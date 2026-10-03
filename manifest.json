@@ -1,0 +1,16 @@
+{
+  "name": "Extract Lab",
+  "short_name": "Extract Lab",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Continue learning", "short_name": "Continue", "url": "./?start=1", "icons": [{ "src": "icon.svg", "sizes": "any" }] }
+  ]
+}
