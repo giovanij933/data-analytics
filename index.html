@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Extract Lab</title>
+<style>
+:root{--bg:#121212;--card:#171717;--cell:#1c1c1c;--line:#2b2b2b;--tx:#ececec;--mu:#a3a3a3;--g:#1fae8f;--r:#f0304a;--a:#e8a33a;--b:#4a78ff;--blue:#3050ff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{color:var(--tx);font:13px/1.35 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:calc(6px + env(safe-area-inset-top)) 12px calc(40px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+.red{color:var(--r)}.grn{color:var(--g)}.amb{color:var(--a)}.mu{color:var(--mu)}
+.bar{display:flex;gap:10px;align-items:center;margin:4px 0 22px;flex-wrap:wrap}
+.sel{background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23aaa' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--line);border-radius:6px;padding:7px 34px 7px 12px;min-width:170px;appearance:none;-webkit-appearance:none;font-weight:500}
+.ctx{font-size:11px;color:#cfcfcf}
+.sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 10px;display:inline-flex;gap:6px;align-items:center;font-weight:600}
+.btn:hover{border-color:#484848}
+.btn:disabled{opacity:.5;cursor:default}
+.btn svg{width:14px;height:14px}
+.btn.pri{background:var(--blue);border-color:var(--blue)}
+.btn.go{background:var(--g);border-color:var(--g);color:#06231c}
+.btn.dng{color:var(--r)}
+.btn.xs{padding:4px 8px;font-size:11px}
+.grid{display:grid;gap:16px;margin-bottom:22px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.gm{grid-template-columns:2.05fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;min-width:0}
+.ban{flex-direction:row;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;margin-bottom:22px;flex-wrap:wrap;border-color:#2f3d39}
+.bd{padding:22px 22px 12px;flex:1;display:flex;flex-direction:column}
+.ft{border-top:1px solid var(--line);padding:24px 22px;display:flex;justify-content:space-between;font-size:12px;color:#c9c9c9;gap:10px;flex-wrap:wrap;align-items:center}
+h3{font-size:13px;font-weight:700;margin-bottom:20px}
+.lbl{font-size:11px;color:#c9c9c9}
+.big{font-size:18px;font-weight:700;margin-top:6px}
+.gauge{display:block;width:170px;margin:44px auto 8px}
+.lr{display:flex;align-items:center;font-size:11px;margin-top:8px;color:#d6d6d6}
+.lr span{flex:1}.lr b{min-width:24px;text-align:right}.lr em{font-style:normal;width:48px;text-align:right}
+.dot{width:7px;height:7px;border-radius:50%;margin-right:7px;display:inline-block;flex:none}
+.row{display:flex;justify-content:space-between;font-size:11px;gap:8px}
+.hb{height:8px;background:#222;border-radius:4px;margin:6px 0 4px;overflow:hidden}
+.hb i{display:block;height:100%;border-radius:4px}
+.tk{padding:11px 0;border-bottom:1px solid #222}
+.tk:last-child{border:0}
+.tkh{display:flex;align-items:center;gap:8px;font-size:12px}
+.tkh b{flex:1}
+.tl{display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid #222;color:#ddd}.tl span{color:#aaa}
+/* calendar */
+.calhd{display:flex;justify-content:space-between;align-items:flex-end}
+.wl{font-size:12px;color:#d0d0d0}
+.cal{display:grid;grid-template-columns:repeat(8,1fr);gap:6px 8px;margin-top:22px}
+.dh{text-align:center;font-size:11px;color:#d0d0d0;padding-bottom:4px}
+.cell{height:72px;background:var(--cell);border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;color:#d8d8d8;cursor:pointer;position:relative;border:2px solid transparent}
+.cell.hatch{background:repeating-linear-gradient(135deg,#1a1a1a 0 5px,#252525 5px 6px)}
+.cell.out,.cell.wk{cursor:default}
+.cell.fut span{color:#555}
+.cell.on b{font-size:10px;color:#e8fff8}
+.cell.sel{border-color:var(--blue)}
+.cell small{font-size:8px;color:#cfe}
+.cell.wk{border:1px dashed #353535;background:transparent;color:#555}
+.cell.wk b{font-size:10px}
+.cdots{display:flex;gap:2px}.cdots i{width:5px;height:5px;border-radius:50%}
+.calft{padding:12px 22px;font-size:10px;align-items:center}
+.nav{display:flex;gap:8px;align-items:center}
+.nav button{border:1px solid var(--line);border-radius:3px;min-width:18px;height:18px;line-height:14px;color:#aaa;padding:0 4px}
+.nav .tb{font-size:9px;padding:0 6px}
+/* evaluation */
+.ev h4{font-size:10px;letter-spacing:.06em;color:#cfcfcf;margin:16px 0 16px;font-weight:600}
+.er{display:flex;align-items:center;font-size:11px;margin-bottom:17px;color:#d6d6d6;gap:2px}
+.er span{flex:1}.er b{margin-right:8px;text-align:right;font-weight:500}
+.q{width:11px;height:11px;border:1px solid #555;border-radius:50%;font-size:7px;display:inline-flex;align-items:center;justify-content:center;color:#777;font-style:normal;flex:none;cursor:help}
+hr{border:0;border-top:1px solid var(--line);margin:2px 0 6px}
+.l5{display:inline-flex;gap:3px}.l5 i{width:10px;height:10px;border-radius:2px}
+/* charts */
+.chart{width:100%;height:210px;display:block;margin-top:14px}
+.empty{height:210px;display:flex;align-items:center;justify-content:center;color:#555;font-size:12px;text-align:center;padding:0 12px}
+.eqh{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.ks{display:flex;gap:28px;flex-wrap:wrap}
+.ks div{font-size:10px;color:#cfcfcf;letter-spacing:.04em}
+.ks b{display:block;font-size:12px;margin-top:6px;color:var(--tx)}
+.radar{width:100%;max-width:320px;height:240px;margin:auto;display:block}
+/* table */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:left;font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #232323;white-space:nowrap}
+.num{text-align:right}
+.mu2{color:#c9c9c9}
+.pill{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:10px;border:1px solid;white-space:nowrap}
+.th{display:flex;align-items:center;gap:12px;padding:22px 22px 14px}
+.th h3{margin:0;flex:1}
+.tf{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;font-size:11px;color:#cfcfcf;gap:10px;flex-wrap:wrap}
+.pg{display:flex;align-items:center;gap:6px}
+.pg button{border:1px solid var(--line);border-radius:3px;width:20px;height:20px;color:#aaa}
+.pg input{width:36px;text-align:center;background:#101010;border:1px solid var(--line);border-radius:3px;padding:2px}
+.rs{background:#101010;border:1px solid var(--line);border-radius:4px;padding:3px 6px}
+/* modal */
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:25;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))}
+.modal.hidden,.po.hidden{display:none}
+.box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px;width:100%;max-width:560px;max-height:90vh;overflow:auto}
+.box.wide{max-width:900px}
+.box p{font-size:12px;margin-bottom:12px;line-height:1.5}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mu)}
+.fg input,.fg select{background:#101010;border:1px solid var(--line);border-radius:5px;padding:7px 9px;width:100%}
+.full{grid-column:1/-1}
+.mact{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#262626;border:1px solid #3a3a3a;padding:9px 14px;border-radius:6px;font-size:12px;z-index:40}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;background:#1a1a1a}
+.chip.on{border-color:var(--g);color:var(--g);background:#10322a}
+/* code */
+pre,.ed{font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre{background:#0f0f0f;border:1px solid var(--line);border-radius:6px;padding:12px 14px;overflow:auto;color:#d6e9e2;white-space:pre;tab-size:2}
+.ed{width:100%;min-height:170px;background:#0c0c0c;border:1px solid #2f3d39;border-radius:6px;padding:12px 14px;color:#e8fff8;resize:vertical;tab-size:2;white-space:pre;overflow:auto}
+.ed:focus{outline:1px solid var(--g)}
+.codeh{display:flex;align-items:center;gap:8px;margin:16px 0 6px;font-size:11px;color:#bbb;letter-spacing:.04em}
+.codeh b{flex:1;font-weight:600}
+.rt{border-collapse:collapse;font:12px ui-monospace,Menlo,Consolas,monospace;width:auto}
+.rt th,.rt td{border:1px solid #2a2a2a;padding:5px 9px;text-align:left;white-space:nowrap}
+.rt th{background:#161616;color:#bbb;font-weight:600}
+.outw{max-height:320px;overflow:auto;margin-top:8px;border-radius:6px}
+.fb{border-radius:6px;padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.5}
+.fb.ok{background:#10322a;border:1px solid #1c4a3e;color:#bfeee0}
+.fb.no{background:#33161a;border:1px solid #5a1f26;color:#ffd2d8}
+.fb.info{background:#141a2a;border:1px solid #23305a;color:#cdd8ff}
+/* lesson overlay */
+.po{position:fixed;inset:0;background:#0d0d0d;z-index:20;display:flex;justify-content:center;padding:0 max(12px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:auto;-webkit-overflow-scrolling:touch}
+.lv{width:100%;max-width:860px}
+.lvh{position:sticky;top:0;background:#0d0d0df2;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:3;padding:calc(12px + env(safe-area-inset-top)) 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid #1f1f1f}
+.lvh .btn{min-height:36px}
+.stime{font-variant-numeric:tabular-nums;font-size:13px;color:#9fd9c9;min-width:52px}
+.lvb{padding:18px 0 40px}
+.lvb h2{font-size:20px;margin:6px 0 12px}
+.lvb p.learn{font-size:13.5px;line-height:1.6;color:#ddd;margin-bottom:10px}
+.task{background:#141c1a;border:1px solid #233;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.55;margin-top:18px}
+.task b{color:#9fd9c9}
+.opts{display:grid;gap:8px;margin-top:10px}
+.opt{text-align:left;border:1px solid var(--line);border-radius:8px;padding:11px 14px;background:#121212;font-size:13px;line-height:1.45}
+.opt.right{border-color:var(--g);background:#10322a}.opt.wrong{border-color:var(--r);background:#33161a}
+.lnav{display:flex;gap:8px;justify-content:space-between;margin-top:24px;flex-wrap:wrap}
+.ltrk{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:8px}
+.li{text-align:left;border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#121212;font-size:12px;display:flex;gap:8px;align-items:center}
+.li b{flex:1;font-weight:500}
+.li.done{border-color:#1c4a3e}
+.rosetta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.rosetta .codeh{margin-top:0}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.gm,.g3{grid-template-columns:1fr}}
+@media(max-width:620px){.g4{grid-template-columns:1fr}.sel{min-width:0;flex:1}.cell{height:54px}.cal{gap:4px}.ctx{width:100%}.fg,.rosetta{grid-template-columns:1fr}
+  .ed,.fg input,.fg select{font-size:16px}.lvb h2{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <select id="fTrack" class="sel"><option value="all">All tracks</option><option value="sql">SQL</option><option value="py">Python</option><option value="sas">SAS</option><option value="tab">Tableau</option></select>
+  <select id="fRange" class="sel">
+    <option value="today">Today</option><option value="week">This week</option><option value="7d">Last 7 days</option>
+    <option value="30d">Last 30 days</option><option value="90d">Last 90 days</option><option value="all">All time</option>
+  </select>
+  <span id="ctx" class="ctx"></span>
+  <div class="sp"></div>
+  <div id="barBtns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+</div>
+<div id="app"></div>
+<div id="po" class="po hidden"></div>
+<div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const R=String.raw;
+/* ================= tracks & levels ================= */
+const TR={sql:{n:'SQL',col:'#4a78ff',run:1},py:{n:'Python',col:'#e8a33a',run:1},sas:{n:'SAS',col:'#1fae8f'},tab:{n:'Tableau',col:'#b06cf0'}};
+const TK=Object.keys(TR);
+const LV=['','Beginner','Intermediate','Advanced','Expert'],XPL=[0,10,20,30,50];
+const RANKS=[[0,'Novice'],[.15,'Apprentice'],[.35,'Practitioner'],[.6,'Specialist'],[.85,'Expert']];
+
+/* ================= lessons ================= */
+const LESSONS=[
+/* ---------- SQL ---------- */
+{id:'sql1',t:'sql',lv:1,title:'SELECT & WHERE',
+ learn:['Every extraction starts with SELECT (which columns) and FROM (which table). WHERE filters rows before anything else is calculated.','Text goes in single quotes. Combine conditions with AND / OR, and use IN (...) to match a list of values.'],
+ ex:R`SELECT name, price
+FROM products
+WHERE category = 'Office' AND price < 200;`,
+ task:'List the <b>name</b> and <b>region</b> of every customer in the <b>West</b> region.',
+ start:R`SELECT
+FROM customers
+WHERE `,
+ sol:R`SELECT name, region
+FROM customers
+WHERE region = 'West';`,
+ hint:"Two columns after SELECT, one condition after WHERE: region = 'West'."},
+{id:'sql2',t:'sql',lv:1,title:'ORDER BY & LIMIT',ordered:true,
+ learn:['ORDER BY sorts the result; add DESC for largest first. LIMIT keeps only the first N rows — the classic “top N” pattern.','Without ORDER BY, a database is free to return rows in any order, so never rely on the natural order.'],
+ ex:R`SELECT name, signup_date
+FROM customers
+ORDER BY signup_date
+LIMIT 3;`,
+ task:'Return the <b>5 most expensive products</b>: <b>name</b>, <b>price</b>, highest price first.',
+ start:R`SELECT name, price
+FROM products
+`,
+ sol:R`SELECT name, price
+FROM products
+ORDER BY price DESC
+LIMIT 5;`,
+ hint:'ORDER BY price DESC, then LIMIT 5.'},
+{id:'sql3',t:'sql',lv:1,title:'COUNT, SUM & GROUP BY',
+ learn:['Aggregate functions — COUNT, SUM, AVG, MIN, MAX — collapse many rows into one. GROUP BY splits rows into groups first, giving one output row per group.','Every column in SELECT must either be in GROUP BY or wrapped in an aggregate. Name results with AS.'],
+ ex:R`SELECT category, COUNT(*) AS products, AVG(price) AS avg_price
+FROM products
+GROUP BY category;`,
+ task:'Count customers per region. Columns: <b>region</b>, <b>n</b>.',
+ start:R`SELECT region,
+FROM customers
+`,
+ sol:R`SELECT region, COUNT(*) AS n
+FROM customers
+GROUP BY region;`,
+ hint:'COUNT(*) AS n, then GROUP BY region.'},
+{id:'sql4',t:'sql',lv:2,title:'JOINs across tables',
+ learn:['Real data is split across tables. JOIN ... ON reconnects them using keys: here order_items.order_id → orders.id and order_items.product_id → products.id.','Use short aliases (o, oi, p). INNER JOIN keeps only matching rows; you’ll meet LEFT JOIN soon.'],
+ ex:R`SELECT o.id, o.order_date, c.name
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+LIMIT 5;`,
+ task:'Revenue per product <b>category</b> from <b>completed</b> orders only. Revenue = SUM(qty × unit_price), rounded to 2 decimals. Columns: <b>category</b>, <b>revenue</b>.',
+ start:R`SELECT p.category,
+FROM order_items oi
+JOIN orders o ON
+JOIN products p ON
+WHERE
+GROUP BY p.category;`,
+ sol:R`SELECT p.category, ROUND(SUM(oi.qty * oi.unit_price), 2) AS revenue
+FROM order_items oi
+JOIN orders o ON o.id = oi.order_id
+JOIN products p ON p.id = oi.product_id
+WHERE o.status = 'completed'
+GROUP BY p.category;`,
+ hint:"Join order_items to orders on o.id = oi.order_id and to products on p.id = oi.product_id; filter o.status = 'completed'."},
+{id:'sql5',t:'sql',lv:2,title:'HAVING — filtering groups',
+ learn:['WHERE filters rows <i>before</i> grouping; HAVING filters groups <i>after</i> aggregation. You can’t use an aggregate like COUNT(*) in WHERE.','Logical order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT.'],
+ ex:R`SELECT category, COUNT(*) AS n
+FROM products
+GROUP BY category
+HAVING COUNT(*) >= 4;`,
+ task:'Find customers who placed <b>more than 8 orders</b> (any status). Columns: <b>customer_id</b>, <b>orders</b>.',
+ start:R`SELECT customer_id, COUNT(*) AS orders
+FROM orders
+`,
+ sol:R`SELECT customer_id, COUNT(*) AS orders
+FROM orders
+GROUP BY customer_id
+HAVING COUNT(*) > 8;`,
+ hint:'GROUP BY customer_id, then HAVING COUNT(*) > 8.'},
+{id:'sql6',t:'sql',lv:2,title:'CASE WHEN — deriving labels',
+ learn:['CASE WHEN ... THEN ... ELSE ... END creates new values row by row — buckets, flags, cleaned categories. It works inside SELECT, GROUP BY, ORDER BY and even inside aggregates.','A powerful trick: SUM(CASE WHEN cond THEN 1 ELSE 0 END) counts rows meeting a condition.'],
+ ex:R`SELECT name,
+  CASE WHEN price >= 300 THEN 'premium'
+       WHEN price >= 50  THEN 'standard'
+       ELSE 'budget' END AS tier
+FROM products;`,
+ task:'Label each order: <b>completed → \'kept\'</b>, anything else → <b>\'lost\'</b>, and count orders per label. Columns: <b>outcome</b>, <b>n</b>.',
+ start:R`SELECT
+  CASE WHEN  THEN  ELSE  END AS outcome,
+  COUNT(*) AS n
+FROM orders
+GROUP BY outcome;`,
+ sol:R`SELECT CASE WHEN status = 'completed' THEN 'kept' ELSE 'lost' END AS outcome,
+       COUNT(*) AS n
+FROM orders
+GROUP BY outcome;`,
+ hint:"CASE WHEN status = 'completed' THEN 'kept' ELSE 'lost' END"},
+{id:'sql7',t:'sql',lv:3,title:'CTEs & subqueries',
+ learn:['A CTE (WITH name AS (...)) names an intermediate result so you can build a query in readable steps. A subquery does the same inline.','Here: first compute each customer’s spend, then compare it to the average of those spends — a two-step problem that a single GROUP BY can’t do.'],
+ ex:R`WITH cat AS (
+  SELECT category, AVG(price) AS avg_price
+  FROM products GROUP BY category
+)
+SELECT p.name, p.price, cat.avg_price
+FROM products p JOIN cat ON cat.category = p.category
+WHERE p.price > cat.avg_price;`,
+ task:'Customers whose total <b>completed</b> spend is <b>above the average customer’s</b> completed spend. Columns: <b>customer_id</b>, <b>spend</b> (rounded to 2).',
+ start:R`WITH s AS (
+  SELECT o.customer_id, SUM(oi.qty * oi.unit_price) AS spend
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.id
+  WHERE o.status = 'completed'
+  GROUP BY o.customer_id
+)
+SELECT
+FROM s
+WHERE `,
+ sol:R`WITH s AS (
+  SELECT o.customer_id, SUM(oi.qty * oi.unit_price) AS spend
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.id
+  WHERE o.status = 'completed'
+  GROUP BY o.customer_id
+)
+SELECT customer_id, ROUND(spend, 2) AS spend
+FROM s
+WHERE spend > (SELECT AVG(spend) FROM s);`,
+ hint:'Compare spend to a scalar subquery: (SELECT AVG(spend) FROM s).'},
+{id:'sql8',t:'sql',lv:3,title:'LEFT JOIN & anti-joins',
+ learn:['LEFT JOIN keeps every row from the left table, filling NULLs where there’s no match. Filtering WHERE right.key IS NULL keeps only the non-matches — an “anti-join”.','Anti-joins answer “who never…?” questions: customers who never ordered, products never sold. NOT EXISTS is an equivalent pattern.'],
+ ex:R`SELECT p.name
+FROM products p
+LEFT JOIN order_items oi ON oi.product_id = p.id
+WHERE oi.order_id IS NULL;`,
+ task:'Customers who have <b>never placed an order</b>. Columns: <b>id</b>, <b>name</b>.',
+ start:R`SELECT c.id, c.name
+FROM customers c
+LEFT JOIN orders o ON
+WHERE `,
+ sol:R`SELECT c.id, c.name
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id
+WHERE o.id IS NULL;`,
+ hint:'Join on o.customer_id = c.id and keep rows WHERE o.id IS NULL.'},
+{id:'sql9',t:'sql',lv:3,title:'Window functions: RANK',
+ learn:['Window functions calculate across related rows <i>without collapsing them</i>. OVER (PARTITION BY ... ORDER BY ...) defines the window.','ROW_NUMBER gives 1,2,3…; RANK leaves gaps after ties; DENSE_RANK doesn’t. These power top-N-per-group and dedup queries.'],
+ ex:R`SELECT name, category, price,
+  ROW_NUMBER() OVER (ORDER BY price DESC) AS overall_pos
+FROM products;`,
+ task:'Rank products by price <b>within each category</b> (1 = most expensive). Columns: <b>category</b>, <b>name</b>, <b>price</b>, <b>rnk</b>.',
+ start:R`SELECT category, name, price,
+  RANK() OVER (               ) AS rnk
+FROM products;`,
+ sol:R`SELECT category, name, price,
+  RANK() OVER (PARTITION BY category ORDER BY price DESC) AS rnk
+FROM products;`,
+ hint:'OVER (PARTITION BY category ORDER BY price DESC)'},
+{id:'sql10',t:'sql',lv:4,title:'Running totals by month',ordered:true,
+ learn:['Bucket dates with strftime(\'%Y-%m\', date) in SQLite (DATE_TRUNC in Postgres/Snowflake, FORMAT in SQL Server). Then SUM(...) OVER (ORDER BY month) produces a running total.','Combining a CTE for the monthly rollup with a window over it is a pattern you’ll use constantly for trend reports.'],
+ ex:R`SELECT strftime('%Y', order_date) AS yr, COUNT(*) AS orders
+FROM orders
+GROUP BY yr;`,
+ task:'Monthly <b>completed</b> revenue with a running total. Columns: <b>month</b> (YYYY-MM), <b>revenue</b>, <b>running_total</b> (both rounded to 2), ordered by month.',
+ start:R`WITH m AS (
+  SELECT strftime('%Y-%m', o.order_date) AS month,
+         SUM(oi.qty * oi.unit_price) AS revenue
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.id
+  WHERE o.status = 'completed'
+  GROUP BY month
+)
+SELECT month,
+FROM m
+ORDER BY month;`,
+ sol:R`WITH m AS (
+  SELECT strftime('%Y-%m', o.order_date) AS month,
+         SUM(oi.qty * oi.unit_price) AS revenue
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.id
+  WHERE o.status = 'completed'
+  GROUP BY month
+)
+SELECT month, ROUND(revenue, 2) AS revenue,
+       ROUND(SUM(revenue) OVER (ORDER BY month), 2) AS running_total
+FROM m
+ORDER BY month;`,
+ hint:'SUM(revenue) OVER (ORDER BY month)'},
+{id:'sql11',t:'sql',lv:4,title:'Latest record per key',
+ learn:['A top data-engineering pattern: keep only the newest row per entity (latest order, current address, last status). Number rows per key newest-first and keep row 1.','Always add a tie-breaker to ORDER BY (e.g. id DESC) so the result is deterministic when two rows share a date.'],
+ ex:R`SELECT * FROM (
+  SELECT p.*, ROW_NUMBER() OVER (PARTITION BY category ORDER BY price) AS rn
+  FROM products p
+) WHERE rn = 1;   -- cheapest per category`,
+ task:'Each customer’s <b>most recent order</b>. Columns: <b>customer_id</b>, <b>order_id</b>, <b>order_date</b>. Break date ties by the highest order id.',
+ start:R`SELECT customer_id, id AS order_id, order_date
+FROM (
+  SELECT o.*,
+    ROW_NUMBER() OVER (            ) AS rn
+  FROM orders o
+)
+WHERE rn = 1;`,
+ sol:R`SELECT customer_id, id AS order_id, order_date
+FROM (
+  SELECT o.*,
+    ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, id DESC) AS rn
+  FROM orders o
+)
+WHERE rn = 1;`,
+ hint:'PARTITION BY customer_id ORDER BY order_date DESC, id DESC'},
+{id:'sql12',t:'sql',lv:4,title:'Cohort conversion',
+ learn:['Cohort analysis groups entities by when they started (signup month) and measures what they did later. It combines date bucketing, LEFT JOIN, conditional DISTINCT counts and ratios.','Multiply by 100.0 (not 100) to force decimal division — integer division silently truncates in many databases.'],
+ ex:R`SELECT strftime('%Y-%m', signup_date) AS cohort, COUNT(*) AS customers
+FROM customers
+GROUP BY cohort;`,
+ task:'Per <b>signup-month cohort</b>: <b>cohort</b> (YYYY-MM), <b>customers</b>, <b>buyers</b> (customers with ≥1 completed order), <b>pct</b> = buyers×100.0/customers rounded to 1.',
+ start:R`SELECT strftime('%Y-%m', c.signup_date) AS cohort,
+       COUNT(DISTINCT c.id) AS customers,
+       COUNT(DISTINCT o.customer_id) AS buyers,
+
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id AND o.status = 'completed'
+GROUP BY cohort;`,
+ sol:R`SELECT strftime('%Y-%m', c.signup_date) AS cohort,
+       COUNT(DISTINCT c.id) AS customers,
+       COUNT(DISTINCT o.customer_id) AS buyers,
+       ROUND(COUNT(DISTINCT o.customer_id) * 100.0 / COUNT(DISTINCT c.id), 1) AS pct
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id AND o.status = 'completed'
+GROUP BY cohort;`,
+ hint:'Putting the status filter in the ON clause (not WHERE) keeps customers with no completed orders.'},
+/* ---------- Python ---------- */
+{id:'py1',t:'py',lv:1,title:'Filtering a DataFrame',
+ learn:['pandas holds tables as DataFrames. The tables <b>customers</b>, <b>products</b>, <b>orders</b> and <b>items</b> are preloaded, with pd and np imported.','Filter rows with a boolean mask: df[df["col"] == value]. Select columns with a list: df[["a","b"]]. Assign your answer to <b>result</b>.'],
+ ex:R`cheap_office = products[(products["category"] == "Office") & (products["price"] < 200)]
+print(cheap_office[["name", "price"]])`,
+ task:'Return the <b>name</b> and <b>region</b> of customers in the <b>West</b> region as <b>result</b>.',
+ start:R`result = `,
+ sol:R`result = customers[customers["region"] == "West"][["name", "region"]]`,
+ hint:'customers[customers["region"] == "West"] then select [["name", "region"]].'},
+{id:'py2',t:'py',lv:1,title:'Sorting & head',ordered:true,
+ learn:['sort_values("col", ascending=False) sorts; head(n) keeps the first n rows. Chain methods left-to-right like a pipeline.'],
+ ex:R`print(customers.sort_values("signup_date").head(3))`,
+ task:'The <b>5 most expensive products</b>: columns <b>name</b>, <b>price</b>, highest first.',
+ start:R`result = products.`,
+ sol:R`result = products.sort_values("price", ascending=False).head(5)[["name", "price"]]`,
+ hint:'sort_values("price", ascending=False).head(5)'},
+{id:'py3',t:'py',lv:1,title:'groupby basics',
+ learn:['df.groupby("col") splits rows into groups; .size() counts rows; .agg(...) applies aggregates. reset_index() turns the group key back into a column.','size().reset_index(name="n") is the pandas version of SELECT col, COUNT(*) AS n ... GROUP BY col.'],
+ ex:R`print(products.groupby("category")["price"].mean().round(2))`,
+ task:'Count customers per region. Columns: <b>region</b>, <b>n</b>.',
+ start:R`result = customers.groupby("region")`,
+ sol:R`result = customers.groupby("region").size().reset_index(name="n")`,
+ hint:'.size().reset_index(name="n")'},
+{id:'py4',t:'py',lv:2,title:'merge — joining DataFrames',
+ learn:['df.merge(other, left_on=..., right_on=...) is a SQL join (how="inner" by default; also "left", "right", "outer").','When both tables have an id column, pandas adds suffixes (_x, _y). Create computed columns with df["new"] = expression.'],
+ ex:R`oc = orders.merge(customers, left_on="customer_id", right_on="id", suffixes=("", "_cust"))
+print(oc[["id", "order_date", "name"]].head())`,
+ task:'Revenue per <b>category</b> from <b>completed</b> orders (revenue = qty × unit_price summed, rounded to 2). Columns: <b>category</b>, <b>revenue</b>.',
+ start:R`m = items.merge(orders, left_on="order_id", right_on="id")
+m = m.merge(products, left_on="product_id", right_on="id")
+# filter, compute revenue, group
+result = `,
+ sol:R`m = items.merge(orders, left_on="order_id", right_on="id")
+m = m.merge(products, left_on="product_id", right_on="id")
+m = m[m["status"] == "completed"].copy()
+m["revenue"] = m["qty"] * m["unit_price"]
+result = m.groupby("category", as_index=False)["revenue"].sum().round(2)`,
+ hint:'Filter status == "completed", create m["revenue"], then groupby("category", as_index=False)["revenue"].sum().'},
+{id:'py5',t:'py',lv:2,title:'pivot_table',
+ learn:['pivot_table reshapes long data into a matrix: index = rows, columns = new column headers, values + aggfunc = what fills the cells. fill_value=0 replaces missing combinations.','pd.to_datetime(...) turns text into real dates; .dt.year, .dt.month extract parts.'],
+ ex:R`print(products.pivot_table(index="category", values="price", aggfunc=["min", "max"]))`,
+ task:'Count orders by <b>status</b> (rows) and <b>year</b> of order_date (columns), missing = 0. Expected columns: <b>status</b>, then one column per year.',
+ start:R`o = orders.copy()
+o["year"] = pd.to_datetime(o["order_date"]).dt.year
+result = `,
+ sol:R`o = orders.copy()
+o["year"] = pd.to_datetime(o["order_date"]).dt.year
+result = o.pivot_table(index="status", columns="year", values="id", aggfunc="count", fill_value=0)`,
+ hint:'pivot_table(index="status", columns="year", values="id", aggfunc="count", fill_value=0)'},
+{id:'py6',t:'py',lv:2,title:'np.where — derived categories',
+ learn:['np.where(condition, if_true, if_false) is pandas’ vectorized CASE WHEN. Nest it for 3+ buckets, or use np.select / pd.cut for many.'],
+ ex:R`products["is_big_ticket"] = np.where(products["price"] > 300, "yes", "no")
+print(products[["name", "price", "is_big_ticket"]])`,
+ task:'Band products by price: <b>&lt; 50 → "low"</b>, <b>50–200 → "mid"</b>, <b>&gt; 200 → "high"</b>, then count per band. Columns: <b>band</b>, <b>n</b>.',
+ start:R`p = products.copy()
+p["band"] = np.where(p["price"] < 50, "low", np.where(            ))
+result = `,
+ sol:R`p = products.copy()
+p["band"] = np.where(p["price"] < 50, "low", np.where(p["price"] <= 200, "mid", "high"))
+result = p.groupby("band").size().reset_index(name="n")`,
+ hint:'Inner np.where(p["price"] <= 200, "mid", "high"), then groupby("band").size().'},
+{id:'py7',t:'py',lv:3,title:'Dates & monthly buckets',ordered:true,
+ learn:['Extraction work is full of time buckets. dt.strftime("%Y-%m") turns dates into sortable month keys (or use dt.to_period("M")).','Group by the bucket and sort — ISO-style YYYY-MM strings sort correctly as text.'],
+ ex:R`o = orders.copy()
+o["dow"] = pd.to_datetime(o["order_date"]).dt.day_name()
+print(o["dow"].value_counts())`,
+ task:'Monthly <b>completed</b> revenue: columns <b>month</b> (YYYY-MM), <b>revenue</b> (rounded to 2), sorted by month.',
+ start:R`m = items.merge(orders, left_on="order_id", right_on="id")
+m = m[m["status"] == "completed"].copy()
+m["revenue"] = m["qty"] * m["unit_price"]
+m["month"] =
+result = `,
+ sol:R`m = items.merge(orders, left_on="order_id", right_on="id")
+m = m[m["status"] == "completed"].copy()
+m["revenue"] = m["qty"] * m["unit_price"]
+m["month"] = pd.to_datetime(m["order_date"]).dt.strftime("%Y-%m")
+result = m.groupby("month", as_index=False)["revenue"].sum().round(2).sort_values("month")`,
+ hint:'pd.to_datetime(m["order_date"]).dt.strftime("%Y-%m")'},
+{id:'py8',t:'py',lv:3,title:'Top-N per group',
+ learn:['groupby(...)["col"].rank(ascending=False, method="first") ranks within each group — the pandas twin of ROW_NUMBER() OVER (PARTITION BY ...).','Alternative: sort_values then groupby(...).head(n).'],
+ ex:R`top2 = products.sort_values("price", ascending=False).groupby("category").head(2)
+print(top2[["category", "name", "price"]])`,
+ task:'The <b>top-spending customer in each region</b> (completed orders). Columns: <b>region</b>, <b>customer_id</b>, <b>spend</b> (rounded to 2).',
+ start:R`m = items.merge(orders, left_on="order_id", right_on="id")
+m = m[m["status"] == "completed"].copy()
+m["spend"] = m["qty"] * m["unit_price"]
+s = m.groupby("customer_id", as_index=False)["spend"].sum()
+s = s.merge(customers[["id", "region"]], left_on="customer_id", right_on="id")
+# rank within region, keep rank 1
+result = `,
+ sol:R`m = items.merge(orders, left_on="order_id", right_on="id")
+m = m[m["status"] == "completed"].copy()
+m["spend"] = m["qty"] * m["unit_price"]
+s = m.groupby("customer_id", as_index=False)["spend"].sum()
+s = s.merge(customers[["id", "region"]], left_on="customer_id", right_on="id")
+s["rk"] = s.groupby("region")["spend"].rank(ascending=False, method="first")
+result = s[s["rk"] == 1][["region", "customer_id", "spend"]].round(2)`,
+ hint:'s["rk"] = s.groupby("region")["spend"].rank(ascending=False, method="first")'},
+{id:'py9',t:'py',lv:3,title:'Flattening JSON from an API',
+ learn:['APIs return nested JSON. pd.json_normalize flattens it: record_path explodes a nested list into rows, meta carries parent fields along (nested keys become "customer.id").','A preloaded list <b>api_payload</b> mimics an orders API: each order has a customer object and a list of lines.'],
+ ex:R`print(api_payload[0])
+flat = pd.json_normalize(api_payload)
+print(flat.columns.tolist())`,
+ task:'One row per order line with columns, in this order: <b>order_id</b>, <b>customer_id</b>, <b>sku</b>, <b>qty</b>.',
+ start:R`lines = pd.json_normalize(api_payload, record_path="lines", meta=["order_id", ["customer", "id"]])
+result = `,
+ sol:R`lines = pd.json_normalize(api_payload, record_path="lines", meta=["order_id", ["customer", "id"]])
+lines = lines.rename(columns={"customer.id": "customer_id"})
+result = lines[["order_id", "customer_id", "sku", "qty"]]`,
+ hint:'Rename "customer.id" → "customer_id", then select the four columns in order.'},
+{id:'py10',t:'py',lv:4,title:'Regex extraction from logs',
+ learn:['Semi-structured text (logs, emails, filenames) is extracted with regular expressions. Series.str.extract(pattern) returns one column per capture group; non-matching lines become NaN.','A preloaded list <b>logs</b> contains lines like “… INFO user=42 action=export rows=1532”, plus some malformed lines to drop.'],
+ ex:R`s = pd.Series(logs)
+print(s.head(3).tolist())
+print(s.str.extract(r"(INFO|WARN|ERROR)")[0].value_counts())`,
+ task:'Total <b>rows exported per user</b> (action = export only). Columns: <b>user</b> (int), <b>rows</b> (int).',
+ start:R`s = pd.Series(logs)
+d = s.str.extract(r"user=(\d+) action=(\w+) rows=(\d+)")
+d.columns = ["user", "action", "rows"]
+# drop non-matches, keep exports, convert types, aggregate
+result = `,
+ sol:R`s = pd.Series(logs)
+d = s.str.extract(r"user=(\d+) action=(\w+) rows=(\d+)")
+d.columns = ["user", "action", "rows"]
+d = d.dropna()
+d = d[d["action"] == "export"].astype({"user": int, "rows": int})
+result = d.groupby("user", as_index=False)["rows"].sum()`,
+ hint:'dropna(), filter action == "export", astype({"user": int, "rows": int}), then groupby("user").'},
+{id:'py11',t:'py',lv:4,title:'Dedup to latest record',
+ learn:['sort_values by key + date (+ tie-breaker), then drop_duplicates(key, keep="last") keeps the newest row per key — fast and readable.','This is the pandas equivalent of the ROW_NUMBER() … WHERE rn = 1 pattern.'],
+ ex:R`print(orders.sort_values(["customer_id", "order_date"]).groupby("customer_id").tail(1).head())`,
+ task:'Each customer’s <b>most recent order</b>: columns <b>customer_id</b>, <b>order_id</b>, <b>order_date</b>. Break date ties by highest order id.',
+ start:R`o = orders.sort_values(["customer_id", "order_date", "id"])
+result = `,
+ sol:R`o = orders.sort_values(["customer_id", "order_date", "id"])
+o = o.drop_duplicates("customer_id", keep="last")
+result = o.rename(columns={"id": "order_id"})[["customer_id", "order_id", "order_date"]]`,
+ hint:'drop_duplicates("customer_id", keep="last"), rename id → order_id.'},
+/* ---------- SAS ---------- */
+{id:'sas1',t:'sas',lv:1,title:'The DATA step',
+ learn:['SAS processes data row by row in a DATA step: DATA names the output, SET reads the input, statements in between transform each row, RUN executes it.','WHERE filters rows as they are read; KEEP / DROP control which columns are written.'],
+ ex:R`data west;
+  set work.customers;
+  where region = 'West';
+  keep name region;
+run;`,
+ quiz:{q:'Which statement controls which <b>columns</b> are written to the output data set?',o:['WHERE','KEEP','SET','RUN'],a:1,why:'KEEP (or DROP) selects variables. WHERE filters rows, SET names the input, RUN executes the step.'},
+ prac:{task:'Write a DATA step that creates <b>done_orders</b> from work.orders, keeping only completed orders.',sol:R`data done_orders;
+  set work.orders;
+  where status = 'completed';
+run;`}},
+{id:'sas2',t:'sas',lv:1,title:'PROC SORT & PROC PRINT',
+ learn:['Procedures (PROCs) are SAS’s built-in tools. PROC SORT orders data — and many later steps (MERGE, BY-group logic) require sorted input.','OUT= writes a sorted copy instead of overwriting the original. NODUPKEY removes duplicate BY values. PROC PRINT with (obs=5) shows the first 5 rows.'],
+ ex:R`proc sort data=work.products out=prod_sorted;
+  by descending price;
+run;
+
+proc print data=prod_sorted(obs=5);
+  var name price;
+run;`,
+ quiz:{q:'What does <b>OUT=</b> do in PROC SORT?',o:['Exports the data to a CSV file','Writes the sorted result to a new data set, leaving the input unchanged','Removes duplicate rows','Prints the output'],a:1,why:'Without OUT=, PROC SORT replaces the input data set with its sorted version.'},
+ prac:{task:'Sort work.customers by region, then signup_date, into cust_sorted.',sol:R`proc sort data=work.customers out=cust_sorted;
+  by region signup_date;
+run;`}},
+{id:'sas3',t:'sas',lv:2,title:'PROC SQL',
+ learn:['PROC SQL lets you write (mostly ANSI) SQL inside SAS — the joins and GROUP BY from the SQL track transfer directly. CREATE TABLE ... AS saves the result as a data set.','Add SAS formats inline (format=dollar12.2). Note that PROC SQL runs each statement immediately and ends with QUIT, not RUN.'],
+ ex:R`proc sql;
+  create table cat_rev as
+  select p.category,
+         sum(i.qty * i.unit_price) as revenue format=dollar12.2
+  from work.order_items as i
+  inner join work.products as p
+    on i.product_id = p.id
+  group by p.category;
+quit;`,
+ quiz:{q:'Which statement ends a PROC SQL step?',o:['RUN;','END;','QUIT;','STOP;'],a:2,why:'PROC SQL executes statements as it reads them; QUIT; ends the procedure. RUN; is ignored there.'},
+ prac:{task:'With PROC SQL, create <b>region_counts</b>: number of customers per region.',sol:R`proc sql;
+  create table region_counts as
+  select region, count(*) as n
+  from work.customers
+  group by region;
+quit;`}},
+{id:'sas4',t:'sas',lv:2,title:'MERGE with BY and IN=',
+ learn:['The DATA-step MERGE joins data sets by a common BY variable. IN= creates temporary flags telling you which input contributed each row.','if c and not o; keeps customers with no orders (an anti-join). if c and o; is an inner join; no condition is a full outer join.'],
+ ex:R`proc sort data=work.customers out=c; by id; run;
+proc sort data=work.orders(rename=(customer_id=id)) out=o; by id; run;
+
+data no_orders;
+  merge c(in=in_c) o(in=in_o);
+  by id;
+  if in_c and not in_o;
+run;`,
+ quiz:{q:'Before a DATA-step MERGE with BY, both inputs must be…',o:['Indexed or sorted by the BY variable','Exported to CSV','The same number of rows','Created with PROC SQL'],a:0,why:'MERGE walks both tables in BY order, so they must be sorted (or indexed) by the BY variable — otherwise SAS stops with an error.'},
+ prac:{task:'Merge sorted data sets <b>c</b> and <b>o</b> by id, keeping only matching rows (inner join) into <b>cust_orders</b>.',sol:R`data cust_orders;
+  merge c(in=in_c) o(in=in_o);
+  by id;
+  if in_c and in_o;
+run;`}},
+{id:'sas5',t:'sas',lv:3,title:'PROC MEANS / SUMMARY',
+ learn:['PROC MEANS computes statistics by group. CLASS defines groups (no sorting needed), VAR the measures, and OUTPUT OUT= writes results to a data set.','NWAY keeps only the full CLASS combination, dropping the overall-total row SAS adds by default (_TYPE_=0). NOPRINT suppresses printed output.'],
+ ex:R`proc means data=work.sales noprint nway;
+  class region;
+  var revenue;
+  output out=region_stats(drop=_type_ _freq_)
+         sum=total mean=avg n=orders;
+run;`,
+ quiz:{q:'What does <b>NWAY</b> do in PROC MEANS?',o:['Uses n-way parallel processing','Keeps only the highest-level combination of CLASS variables in the output','Removes missing values','Sorts the output'],a:1,why:'Without NWAY, OUTPUT includes every subtotal level, including a grand total row (_TYPE_=0).'},
+ prac:{task:'Get the min, max and mean price per category from work.products into <b>price_stats</b>.',sol:R`proc means data=work.products noprint nway;
+  class category;
+  var price;
+  output out=price_stats min=min_p max=max_p mean=avg_p;
+run;`}},
+{id:'sas6',t:'sas',lv:3,title:'FIRST. and LAST. — BY-group logic',
+ learn:['With BY in a DATA step, SAS creates FIRST.var and LAST.var flags (1 or 0) marking the first and last row of each group.','This drives dedup (“keep the latest per key”), running counts per group, and group-level resets — tasks SQL does with window functions.'],
+ ex:R`proc sort data=work.orders out=o;
+  by customer_id order_date id;
+run;
+
+data latest;
+  set o;
+  by customer_id;
+  if last.customer_id;
+run;`,
+ quiz:{q:'Inside a BY-group, <b>LAST.customer_id = 1</b> when…',o:['The customer_id is the largest value','The current row is the final row for that customer_id','The data set has ended','customer_id is missing'],a:1,why:'LAST.var is 1 on the last observation of each BY group, so the subsetting IF keeps one row per customer — the latest after sorting.'},
+ prac:{task:'Count orders per customer with BY-group logic into <b>order_counts</b> (one row per customer, variable n).',sol:R`data order_counts;
+  set o;
+  by customer_id;
+  if first.customer_id then n = 0;
+  n + 1;
+  if last.customer_id;
+  keep customer_id n;
+run;`}},
+{id:'sas7',t:'sas',lv:4,title:'Macros for reusable extracts',
+ learn:['The macro language generates SAS code. %macro / %mend defines a template; parameters become &variables; %do loops repeat steps.','Macro variables only resolve inside <b>double</b> quotes — in single quotes, &region stays literal text. That’s the #1 macro bug.'],
+ ex:R`%macro extract(region=, out=);
+  proc sql;
+    create table &out as
+    select * from work.customers
+    where region = "&region";
+  quit;
+%mend extract;
+
+%extract(region=West, out=west_cust)
+%extract(region=East, out=east_cust)`,
+ quiz:{q:'Why does the WHERE clause use <b>"&region"</b> (double quotes)?',o:['Double quotes are faster','Macro variables resolve inside double quotes but not single quotes','SAS requires double quotes for all text','It prevents SQL injection'],a:1,why:'Inside single quotes the macro processor doesn’t scan, so the query would look for the literal text &region.'},
+ prac:{task:'Write a %do loop that calls %extract for North, South, East and West (hint: %scan).',sol:R`%macro all_regions;
+  %let list = North South East West;
+  %do i = 1 %to 4;
+    %let r = %scan(&list, &i);
+    %extract(region=&r, out=cust_&r)
+  %end;
+%mend all_regions;
+%all_regions`}},
+{id:'sas8',t:'sas',lv:4,title:'SQL pass-through to databases',
+ learn:['For large warehouses, push the work to the database. Explicit pass-through (CONNECT TO … / CONNECTION TO …) sends native SQL to the DBMS; only the result travels back to SAS.','EXECUTE (...) BY runs statements with no result (updates, temp tables). LIBNAME engines also attempt implicit pass-through, but explicit gives you full control of the dialect.'],
+ ex:R`proc sql;
+  connect to odbc as db (dsn="warehouse" user=&user password=&pw);
+  create table recent as
+  select * from connection to db (
+    select order_id, customer_id, order_date
+    from dbo.orders
+    where order_date >= '2025-01-01'
+  );
+  execute (update etl_log set last_pull = getdate()) by db;
+  disconnect from db;
+quit;`,
+ quiz:{q:'Main benefit of explicit SQL pass-through?',o:['It converts SQL into DATA steps','The query runs inside the database in its own dialect, so only the result is transferred','It encrypts the data','It avoids needing credentials'],a:1,why:'Filtering and aggregating in the warehouse avoids pulling millions of rows across the network into SAS.'},
+ prac:{task:'Using an existing connection <b>db</b>, pull revenue per month for 2025 from the warehouse table dbo.sales (columns sale_date, amount).',sol:R`create table monthly as
+select * from connection to db (
+  select format(sale_date, 'yyyy-MM') as month, sum(amount) as revenue
+  from dbo.sales
+  where sale_date >= '2025-01-01'
+  group by format(sale_date, 'yyyy-MM')
+);`}},
+/* ---------- Tableau ---------- */
+{id:'tab1',t:'tab',lv:1,title:'Live connections vs extracts',
+ learn:['A <b>live</b> connection queries the source every time the view changes — always current, but only as fast as the database. An <b>extract</b> (.hyper) is a compressed snapshot Tableau stores and refreshes on a schedule.','Extract filters and aggregation (“Aggregate data for visible dimensions”) shrink extracts; data source filters restrict what any workbook can see.'],
+ ex:R`Data Source tab → Connection: ( ) Live  (•) Extract → Edit…
+  • Filters → Add… → Order Date ≥ 2024-01-01
+  • ☑ Aggregate data for visible dimensions
+  • Incremental refresh on: Order Date`,
+ quiz:{q:'When is an <b>extract</b> usually the better choice?',o:['When you need second-by-second real-time data','When the source is slow, you want to reduce database load, or need offline access','When the data is under 100 rows','Never — live is always better'],a:1,why:'Extracts trade freshness for speed and lower load on the source. Live makes sense for near-real-time needs on a fast database.'},
+ prac:{task:'Describe how you’d set up an extract that only keeps the last 2 years and refreshes just new rows.',sol:R`Extract → Edit → Filters: Order Date — relative date: last 2 years
+Incremental refresh: ☑ identify new rows using Order Date
+Schedule: full refresh weekly, incremental refresh daily`}},
+{id:'tab2',t:'tab',lv:1,title:'Dimensions, measures & aggregation',
+ learn:['Dimensions (blue, discrete) slice the view; measures (green, continuous) get aggregated. Dropping a measure on a shelf applies a default aggregation, usually SUM.','The level of detail of the view = the dimensions on it. That’s the same idea as GROUP BY.'],
+ ex:R`Columns: [Region]
+Rows:    SUM([Revenue])
+→ equivalent SQL: SELECT region, SUM(revenue) FROM … GROUP BY region`,
+ quiz:{q:'With [Region] on Columns, you drag the measure [Revenue] to Rows. What appears?',o:['Every individual revenue value','SUM(Revenue) for each region','The count of regions','An error until you choose an aggregation'],a:1,why:'Measures default to SUM, aggregated to the dimensions in the view (Region).'},
+ prac:{task:'Which Tableau setup reproduces: SELECT category, COUNT(DISTINCT customer_id) FROM orders GROUP BY category?',sol:R`Rows: [Category]
+Text/Columns: COUNTD([Customer ID])`}},
+{id:'tab3',t:'tab',lv:2,title:'Relationships vs joins',
+ learn:['Since 2020.2, Tableau’s logical layer uses <b>relationships</b> (“noodles”): tables stay separate and are joined at query time at the right level of detail. Physical-layer <b>joins</b> flatten tables into one first.','Relationships avoid the classic duplication problem when tables have different grains (orders vs monthly targets).'],
+ ex:R`Logical layer:   Orders ──(Region = Region)── Targets
+  → SUM([Target]) is computed per Region, not per order row
+
+Physical join:   Orders ⨝ Targets on Region
+  → each order row repeats the target → SUM([Target]) is inflated`,
+ quiz:{q:'Orders (one row per order) and Targets (one row per region per month) are combined with a <b>physical join</b>. What happens to SUM([Target])?',o:['It’s correct','It’s inflated, because each target repeats on every matching order row','It becomes NULL','Tableau blocks the join'],a:1,why:'Joining tables of different grain duplicates the coarser rows. Relationships (or LOD calcs) prevent this.'},
+ prac:{task:'How do you get to the physical layer to create a classic join?',sol:R`Data Source tab → double-click the logical table (e.g. Orders)
+→ opens the physical layer → drag the second table in → choose Inner/Left/Right/Full and the join keys`}},
+{id:'tab4',t:'tab',lv:2,title:'Calculated fields',
+ learn:['Calculated fields (Analysis → Create Calculated Field) are row-level formulas — Tableau’s SELECT expressions. IF/ELSEIF/ELSE/END, IIF, CASE, DATEDIFF, DATETRUNC and string functions are the core tools.','An IF with no ELSE returns NULL for non-matching rows, which SUM ignores — handy for conditional measures.'],
+ ex:R`// Completed revenue
+IF [Status] = "completed" THEN [Qty] * [Unit Price] END
+
+// Days from signup to order
+DATEDIFF('day', [Signup Date], [Order Date])
+
+// Month bucket
+DATETRUNC('month', [Order Date])`,
+ quiz:{q:'What does <b>IF [Status] = "completed" THEN [Revenue] END</b> return for a cancelled order?',o:['0','NULL','An error','The revenue anyway'],a:1,why:'With no ELSE branch, non-matching rows return NULL. Aggregations like SUM skip NULLs.'},
+ prac:{task:'Write a calc that labels price tiers: ≥ 300 "premium", ≥ 50 "standard", else "budget".',sol:R`IF [Price] >= 300 THEN "premium"
+ELSEIF [Price] >= 50 THEN "standard"
+ELSE "budget"
+END`}},
+{id:'tab5',t:'tab',lv:3,title:'LOD expressions: FIXED',
+ learn:['Level of Detail expressions compute at a granularity you choose, independent of the view. { FIXED [Customer ID] : MIN([Order Date]) } gives each customer’s first order date — the basis of cohort analysis.','FIXED runs <b>before</b> dimension filters (but after context, data source and extract filters). INCLUDE / EXCLUDE adjust the view’s grain instead.'],
+ ex:R`// First order date per customer (cohort)
+{ FIXED [Customer ID] : MIN([Order Date]) }
+
+// Customer lifetime revenue on every row
+{ FIXED [Customer ID] : SUM([Revenue]) }
+
+// Average order value per region regardless of view
+{ FIXED [Region] : AVG([Revenue]) }`,
+ quiz:{q:'A FIXED LOD is evaluated relative to a normal <b>dimension filter</b>…',o:['After it, so it respects the filter','Before it, so the filter doesn’t change the FIXED result','At the same time','Only on extracts'],a:1,why:'In Tableau’s order of operations, FIXED LODs come before dimension filters. Add the filter to context if you want FIXED to respect it.'},
+ prac:{task:'Write an LOD that returns each customer’s number of distinct orders.',sol:R`{ FIXED [Customer ID] : COUNTD([Order ID]) }`}},
+{id:'tab6',t:'tab',lv:3,title:'Table calculations',
+ learn:['Table calculations run <b>last</b>, on the aggregated numbers already in the view: running totals, % of total, rank, difference, moving averages.','“Compute Using” (table across, pane down, specific dimensions) decides the direction and scope — the Tableau version of PARTITION BY / ORDER BY.'],
+ ex:R`RUNNING_SUM(SUM([Revenue]))              // running total
+SUM([Revenue]) / TOTAL(SUM([Revenue]))   // % of total
+RANK(SUM([Revenue]))                      // rank in partition
+WINDOW_AVG(SUM([Revenue]), -2, 0)         // 3-period moving avg`,
+ quiz:{q:'When are table calculations computed?',o:['Before any filters, at row level','In the database during extraction','Last, on the aggregated results currently in the view','Only when exporting'],a:2,why:'They operate on the view’s result table, so they change if you filter out marks or change the dimensions in the view.'},
+ prac:{task:'Write a table calc for month-over-month % change in revenue.',sol:R`(ZN(SUM([Revenue])) - LOOKUP(ZN(SUM([Revenue])), -1))
+/ ABS(LOOKUP(ZN(SUM([Revenue])), -1))
+// Compute using: Order Date (month)`}},
+{id:'tab7',t:'tab',lv:4,title:'Order of operations & context filters',
+ learn:['Tableau’s query pipeline: extract filters → data source filters → <b>context filters</b> → Top N / FIXED LOD → dimension filters → INCLUDE/EXCLUDE LOD → measure filters → table calcs → table-calc filters.','Most “why is my Top 10 wrong?” bugs come from this order. Adding a filter to context makes it apply before Top N and FIXED.'],
+ ex:R`Goal: Top 10 customers by revenue *within the West region*
+1. Filters: [Customer Name] → Top → By field: Top 10 by SUM(Revenue)
+2. Filters: [Region] = West  → right-click → Add to Context
+   (without context, Top 10 is computed across all regions first)`,
+ quiz:{q:'Your Top 10 Customers filter ignores the Region filter. The fix?',o:['Convert Region to a measure','Add the Region filter to context','Use a live connection','Sort descending'],a:1,why:'Top N filters run before regular dimension filters; context filters run before Top N.'},
+ prac:{task:'Where do FIXED LODs sit relative to context filters and dimension filters?',sol:R`Context filters → FIXED LOD → dimension filters
+(FIXED respects context filters, ignores normal dimension filters)`}},
+{id:'tab8',t:'tab',lv:4,title:'Automating extracts: Hyper API & REST',
+ learn:['The Tableau Hyper API (Python package tableauhyperapi) builds .hyper extracts straight from code — ideal after a SQL/pandas extraction pipeline. You define a table, insert rows, and publish.','Publishing and refreshing are automated with the REST API — the Python wrapper is tableauserverclient (TSC) — or the tabcmd command line.'],
+ ex:R`from tableauhyperapi import (HyperProcess, Telemetry, Connection, CreateMode,
+                             TableDefinition, TableName, SqlType, Inserter)
+
+with HyperProcess(Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hp:
+    with Connection(hp.endpoint, "orders.hyper", CreateMode.CREATE_AND_REPLACE) as con:
+        con.catalog.create_schema("Extract")
+        t = TableDefinition(TableName("Extract", "orders"), [
+            TableDefinition.Column("order_id", SqlType.int()),
+            TableDefinition.Column("order_date", SqlType.date()),
+            TableDefinition.Column("revenue", SqlType.double()),
+        ])
+        con.catalog.create_table(t)
+        with Inserter(con, t) as ins:
+            ins.add_rows(rows)   # list of tuples; dates as datetime.date
+            ins.execute()`,
+ quiz:{q:'Which tool would you use to <b>publish and refresh</b> data sources on Tableau Server/Cloud from a Python script?',o:['tableauhyperapi only','Tableau Server Client (REST API) or tabcmd','PROC SQL','Tableau Prep only'],a:1,why:'The Hyper API creates files; publishing, refresh jobs and permissions go through the REST API (tableauserverclient) or tabcmd.'},
+ prac:{task:'Sketch TSC code to publish orders.hyper to a project, overwriting the existing data source.',sol:R`import tableauserverclient as TSC
+auth = TSC.PersonalAccessTokenAuth("token-name", "token-secret", site_id="mysite")
+server = TSC.Server("https://tableau.example.com", use_server_version=True)
+with server.auth.sign_in(auth):
+    ds = TSC.DatasourceItem(project_id="PROJECT_ID")
+    server.datasources.publish(ds, "orders.hyper", TSC.Server.PublishMode.Overwrite)`}}
+];
+const LM=Object.fromEntries(LESSONS.map(l=>[l.id,l]));
+const ROSETTA=[
+ {t:'Filter rows',sql:R`SELECT name, region
+FROM customers
+WHERE region = 'West';`,sas:R`data west;
+  set customers;
+  where region = 'West';
+  keep name region;
+run;`,py:R`west = customers.loc[customers["region"] == "West", ["name", "region"]]`,tab:R`Drag [Region] to Filters → select West
+(or Data Source → Filters → Add… to restrict the extract itself)`},
+ {t:'Aggregate by group',sql:R`SELECT region, COUNT(*) AS n
+FROM customers
+GROUP BY region;`,sas:R`proc sql;
+  select region, count(*) as n
+  from customers
+  group by region;
+quit;
+/* or: proc freq data=customers; tables region; run; */`,py:R`customers.groupby("region").size().reset_index(name="n")`,tab:R`Rows: [Region]
+Text: COUNTD([Customer ID])   (or the table's Count field)`},
+ {t:'Join two tables',sql:R`SELECT o.id, o.order_date, c.name
+FROM orders o
+JOIN customers c ON c.id = o.customer_id;`,sas:R`proc sql;
+  create table oc as
+  select o.id, o.order_date, c.name
+  from orders o inner join customers c
+    on c.id = o.customer_id;
+quit;`,py:R`orders.merge(customers, left_on="customer_id", right_on="id",
+             suffixes=("", "_cust"))`,tab:R`Data Source → drag Customers next to Orders
+→ relationship: Customer ID = Id
+(double-click a table for a physical join)`},
+ {t:'Top N per group',sql:R`SELECT * FROM (
+  SELECT category, name, price,
+    ROW_NUMBER() OVER (PARTITION BY category
+                       ORDER BY price DESC) AS rn
+  FROM products
+) WHERE rn <= 2;`,sas:R`proc sort data=products out=p;
+  by category descending price;
+run;
+data top2;
+  set p; by category;
+  if first.category then rn = 0;
+  rn + 1;
+  if rn <= 2;
+run;`,py:R`(products.sort_values("price", ascending=False)
+         .groupby("category").head(2))`,tab:R`Calc: RANK(SUM([Price]))  → Compute using: Name
+Filter the calc to ≤ 2, with [Category] on Rows`},
+ {t:'Running total',sql:R`SELECT month, revenue,
+  SUM(revenue) OVER (ORDER BY month) AS running
+FROM monthly;`,sas:R`data running;
+  set monthly;
+  running + revenue;   /* sum statement retains */
+run;`,py:R`monthly["running"] = monthly["revenue"].cumsum()`,tab:R`SUM([Revenue]) → right-click → Quick Table Calculation
+→ Running Total   (= RUNNING_SUM(SUM([Revenue])))`},
+ {t:'Latest record per key',sql:R`SELECT * FROM (
+  SELECT o.*, ROW_NUMBER() OVER (
+    PARTITION BY customer_id
+    ORDER BY order_date DESC, id DESC) AS rn
+  FROM orders o
+) WHERE rn = 1;`,sas:R`proc sort data=orders out=o;
+  by customer_id order_date id;
+run;
+data latest;
+  set o; by customer_id;
+  if last.customer_id;
+run;`,py:R`(orders.sort_values(["customer_id", "order_date", "id"])
+       .drop_duplicates("customer_id", keep="last"))`,tab:R`Filter calc:
+[Order Date] = { FIXED [Customer ID] : MAX([Order Date]) }
+→ keep TRUE`}
+];
+
+/* ================= sample warehouse ================= */
+const DATA=(()=>{
+  let sd=42;const rnd=()=>(sd=sd*16807%2147483647)/2147483647;
+  const p2=n=>String(n).padStart(2,'0'),iso=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+  const FN=['Ava','Liam','Mia','Noah','Zoe','Eli','Ivy','Leo','Ana','Max','Sofia','Kai','Luna','Omar','Nia','Ray','Elena','Jude','Maya','Theo'];
+  const LN=['Smith','Garcia','Chen','Patel','Brown','Lopez','Kim','Nguyen','Davis','Silva','Moore','Rossi'];
+  const REG=['North','South','East','West'];
+  const C=[];for(let i=1;i<=60;i++){const d=new Date(2024,Math.floor(rnd()*18),1+Math.floor(rnd()*27));C.push([i,`${FN[(i-1)%20]} ${LN[(i-1)%12]}`,REG[Math.floor(rnd()*4)],rnd()<.65?'Consumer':'Business',iso(d)])}
+  const P=[['Laptop Pro','Electronics',1299],['Tablet 10','Electronics',449],['Headphones','Electronics',199],['USB-C Hub','Electronics',49.99],
+    ['Desk Lamp','Home',39.5],['Air Purifier','Home',229],['Coffee Maker','Home',89],['Throw Blanket','Home',34],
+    ['Office Chair','Office',319],['Standing Desk','Office',549],['Notebook Pack','Office',12.75],['Monitor Arm','Office',119],
+    ['Tent 4P','Outdoor',279],['Hiking Pack','Outdoor',149],['Water Bottle','Outdoor',24.99],['Camp Stove','Outdoor',64]].map((p,i)=>[i+1,...p]);
+  const O=[],I=[],end=new Date(2025,8,30);
+  for(let i=1;i<=420;i++){
+    const cid=1+Math.floor(Math.pow(rnd(),1.6)*54),su=new Date(C[cid-1][4]),span=Math.max(1,(end-su)/864e5);
+    const d=new Date(su.getTime()+Math.floor(rnd()*span)*864e5),r=rnd();
+    O.push([i,cid,iso(d),r<.85?'completed':r<.93?'returned':'cancelled']);
+    const n=1+Math.floor(rnd()*3),used=new Set();
+    for(let k=0;k<n;k++){let pid=1+Math.floor(rnd()*16);if(used.has(pid))continue;used.add(pid);
+      const pr=P[pid-1][3],up=rnd()<.2?Math.round(pr*.9*100)/100:pr;I.push([i,pid,1+Math.floor(rnd()*4),up])}
+  }
+  const q=v=>typeof v==='number'?v:`'${String(v).replace(/'/g,"''")}'`;
+  const ins=(t,rows)=>rows.map(r=>`INSERT INTO ${t} VALUES (${r.map(q).join(',')});`).join('\n');
+  const sql=`CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, region TEXT, segment TEXT, signup_date TEXT);
+CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL);
+CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, order_date TEXT, status TEXT);
+CREATE TABLE order_items (order_id INTEGER, product_id INTEGER, qty INTEGER, unit_price REAL);
+${ins('customers',C)}\n${ins('products',P)}\n${ins('orders',O)}\n${ins('order_items',I)}`;
+  const csv=(h,rows)=>[h,...rows.map(r=>r.join(','))].join('\n');
+  const api=O.slice(0,12).map(o=>({order_id:o[0],customer:{id:o[1],region:C[o[1]-1][2]},status:o[3],lines:I.filter(x=>x[0]===o[0]).map(x=>({sku:'P'+p2(x[1]),qty:x[2]}))}));
+  const logs=[];for(let i=0;i<48;i++){const d=new Date(2025,8,1+Math.floor(i/4),8+Math.floor(rnd()*10),Math.floor(rnd()*60),Math.floor(rnd()*60));
+    const stamp=`${iso(d)} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
+    if(rnd()<.12){logs.push(`${stamp} ERROR export timed out after 30s`);continue}
+    logs.push(`${stamp} ${rnd()<.85?'INFO':'WARN'} user=${[7,12,19,23,42][Math.floor(rnd()*5)]} action=${['export','export','view','delete'][Math.floor(rnd()*4)]} rows=${50+Math.floor(rnd()*4000)}`)}
+  return{sql,csv:{c:csv('id,name,region,segment,signup_date',C),p:csv('id,name,category,price',P),o:csv('id,customer_id,order_date,status',O),i:csv('order_id,product_id,qty,unit_price',I)},api:JSON.stringify(api),logs:logs.join('\n')};
+})();
+const SCHEMA=[['customers','id INTEGER · name TEXT · region TEXT · segment TEXT · signup_date TEXT (YYYY-MM-DD)'],['products','id INTEGER · name TEXT · category TEXT · price REAL'],
+  ['orders','id INTEGER · customer_id INTEGER · order_date TEXT · status TEXT (completed / returned / cancelled)'],['order_items','order_id INTEGER · product_id INTEGER · qty INTEGER · unit_price REAL']];
+
+/* ================= storage ================= */
+const K={p:'xl.progress.v1',e:'xl.events.v1',s:'xl.sessions.v1',d:'xl.drafts.v1',c:'xl.settings.v1'};
+const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}};
+let progress=load(K.p,{}),events=load(K.e,[]),sessions=load(K.s,[]),drafts=load(K.d,{}),settings=Object.assign({goal:30,focus:25,last:null},load(K.c,{}));
+if(!Array.isArray(events))events=[];if(!Array.isArray(sessions))sessions=[];
+const save=()=>{localStorage.setItem(K.p,JSON.stringify(progress));localStorage.setItem(K.e,JSON.stringify(events));localStorage.setItem(K.s,JSON.stringify(sessions));localStorage.setItem(K.c,JSON.stringify(settings))};
+const saveDrafts=()=>localStorage.setItem(K.d,JSON.stringify(drafts));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+/* ================= helpers ================= */
+const r1=v=>Math.round(v*10)/10;
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const pd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ymd(d)};
+const diffDays=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
+const monday=s=>{const d=pd(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d)};
+const today=()=>ymd(new Date());
+const dayOf=x=>ymd(new Date(x.time));
+const fdate=s=>pd(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const fsd=s=>pd(s).toLocaleDateString('en-US',{month:'numeric',day:'numeric'});
+const fnum=v=>(+v).toLocaleString('en-US',{maximumFractionDigits:1});
+const fmin=m=>{m=Math.round(m||0);return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`};
+const mmss=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600);return h?`${h}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`:`${Math.floor(s/60)}:${pad(s%60)}`};
+const pct=(a,b)=>b?Math.round(a/b*100)+'%':'0%';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)};
+const CV={grn:'var(--g)',red:'var(--r)',amb:'var(--a)','':'transparent'};
+const pr=id=>progress[id]||(progress[id]={att:0,hint:0,rev:0,done:false,first:false,xp:0,date:null});
+const isDone=id=>!!progress[id]?.done;
+const tLessons=t=>LESSONS.filter(l=>l.t===t);
+const nextIn=t=>tLessons(t).find(l=>!isDone(l.id));
+const maxXP=LESSONS.reduce((s,l)=>s+Math.round(XPL[l.lv]*1.5),0);
+const totalXP=()=>LESSONS.reduce((s,l)=>s+(progress[l.id]?.xp||0),0);
+const rank=x=>{let r=RANKS[0][1];RANKS.forEach(([f,n])=>{if(x>=f*maxXP)r=n});return r};
+const trackLevel=t=>{let lv=0;for(let v=1;v<=4;v++){const ls=tLessons(t).filter(l=>l.lv===v);if(ls.length&&ls.every(l=>isDone(l.id)))lv=v;else break}return lv};
+const pill=t=>`<span class="pill" style="color:${TR[t].col};border-color:${TR[t].col}55;background:${TR[t].col}1a">${TR[t].n}</span>`;
+const SV='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+const I={
+  play:`<svg ${SV}><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>`,
+  book:`<svg ${SV}><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>`,
+  swap:`<svg ${SV}><path d="M7 7h13l-4-4M17 17H4l4 4"/></svg>`,
+  data:`<svg ${SV}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>`,
+  dl:`<svg ${SV}><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg>`,
+  copy:`<svg ${SV}><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>`,
+  check:`<svg ${SV}><path d="M5 12l5 5L20 7"/></svg>`};
+$('#barBtns').innerHTML=`<button class="btn" data-act="data">${I.data}Settings</button><button class="btn" data-act="rosetta">${I.swap}Rosetta</button><button class="btn" data-act="catalog">${I.book}All lessons</button><button class="btn go" data-act="startnext">${I.play}Start session</button>`;
+
+/* ================= runtimes ================= */
+const SQLJS='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/';
+const PYIDX='https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+const loadScript=src=>new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Could not download the runtime — check your internet connection (needed once).'));document.head.appendChild(s)});
+let SQLM=null,DBB=null,PY=null,PYP=null;
+async function ensureSQL(){
+  if(SQLM)return;
+  await loadScript(SQLJS+'sql-wasm.js');
+  SQLM=await initSqlJs({locateFile:f=>SQLJS+f});
+  const db=new SQLM.Database();db.run(DATA.sql);DBB=db.export();db.close();
+}
+async function runSQL(q){
+  await ensureSQL();const db=new SQLM.Database(DBB);
+  try{const r=db.exec(q);const last=r[r.length-1];return{cols:last?.columns||[],rows:last?.values||[]}}
+  finally{db.close()}
+}
+const PYSETUP=R`
+import pandas as pd, numpy as np, io, json, sys, traceback
+pd.set_option("display.width", 120)
+def fresh_ns():
+    ns = {"pd": pd, "np": np, "json": json}
+    ns["customers"] = pd.read_csv(io.StringIO(CSV_C))
+    ns["products"] = pd.read_csv(io.StringIO(CSV_P))
+    ns["orders"] = pd.read_csv(io.StringIO(CSV_O))
+    ns["items"] = pd.read_csv(io.StringIO(CSV_I))
+    ns["api_payload"] = json.loads(API_JSON)
+    ns["logs"] = LOGS.split("\n")
+    return ns
+def to_rows(r):
+    if r is None:
+        return None
+    if isinstance(r, pd.Series):
+        r = r.reset_index() if (r.index.name is not None or isinstance(r.index, pd.MultiIndex)) else r.to_frame()
+    if isinstance(r, pd.DataFrame):
+        if r.index.name is not None or isinstance(r.index, pd.MultiIndex):
+            r = r.reset_index()
+        r = r.reset_index(drop=True)
+        return {"cols": [str(c) for c in r.columns], "rows": json.loads(r.to_json(orient="values", date_format="iso"))}
+    return {"cols": ["value"], "rows": [[r if isinstance(r, (int, float, str)) else str(r)]]}
+def run_user(code):
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    err = ""
+    ns = fresh_ns()
+    try:
+        exec(code, ns)
+    except Exception as e:
+        err = "".join(traceback.format_exception_only(type(e), e))
+    finally:
+        sys.stdout = old
+    res = None
+    if not err:
+        try:
+            res = to_rows(ns.get("result"))
+        except Exception as e:
+            err = "Could not read result: " + str(e)
+    return json.dumps({"out": buf.getvalue(), "err": err, "res": res})
+`;
+async function ensurePy(onStatus){
+  if(PY)return PY;
+  if(!PYP)PYP=(async()=>{
+    onStatus?.('Downloading Python + pandas (one-time, ~15–20 MB)…');
+    await loadScript(PYIDX+'pyodide.js');
+    const py=await loadPyodide({indexURL:PYIDX});
+    onStatus?.('Loading pandas…');
+    await py.loadPackage(['pandas']);
+    py.globals.set('CSV_C',DATA.csv.c);py.globals.set('CSV_P',DATA.csv.p);py.globals.set('CSV_O',DATA.csv.o);py.globals.set('CSV_I',DATA.csv.i);
+    py.globals.set('API_JSON',DATA.api);py.globals.set('LOGS',DATA.logs);
+    py.runPython(PYSETUP);PY=py;return py;
+  })().catch(e=>{PYP=null;throw e});
+  return PYP;
+}
+async function runPyCode(code,onStatus){
+  const py=await ensurePy(onStatus);py.globals.set('CODE_IN',code);
+  return JSON.parse(py.runPython('run_user(CODE_IN)'));
+}
+const SOLC={};
+async function solResult(l){
+  if(SOLC[l.id])return SOLC[l.id];
+  if(l.t==='sql')SOLC[l.id]=await runSQL(l.sol);
+  else{const r=await runPyCode(l.sol);if(r.err)throw new Error('Reference solution failed: '+r.err);SOLC[l.id]=r.res}
+  return SOLC[l.id];
+}
+const nv=v=>{if(v==null)return null;if(typeof v==='string'&&/^-?\d+(\.\d+)?$/.test(v.trim()))v=+v;return typeof v==='number'?Math.round(v*100)/100:String(v)};
+function compare(u,s,ordered){
+  if(!u||!u.rows)return{ok:false,msg:'No result to check. '+(curLesson()?.t==='py'?'Assign your final DataFrame to <b>result</b>.':'Make sure your query returns rows.')};
+  if(u.cols.length!==s.cols.length)return{ok:false,msg:`Expected <b>${s.cols.length}</b> column(s) (${esc(s.cols.join(', '))}), got <b>${u.cols.length}</b>.`};
+  let a=u.rows.map(r=>r.map(nv)),b=s.rows.map(r=>r.map(nv));
+  if(a.length!==b.length)return{ok:false,msg:`Expected <b>${b.length}</b> row(s), got <b>${a.length}</b>.`};
+  if(!ordered){const k=r=>JSON.stringify(r),srt=(x,y)=>k(x)<k(y)?-1:k(x)>k(y)?1:0;a=[...a].sort(srt);b=[...b].sort(srt)}
+  for(let i=0;i<a.length;i++)for(let j=0;j<a[i].length;j++){const x=a[i][j],y=b[i][j];
+    const eq=typeof x==='number'&&typeof y==='number'?Math.abs(x-y)<=0.011:x===y;
+    if(!eq)return{ok:false,msg:`${ordered?'Row':'Sorted row'} ${i+1}, column ${j+1} (${esc(s.cols[j])}): expected <b>${esc(y)}</b>, got <b>${esc(x)}</b>.${ordered?' Row order matters for this one.':''}`}}
+  return{ok:true,msg:'Correct — your result matches the reference exactly.'};
+}
+const resTable=r=>{if(!r||!r.cols.length)return'<div class="mu" style="font-size:12px;margin-top:8px">(no rows returned)</div>';
+  const rows=r.rows.slice(0,200);
+  return`<div class="outw"><table class="rt"><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>`<tr>${x.map(v=>`<td>${v==null?'<span class="mu">NULL</span>':esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+  <div class="mu" style="font-size:11px;margin-top:4px">${r.rows.length} row${r.rows.length===1?'':'s'}${r.rows.length>200?' (showing 200)':''}</div>`};
+
+/* ================= audio ================= */
+let AC=null;
+function chime(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t=AC.currentTime;
+  [[660,0],[880,.22],[990,.44]].forEach(([f,o])=>{const s=AC.createOscillator(),g=AC.createGain();s.frequency.value=f;g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(.15,t+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t+o+1);s.connect(g).connect(AC.destination);s.start(t+o);s.stop(t+o+1.1)})}catch{}}
+
+/* ================= state & stats ================= */
+const S={track:'all',range:'7d',sel:null,month:null,page:1,rows:20};
+{const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1)}
+const RL={today:'Today',week:'This week','7d':'Last 7 days','30d':'Last 30 days','90d':'Last 90 days',all:'All time'};
+const tOk=t=>S.track==='all'||t===S.track;
+function range(){
+  if(S.sel)return[S.sel,S.sel];
+  const t=today();
+  switch(S.range){case'today':return[t,t];case'week':return[monday(t),t];case'7d':return[addDays(t,-6),t];case'30d':return[addDays(t,-29),t];case'90d':return[addDays(t,-89),t];default:return['0000-00-00','9999-99-99']}
+}
+const studyDays=()=>new Set([...sessions.map(dayOf),...events.map(dayOf)]);
+function streak(){const s=studyDays();let c=0,d=today();if(!s.has(d))d=addDays(d,-1);while(s.has(d)&&c<3650){c++;d=addDays(d,-1)}return c}
+function stats(){
+  let[from,to]=range();
+  if(from==='0000-00-00'){const all=[...sessions.map(dayOf),...events.map(dayOf)].sort();from=all[0]||today();to=today()}
+  const inR=d=>d>=from&&d<=to,span=Math.max(1,diffDays(from,to)+1);
+  const ses=sessions.filter(s=>inR(dayOf(s))&&(S.track==='all'||(s.tracks||[]).includes(S.track)));
+  const evs=events.filter(e=>inR(dayOf(e))&&tOk(LM[e.lesson]?.t));
+  const done=LESSONS.filter(l=>tOk(l.t)&&progress[l.id]?.done&&inR(progress[l.id].date));
+  const dm={};ses.forEach(s=>{const d=dayOf(s);dm[d]=(dm[d]||0)+s.min});
+  const tot=ses.reduce((s,x)=>s+x.min,0);
+  const graded=evs.filter(e=>e.kind!=='self');
+  const first=done.filter(l=>progress[l.id].first).length;
+  const sd=new Set([...ses.map(dayOf),...evs.map(dayOf)]);
+  return{from,to,span,ses,evs,done,dm,tot,avgMin:tot/span,xp:done.reduce((s,l)=>s+progress[l.id].xp,0),first,
+    att:done.reduce((s,l)=>s+(progress[l.id].att||0),0),hints:done.reduce((s,l)=>s+(progress[l.id].hint||0),0),revs:done.reduce((s,l)=>s+(progress[l.id].rev||0),0),
+    okRate:graded.length?graded.filter(e=>e.ok).length/graded.length:null,graded:graded.length,days:sd.size,longest:Math.max(0,...ses.map(s=>s.min)),
+    since:(()=>{const s=[...studyDays()].sort().at(-1);return s?diffDays(s,today()):null})(),last5:graded.slice(-5),streak:streak()};
+}
+
+/* ================= svg charts ================= */
+function gauge(segs,text){
+  const cx=100,cy=92,r=72,id='g'+uid();
+  const P=f=>{const a=Math.PI*(1-f);return(cx+r*Math.cos(a)).toFixed(2)+' '+(cy-r*Math.sin(a)).toFixed(2)};
+  const arc=(a,b)=>`M${P(a)}A${r} ${r} 0 0 1 ${P(b)}`;
+  const col={g:`url(#${id}g)`,r:`url(#${id}r)`,a:'#e8a33a',b:'#4a78ff',n:'#4a4a4a'};
+  let s=0,p='';
+  for(const[f,c]of segs){if(!(f>0))continue;const e=Math.min(1,s+f);p+=`<path d="${arc(s,e)}" stroke="${col[c]}" stroke-width="17" fill="none"/>`;s=e}
+  return`<svg class="gauge" viewBox="0 0 200 104"><defs>
+    <linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="28" x2="172" y1="0" y2="0"><stop offset="0" stop-color="#157a66"/><stop offset=".45" stop-color="#1fae8f"/></linearGradient>
+    <linearGradient id="${id}r" gradientUnits="userSpaceOnUse" x1="28" x2="172" y1="0" y2="0"><stop offset=".45" stop-color="#f0304a"/><stop offset="1" stop-color="#5a1420"/></linearGradient></defs>
+    <path d="${arc(0,1)}" stroke="#252525" stroke-width="17" fill="none"/>${p}
+    <text x="100" y="${cy-2}" text-anchor="middle" font-size="21" font-weight="700" fill="#ececec" font-family="Inter,system-ui">${text}</text></svg>`;
+}
+function smooth(pts){
+  let d=`M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+    d+=` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+function area(series,color,{tgt,max}={}){
+  if(series.length<2)return'<div class="empty">Not enough data yet</div>';
+  const W=800,H=200,p=12,mx=max||Math.max(1,...series,(tgt||0))*1.08,X=i=>p+i*(W-2*p)/(series.length-1),Y=v=>p+(mx-v)/mx*(H-2*p);
+  const d=smooth(series.map((v,i)=>[X(i),Y(Math.max(0,Math.min(mx,v)))])),id='a'+uid();
+  return`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".25"/><stop offset="1" stop-color="${color}" stop-opacity=".03"/></linearGradient></defs>
+    <path d="${d} L${X(series.length-1)},${Y(0)} L${X(0)},${Y(0)} Z" fill="url(#${id})"/>
+    ${tgt?`<line x1="${p}" x2="${W-p}" y1="${Y(tgt)}" y2="${Y(tgt)}" stroke="#666" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>`:''}
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function bars(vals,{labels,max,cols}={}){
+  if(!vals.length||!Math.max(...vals))return'<div class="empty">No data in range</div>';
+  const W=400,H=200,p=labels?30:14,mx=max||Math.max(1,...vals)*1.08,n=vals.length,slot=(W-20)/n,bw=Math.min(slot*.66,300),id='b'+uid(),Y=v=>H-p-v/mx*(H-p-14);
+  const rects=vals.map((v,i)=>{const x=10+i*slot+(slot-bw)/2,y=Y(v);
+    return`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,H-p-y).toFixed(1)}" rx="2" fill="${cols?cols[i]:`url(#${id})`}"/>${labels?`<text x="${(x+bw/2).toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="10.5" fill="#aaa" font-family="Inter,system-ui">${labels[i]}</text>`:''}`}).join('');
+  return`<svg class="chart" viewBox="0 0 ${W} ${H}" ${labels?'':'preserveAspectRatio="none"'}><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1fae8f" stop-opacity=".15"/><stop offset="1" stop-color="#1fae8f"/></linearGradient></defs>${rects}</svg>`;
+}
+function radar(labels,vals){
+  const n=labels.length,cx=160,cy=124,R=76,A=labels.map((_,i)=>(-90+i*360/n)*Math.PI/180);
+  const pt=(i,v)=>[cx+R*v*Math.cos(A[i]),cy+R*v*Math.sin(A[i])];
+  const poly=f=>A.map((_,i)=>pt(i,f(i)).map(x=>x.toFixed(1)).join(',')).join(' ');
+  const lab=labels.map((l,i)=>{const[x,y]=pt(i,1.22),c=Math.cos(A[i]);return`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${Math.abs(c)<.2?'middle':c>0?'start':'end'}">${l}</text>`}).join('');
+  return`<svg class="radar" viewBox="0 0 320 250" font-family="Inter,system-ui" font-size="10" font-weight="600" fill="#ddd">
+    ${[1,.75,.5,.25].map(v=>`<polygon points="${poly(()=>v)}" fill="none" stroke="${v===1?'#444':'#2e2e2e'}"/>`).join('')}
+    ${A.map((_,i)=>{const[x,y]=pt(i,1);return`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#2e2e2e"/>`}).join('')}
+    <polygon points="${poly(i=>Math.max(.03,vals[i]))}" fill="#1fae8f" fill-opacity=".35" stroke="#1fae8f" stroke-width="1.5"/>${lab}</svg>`;
+}
+
+/* ================= dashboard sections ================= */
+const foot=(a,b)=>`<div class="ft"><span>${a}</span><span>${b}</span></div>`;
+const lr=(col,label,v,p)=>`<div class="lr"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${v}</b>${p!==undefined?`<em>${p}</em>`:''}</div>`;
+const er=(col,label,val,tip='')=>`<div class="er"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${val}</b><i class="q" title="${esc(tip)}">i</i></div>`;
+function recommend(){
+  const last=settings.last&&LM[settings.last]?.t;
+  if(last&&nextIn(last))return nextIn(last);
+  const ord=TK.slice().sort((a,b)=>tLessons(a).filter(l=>isDone(l.id)).length/tLessons(a).length-tLessons(b).filter(l=>isDone(l.id)).length/tLessons(b).length);
+  for(const t of ord){const n=nextIn(t);if(n)return n}
+  return LESSONS[0];
+}
+function continueHTML(){
+  const rec=recommend();
+  const rows=TK.map(t=>{const ls=tLessons(t),d=ls.filter(l=>isDone(l.id)).length,n=nextIn(t),lv=trackLevel(t);
+    return`<div class="tk"><div class="tkh">${pill(t)}<b>${n?esc(n.title):'Track complete 🎉'}</b><span class="mu" style="font-size:11px">${n?LV[n.lv]:''}</span>
+      ${n?`<button class="btn xs ${n.id===rec.id?'go':''}" data-act="open" data-v="${n.id}">${I.play}${isDone(n.id)?'Review':'Start'}</button>`:`<button class="btn xs" data-act="catalog" data-v="${t}">Review</button>`}</div>
+      <div class="hb"><i style="width:${d/ls.length*100}%;background:${TR[t].col}"></i></div>
+      <div class="row mu"><span>${d} / ${ls.length} lessons</span><span>${lv?'Cleared: '+LV[lv]:'Level 1 in progress'}</span></div></div>`}).join('');
+  return`<div class="card"><div class="bd" style="padding-bottom:4px"><h3 style="margin-bottom:6px">Continue learning</h3><div class="lbl" style="margin-bottom:8px">Beginner → Intermediate → Advanced → Expert in each track</div>${rows}</div>
+    <div class="ft"><span>Up next: ${pill(rec.t)} <b>${esc(rec.title)}</b> <span class="mu">· ${LV[rec.lv]}</span></span><button class="btn go" data-act="open" data-v="${rec.id}">${I.play}Start session</button></div></div>`;
+}
+function todayHTML(){
+  const t=today(),m=sessions.filter(s=>dayOf(s)===t).reduce((s,x)=>s+x.min,0)+(ST?ST.acc/60:0);
+  const dl=LESSONS.filter(l=>progress[l.id]?.date===t),xp=dl.reduce((s,l)=>s+progress[l.id].xp,0),X=totalXP();
+  const row=(l,v,c='')=>`<div class="tl"><span>${l}</span><b class="${c}" style="font-weight:500">${v}</b></div>`;
+  return`<div class="card"><div class="bd"><h3 style="margin-bottom:6px">Today</h3><div class="lbl" style="margin-bottom:12px">Rank: <b class="grn">${rank(X)}</b> · ${X} / ${maxXP} XP</div>
+    ${row('Study time',`${fmin(m)} / ${settings.goal}m`,m>=settings.goal?'grn':'')}
+    ${row('Lessons completed',dl.length)}
+    ${row('XP earned',xp?'+'+xp:'0',xp?'grn':'')}
+    ${row('Study streak',streak()+' day'+(streak()===1?'':'s'),streak()?'grn':'mu')}
+    ${row('Overall progress',`${LESSONS.filter(l=>isDone(l.id)).length} / ${LESSONS.length}`)}
+    <div class="hb" style="margin-top:12px"><i style="width:${X/maxXP*100}%;background:linear-gradient(90deg,#1fae8f,#4a78ff)"></i></div></div>
+    <div class="ft"><span class="mu">Same task in 4 languages</span><button class="btn" data-act="rosetta">${I.swap}Rosetta</button></div></div>`;
+}
+function topCards(st,F){
+  const ls=LESSONS.filter(l=>tOk(l.t)),d=ls.filter(l=>isDone(l.id)).length,lvc=v=>{const x=ls.filter(l=>l.lv===v);return`${x.filter(l=>isDone(l.id)).length} / ${x.length}`};
+  const D=st.done.length,fr=D?st.first/D:0,g=settings.goal,gf=st.avgMin/g,X=S.track==='all'?totalXP():tLessons(S.track).reduce((s,l)=>s+(progress[l.id]?.xp||0),0);
+  const mx=S.track==='all'?maxXP:tLessons(S.track).reduce((s,l)=>s+Math.round(XPL[l.lv]*1.5),0);
+  return`<div class="grid g4">
+  <div class="card"><div class="bd"><h3>Course progress</h3><div class="lbl">Lessons completed (all time)</div><div class="big">${d} / ${ls.length}</div>
+    ${gauge([[d/ls.length,'g']],pct(d,ls.length))}
+    ${lr('#1fae8f','Beginner',lvc(1))}${lr('#4a78ff','Intermediate',lvc(2))}${lr('#e8a33a','Advanced',lvc(3))}${lr('#f0304a','Expert',lvc(4))}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Accuracy</h3><div class="lbl">First-try completions in range</div><div class="big ${D?fr>=.6?'grn':fr>=.35?'amb':'red':''}">${D?pct(st.first,D):'—'}</div>
+    ${gauge(D?[[fr,'g'],[1-fr,'a']]:[],D?pct(st.first,D):'—')}
+    ${lr('var(--g)','First try (no hint/solution)',st.first)}${lr('var(--a)','Needed more tries',D-st.first)}${lr('#4a4a4a','Hints · solutions viewed',`${st.hints} · ${st.revs}`)}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Study time</h3><div class="lbl">Avg minutes / day</div><div class="big">${fnum(Math.round(st.avgMin))}m</div>
+    ${gauge(gf<=1?[[gf,'g']]:[[1/gf,'g'],[1-1/gf,'b']],Math.round(gf*100)+'%')}
+    ${lr('var(--g)','Total',fmin(st.tot))}${lr('#4a4a4a','Sessions',st.ses.length)}${lr('var(--b)','Longest session',fmin(st.longest))}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Experience</h3><div class="lbl">Rank · ${S.track==='all'?'all tracks':TR[S.track].n}</div><div class="big grn">${rank(X/mx*maxXP)}</div>
+    ${gauge([[X/mx,'g']],X+' XP')}
+    ${TK.map(t=>lr(TR[t].col,TR[t].n,`${tLessons(t).reduce((s,l)=>s+(progress[l.id]?.xp||0),0)} XP`,trackLevel(t)?LV[trackLevel(t)].slice(0,5)+'.':'—')).join('')}</div>${F}</div>
+  </div>`;
+}
+function calendarHTML(){
+  const dm={},dt={};
+  sessions.forEach(s=>{if(S.track!=='all'&&!(s.tracks||[]).includes(S.track))return;const d=dayOf(s);dm[d]=(dm[d]||0)+s.min;(dt[d]??=new Set());(s.tracks||[]).forEach(t=>dt[d].add(t))});
+  const y=S.month.getFullYear(),mo=S.month.getMonth(),first=new Date(y,mo,1),start=new Date(first);start.setDate(1-first.getDay());
+  const tk=today();let h=['Sun','Mon','Tue','Wed','Thu','Fri','Sat','Week'].map(d=>`<div class="dh">${d}</div>`).join(''),tm=0,td=0;
+  for(let w=0;w<6;w++){
+    let wm=0,wd=0;
+    for(let i=0;i<7;i++){
+      const d=new Date(start);d.setDate(start.getDate()+w*7+i);const k=ymd(d),v=dm[k];
+      if(d.getMonth()!==mo){h+='<div class="cell hatch out"></div>';continue}
+      if(v){wm+=v;wd++;tm+=v;td++}
+      const done=LESSONS.filter(l=>progress[l.id]?.date===k&&tOk(l.t)).length;
+      h+=`<div class="cell${v?' on':''}${k>tk?' fut':''}${S.sel===k?' sel':''}" data-day="${k}"${v?` style="background:rgba(31,174,143,${(.08+.3*Math.min(1,v/settings.goal)).toFixed(2)})"`:''}>
+        <span>${d.getDate()}</span>${v?`<b>${fmin(v)}</b><small>${done?done+' done':'&nbsp;'}</small><div class="cdots">${[...(dt[k]||[])].map(t=>`<i style="background:${TR[t].col}"></i>`).join('')}</div>`:''}</div>`;
+    }
+    h+=`<div class="cell wk">${wd?`<b class="grn">${fmin(wm)}</b><small>${wd} days</small>`:'—'}</div>`;
+  }
+  return`<div class="card"><div class="bd"><h3 style="margin-bottom:10px">Study Calendar</h3><div class="lbl">Total study time</div>
+    <div class="calhd"><div class="big">${fmin(tm)}</div><div class="wl">Days: <b class="grn" style="font-weight:500">${td}</b> &nbsp;&nbsp; Streak: <b style="font-weight:500;color:#4a78ff">${streak()}</b></div></div>
+    <div class="cal">${h}</div></div>
+    <div class="ft calft"><div class="nav"><button data-act="mprev">‹</button><span>${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</span><button data-act="mnext">›</button><button class="tb" data-act="mtoday">Today</button></div>
+    <span>${td} study days</span></div></div>`;
+}
+function evalHTML(st){
+  const c=(v,good,ok)=>v==null?'':v>=good?'grn':v>=ok?'amb':'red';
+  const trow=t=>{const ls=tLessons(t),d=ls.filter(l=>isDone(l.id)).length,f=d/ls.length,dn=ls.filter(l=>isDone(l.id)),fr=dn.length?dn.filter(l=>progress[l.id].first).length/dn.length:null;
+    return er(TR[t].col,TR[t].n,`${d}/${ls.length} · ${trackLevel(t)?LV[trackLevel(t)]:'—'}${fr!=null?` · <span class="${c(fr,.6,.35)}">${Math.round(fr*100)}% 1st</span>`:''}`,`${Math.round(f*100)}% complete · highest fully cleared level · first-try rate`)};
+  const D=st.done.length,att=D?st.att/D:null,ok=st.okRate;
+  return`<div class="card"><div class="bd ev"><h3>Skill report</h3>
+    <h4>TRACKS</h4>${TK.map(trow).join('')}
+    <hr><h4>QUALITY (IN RANGE)</h4>
+    ${er(CV[c(ok,.6,.4)],'Check / quiz success rate',ok==null?'—':`<span class="${c(ok,.6,.4)}">${Math.round(ok*100)}%</span> of ${st.graded}`,'Share of Check runs and quiz answers that were correct')}
+    ${er('transparent','Avg attempts per lesson',att==null?'—':fnum(r1(att)))}
+    ${er(st.hints?'var(--a)':'transparent','Hints used',st.hints)}
+    ${er(st.revs?'var(--a)':'transparent','Solutions viewed',st.revs,'Viewing the solution removes the first-try bonus — try a hint first')}
+    <hr><h4>CONSISTENCY</h4>
+    ${er(st.streak?'var(--b)':'transparent','Study streak',st.streak+' day'+(st.streak===1?'':'s'))}
+    ${er(CV[c(st.days/st.span,.7,.4)],'Days studied',`${st.days} / ${st.span}`)}
+    ${er(st.since==null?'transparent':st.since>2?'var(--a)':'var(--g)','Days since last study',st.since??'—')}
+    ${er('transparent','Last 5 attempts',`<span class="l5">${st.last5.map(e=>`<i title="${esc(LM[e.lesson]?.title)}" style="background:${e.ok?'var(--g)':'var(--r)'}"></i>`).join('')||'—'}</span>`)}
+  </div></div>`;
+}
+function chartsHTML(st,F){
+  const n=Math.min(st.span,180),start=addDays(st.to,-(n-1)),trend=Array.from({length:n},(_,i)=>st.dm[addDays(start,i)]||0);
+  const m0=monday(today()),wk=Array.from({length:8},(_,i)=>{const ws=addDays(m0,-7*(7-i)),we=addDays(ws,6);return{ws,xp:LESSONS.filter(l=>tOk(l.t)&&progress[l.id]?.done&&progress[l.id].date>=ws&&progress[l.id].date<=we).reduce((s,l)=>s+progress[l.id].xp,0)}});
+  const ax=[],av=[];TK.forEach(t=>{[[1,2,'core'],[3,4,'adv']].forEach(([a,b,k])=>{const ls=tLessons(t).filter(l=>l.lv>=a&&l.lv<=b);ax.push(`${TR[t].n} ${k}`);av.push(ls.length?ls.filter(l=>isDone(l.id)).length/ls.length:0)})});
+  const lvp=[1,2,3,4].map(v=>{const ls=LESSONS.filter(l=>tOk(l.t)&&l.lv===v);return ls.length?Math.round(ls.filter(l=>isDone(l.id)).length/ls.length*100):0});
+  const gd=st.evs.filter(e=>e.kind!=='self'),acc=[];let ok=0;gd.forEach((e,i)=>{ok+=e.ok?1:0;acc.push(Math.round(ok/(i+1)*100))});
+  return`<div class="grid gm">
+    <div class="card"><div class="bd"><div class="eqh"><div><div class="lbl">Study time trend</div><div class="big" style="font-size:20px">${fmin(st.tot)}</div><div class="lbl" style="margin-top:4px">${fdate(st.from)} - ${fdate(st.to)} · dashed = ${settings.goal}m goal</div></div>
+      <div class="ks"><div>SESSIONS<b>${st.ses.length}</b></div><div>LESSONS<b>${st.done.length}</b></div><div>XP<b class="grn">+${st.xp}</b></div><div>SUCCESS<b>${st.okRate==null?'—':Math.round(st.okRate*100)+'%'}</b></div><div>STREAK<b>${st.streak}</b></div></div></div>
+      ${trend.length>1?area(trend,'#1fae8f',{tgt:settings.goal}):bars(trend)}</div>${F}</div>
+    <div class="card"><div class="bd"><h3>XP by week</h3><div class="lbl">Last 8 weeks</div><div class="big">${wk.at(-1).xp} XP <span class="mu" style="font-size:12px;font-weight:500">this week</span></div>
+      ${bars(wk.map(w=>w.xp),{labels:wk.map(w=>fsd(w.ws))})}</div>${F}</div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><div class="bd"><h3>Mastery map</h3><div class="lbl">Core = Beginner + Intermediate · Adv = Advanced + Expert</div><div class="big">${Math.round(av.reduce((s,x)=>s+x,0)/av.length*100)}%</div>${radar(ax,av)}</div>${F}</div>
+    <div class="card"><div class="bd"><h3>Progress by level</h3><div class="lbl">% of lessons completed</div><div class="big">${lvp.join(' / ')}</div>
+      ${bars(lvp,{labels:['Beginner','Intermed.','Advanced','Expert'],max:100,cols:['#1fae8f','#4a78ff','#e8a33a','#f0304a']})}</div>${F}</div>
+    <div class="card"><div class="bd"><h3>Accuracy trend</h3><div class="lbl">Cumulative success rate of attempts in range</div><div class="big">${acc.length?acc.at(-1)+'%':'—'}</div>
+      ${acc.length>1?area(acc,'#4a78ff',{max:100}):'<div class="empty">Run Check or answer quizzes to see this</div>'}</div>${F}</div>
+  </div>`;
+}
+function tableHTML(st){
+  const f=[...st.evs].reverse(),pages=Math.max(1,Math.ceil(f.length/S.rows));S.page=Math.max(1,Math.min(S.page,pages));
+  const rows=f.slice((S.page-1)*S.rows,S.page*S.rows),tf=d=>new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const KIND={check:'Code check',quiz:'Quiz',self:'Practice (self-check)'};
+  return`<div class="th"><h3>Attempt log</h3><button class="btn" data-act="export">${I.dl}Export CSV</button></div>
+  <div class="tw"><table><thead><tr><th>Time (local)</th><th>Lesson</th><th>Track</th><th>Level</th><th>Type</th><th>Result</th><th></th></tr></thead><tbody>
+  ${rows.map(e=>{const l=LM[e.lesson];if(!l)return'';return`<tr><td class="mu2">${tf(e.time)}</td><td><b>${esc(l.title)}</b></td><td>${pill(l.t)}</td><td class="mu2">${LV[l.lv]}</td><td class="mu2">${KIND[e.kind]}</td>
+    <td class="${e.ok?'grn':'red'}">${e.ok?'✓ Correct':'✗ Not yet'}</td><td><button class="btn xs" data-act="open" data-v="${l.id}">Open</button></td></tr>`}).join('')
+  ||'<tr><td colspan="7" style="text-align:center;color:#555;padding:30px">No attempts in this range</td></tr>'}
+  </tbody></table></div>
+  <div class="tf"><div class="pg"><button data-act="pprev">‹</button>Page <input id="pgIn" type="number" min="1" value="${S.page}"> of ${pages}<button data-act="pnext">›</button></div>
+  <div class="pg"><select id="rowsSel" class="rs">${[10,20,50,100].map(n=>`<option value="${n}" ${n===S.rows?'selected':''}>${n} rows</option>`).join('')}</select><span style="margin-left:8px">${f.length} records</span></div></div>`;
+}
+function render(){
+  $('#fTrack').value=S.track;$('#fRange').value=S.range;
+  const st=stats(),F=foot(fdate(st.from),fdate(st.to));
+  $('#ctx').textContent=`${S.track==='all'?'All tracks':TR[S.track].n} - ${S.sel?fdate(S.sel):RL[S.range]}`;
+  const ban=events.length||sessions.length?'':`<div class="card ban"><div><h3 style="margin:0 0 4px">Welcome to Extract Lab</h3><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice.</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">${I.play}Start with SQL</button><button class="btn" data-act="open" data-v="py1">Start with Python</button><button class="btn" data-act="catalog">All lessons</button></div></div>`;
+  $('#app').innerHTML=ban+`<div class="grid gm">${continueHTML()}${todayHTML()}</div>`+topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
+}
+
+/* ================= study session timing ================= */
+let ST=null,CUR=null;
+const curLesson=()=>LM[CUR];
+function stStart(){if(!ST)ST={start:Date.now(),acc:0,run:Date.now(),lessons:new Set(),tracks:new Set(),chimed:false};else if(!ST.run)ST.run=Date.now()}
+function stPause(){if(ST&&ST.run){ST.acc+=(Date.now()-ST.run)/1000;ST.run=null}}
+const stSec=()=>ST?ST.acc+(ST.run?(Date.now()-ST.run)/1000:0):0;
+function stEnd(){
+  if(!ST)return;stPause();
+  const min=r1(ST.acc/60);
+  if(min>=.5){sessions.push({id:uid(),time:new Date(ST.start).toISOString(),min,lessons:[...ST.lessons],tracks:[...ST.tracks]});save()}
+  ST=null;
+}
+setInterval(()=>{if(!ST)return;const s=stSec(),el=$('#stime');if(el)el.textContent=mmss(s);
+  if(!ST.chimed&&settings.focus&&s>=settings.focus*60){ST.chimed=true;chime();toast(`${settings.focus} minutes of focus — great work. Take a short break?`)}},500);
+document.addEventListener('visibilitychange',()=>{if(!ST)return;if(document.hidden)stPause();else if(!$('#po').classList.contains('hidden'))stStart()});
+window.addEventListener('pagehide',()=>{if(ST){stEnd()}});
+
+/* ================= lesson view ================= */
+function openLesson(id){
+  const l=LM[id];if(!l)return;CUR=id;settings.last=id;save();
+  stStart();ST.lessons.add(id);ST.tracks.add(l.t);
+  $('#po').classList.remove('hidden');document.body.style.overflow='hidden';drawLesson();$('#po').scrollTop=0;
+}
+function closeLesson(){stEnd();CUR=null;$('#po').classList.add('hidden');$('#po').innerHTML='';document.body.style.overflow='';render()}
+function drawLesson(){
+  const l=curLesson(),p=pr(l.id),ls=tLessons(l.t),idx=ls.indexOf(l),prev=ls[idx-1],next=ls[idx+1],run=TR[l.t].run;
+  const code=drafts[l.id]??l.start;
+  $('#po').innerHTML=`<div class="lv"><div class="lvh">${pill(l.t)}<span class="mu" style="font-size:12px">${LV[l.lv]} · ${idx+1}/${ls.length}</span><div class="sp"></div>
+      <span class="stime" id="stime" title="Study session time">${mmss(stSec())}</span>
+      <button class="btn xs" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ Prev</button><button class="btn xs" data-act="open" data-v="${next?.id||''}" ${next?'':'disabled'}>Next ›</button>
+      <button class="btn" data-act="lclose">Done</button></div>
+    <div class="lvb">
+      <h2>${esc(l.title)} ${p.done?`<span class="pill" style="color:var(--g);border-color:#1c4a3e;background:#10322a;vertical-align:middle">✓ ${p.xp} XP</span>`:`<span class="mu" style="font-size:12px;font-weight:500">· ${XPL[l.lv]} XP (+50% first try)</span>`}</h2>
+      ${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
+      <div class="codeh"><b>EXAMPLE</b>${run?`<button class="btn xs" data-act="runex">${I.play}Run example</button>`:''}<button class="btn xs" data-act="copy" data-v="ex">${I.copy}Copy</button></div>
+      <pre id="exCode">${esc(l.ex)}</pre>
+      <div id="exOut"></div>
+      ${run?codeExercise(l,code):quizExercise(l)}
+      <div class="lnav"><button class="btn" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ ${prev?esc(prev.title):'Start of track'}</button>
+        <button class="btn ${p.done?'go':''}" data-act="open" data-v="${next?.id||''}" ${next?'':'disabled'}>${next?esc(next.title)+' ›':'Track complete'}</button></div>
+    </div></div>`;
+}
+function codeExercise(l,code){
+  return`<div class="task"><b>YOUR TASK</b><br>${l.task}${l.ordered?'<br><span class="mu" style="font-size:11px">Row order matters for this one.</span>':''}</div>
+    <div class="codeh"><b>${l.t==='sql'?'SQL EDITOR':'PYTHON EDITOR'}</b><button class="btn xs" data-act="schema">Tables</button><button class="btn xs" data-act="reset">Reset</button></div>
+    <textarea class="ed" id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">${esc(code)}</textarea>
+    <div class="mact"><button class="btn" data-act="run">${I.play}Run</button><button class="btn go" data-act="checkc">${I.check}Check</button>
+      <button class="btn xs" data-act="hint">Hint</button><button class="btn xs" data-act="sol">Show solution</button><span class="mu" style="font-size:11px">Ctrl/⌘ + Enter to run</span></div>
+    <div id="fb"></div><div id="out"></div>`;
+}
+function quizExercise(l){
+  const p=pr(l.id);
+  return`<div class="task"><b>QUIZ</b><br>${l.quiz.q}</div>
+    <div class="opts">${l.quiz.o.map((o,i)=>`<button class="opt${p.done&&i===l.quiz.a?' right':''}" data-act="ans" data-v="${i}">${String.fromCharCode(65+i)}. ${esc(o)}</button>`).join('')}</div>
+    <div id="fb">${p.done?`<div class="fb ok">✓ ${esc(l.quiz.why)}</div>`:''}</div>
+    <div class="task" style="margin-top:22px"><b>PRACTICE</b><br>${l.prac.task}<br><span class="mu" style="font-size:11px">Write it below (or in ${l.t==='sas'?'SAS Studio / SAS OnDemand for Academics':'Tableau Public / Desktop'}), then compare.</span></div>
+    <textarea class="ed" id="ed" spellcheck="false" autocapitalize="off" style="min-height:120px" placeholder="Your attempt…">${esc(drafts[l.id]||'')}</textarea>
+    <div class="mact"><button class="btn" data-act="reveal">Reveal model answer</button></div>
+    <div id="pracSol"></div>`;
+}
+function setFb(cls,html){const f=$('#fb');if(f)f.innerHTML=`<div class="fb ${cls}">${html}</div>`}
+function logEvent(kind,ok){events.push({id:uid(),time:new Date().toISOString(),lesson:CUR,kind,ok});save()}
+function complete(l,first){
+  const p=pr(l.id);if(p.done)return;
+  p.done=true;p.first=first;p.xp=Math.round(XPL[l.lv]*(first?1.5:1));p.date=today();save();
+  chime();toast(`Lesson complete · +${p.xp} XP${first?' (first-try bonus!)':''}`);
+}
+async function doRun(check){
+  const l=curLesson(),code=$('#ed').value;drafts[l.id]=code;saveDrafts();
+  const out=$('#out');out.innerHTML='<div class="fb info">Running…</div>';
+  try{
+    let u;
+    if(l.t==='sql'){if(!SQLM)setFb('info','Loading the SQL engine (one-time)…');u=await runSQL(code);out.innerHTML=resTable(u)}
+    else{const r=await runPyCode(code,m=>setFb('info',m));
+      out.innerHTML=(r.out?`<div class="codeh"><b>PRINTED OUTPUT</b></div><pre>${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no"><b>Error</b><pre style="margin-top:6px;background:transparent;border:0;padding:0;color:inherit;white-space:pre-wrap">${esc(r.err)}</pre></div>`:'')+(r.res?`<div class="codeh"><b>result</b></div>${resTable(r.res)}`:'');
+      if(r.err){if(check){pr(l.id).att++;logEvent('check',false)}setFb('no','Fix the error, then try again.');return}
+      u=r.res}
+    if(!check){$('#fb').innerHTML='';return}
+    const s=await solResult(l),cmp=compare(u,s,l.ordered),p=pr(l.id);p.att++;logEvent('check',cmp.ok);
+    if(cmp.ok){const first=p.att===1&&!p.hint&&!p.rev;complete(l,first);setFb('ok','✓ '+cmp.msg+(first?' First try!':''));drawLessonKeep()}
+    else setFb('no',cmp.msg+`<br><span class="mu" style="font-size:11px">Expected columns: ${esc(s.cols.join(', '))}</span>`);
+  }catch(e){
+    const msg=String(e.message||e);out.innerHTML='';
+    if(check&&!/download/i.test(msg)){pr(l.id).att++;logEvent('check',false)}
+    setFb('no',`<b>Error:</b> ${esc(msg)}`);
+  }
+}
+function drawLessonKeep(){const sc=$('#po').scrollTop,fb=$('#fb').innerHTML,out=$('#out')?.innerHTML;drawLesson();$('#fb').innerHTML=fb;if(out&&$('#out'))$('#out').innerHTML=out;$('#po').scrollTop=sc}
+
+/* ================= modals ================= */
+const openModal=(h,wide)=>{$('#mbox').className='box'+(wide?' wide':'');$('#mbox').innerHTML=h;$('#modal').classList.remove('hidden')};
+const closeModal=()=>$('#modal').classList.add('hidden');
+function catalog(only){
+  openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">All lessons</h3><button class="btn" data-act="close">Close</button></div>
+    ${TK.filter(t=>!only||t===only).map(t=>`<div style="margin-top:16px">${pill(t)} <span class="mu" style="font-size:11px">${tLessons(t).filter(l=>isDone(l.id)).length}/${tLessons(t).length} · ${TR[t].run?'runs & auto-grades in the browser':'concepts, quizzes & practice'}</span>
+      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v].toUpperCase()}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span><b>${esc(l.title)}</b><span class="mu">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
+}
+let RI=0;
+function rosetta(){
+  const r=ROSETTA[RI],blk=(t,code)=>`<div><div class="codeh">${pill(t)}<b></b><button class="btn xs" data-act="copyr" data-v="${t}">${I.copy}Copy</button></div><pre>${esc(code)}</pre></div>`;
+  openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">Rosetta — one task, four languages</h3><button class="btn" data-act="close">Close</button></div>
+    <div class="chips">${ROSETTA.map((x,i)=>`<button class="chip${i===RI?' on':''}" data-act="rtab" data-v="${i}">${esc(x.t)}</button>`).join('')}</div>
+    <div class="rosetta">${blk('sql',r.sql)}${blk('py',r.py)}${blk('sas',r.sas)}${blk('tab',r.tab)}</div>`,true);
+}
+function schemaModal(){
+  openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">Sample warehouse</h3><button class="btn" data-act="close">Close</button></div>
+    <p class="mu">The same data is a SQLite database in SQL lessons and pandas DataFrames in Python lessons (<b>order_items</b> is called <b>items</b> in Python). Python lessons also get <b>api_payload</b> (nested JSON) and <b>logs</b> (text lines).</p>
+    ${SCHEMA.map(([t,c])=>`<div class="codeh"><b>${t}</b></div><pre style="white-space:pre-wrap">${esc(c)}</pre>`).join('')}
+    <p class="mu" style="margin-top:12px">Relationships: orders.customer_id → customers.id · order_items.order_id → orders.id · order_items.product_id → products.id</p>`);
+}
+function dataForm(){
+  openModal(`<h3>Settings &amp; data</h3><div class="fg">
+    <label>Daily study goal (min)<input id="s_goal" type="number" min="5" step="5" value="${settings.goal}"></label>
+    <label>Focus chime after (min, 0 = off)<input id="s_focus" type="number" min="0" step="5" value="${settings.focus}"></label>
+    <label class="full">Restore from backup (.json)<input id="i_file" type="file" accept=".json,application/json"></label></div>
+    <p class="mu" style="margin-top:10px">Progress, drafts and study history stay on this device. The SQL engine and Python runtime are downloaded once from public CDNs and then cached for offline use.</p>
+    <div class="mact"><button class="btn dng" data-act="clear">Reset all progress</button><div class="sp"></div><button class="btn" data-act="backup">${I.dl}Backup</button><button class="btn pri" data-act="savedata">Save</button></div>`);
+}
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function exportCSV(){
+  const q=s=>/[",\n]/.test(s=String(s??''))?`"${s.replace(/"/g,'""')}"`:s,st=stats();
+  download(`attempts-${today()}.csv`,['time,lesson,track,level,type,correct',...st.evs.map(e=>{const l=LM[e.lesson];return[e.time,l?.title,TR[l?.t]?.n,LV[l?.lv],e.kind,e.ok].map(q).join(',')})].join('\n'),'text/csv');
+}
+async function restore(file){
+  try{const o=JSON.parse(await file.text());if(!o||typeof o.progress!=='object')throw 0;
+    if(!confirm('Replace all current progress with this backup?'))return;
+    progress=o.progress;events=o.events||[];sessions=o.sessions||[];drafts=o.drafts||{};settings=Object.assign(settings,o.settings||{});save();saveDrafts();render();toast('Backup restored')}
+  catch{toast('Not a valid backup file')}
+}
+
+/* ================= events ================= */
+$('#fTrack').onchange=e=>{S.track=e.target.value;S.page=1;render()};
+$('#fRange').onchange=e=>{S.range=e.target.value;S.sel=null;S.page=1;render()};
+document.addEventListener('change',e=>{
+  const id=e.target.id;
+  if(id==='rowsSel'){S.rows=+e.target.value;S.page=1;render()}
+  if(id==='pgIn'){S.page=+e.target.value||1;render()}
+});
+let dT=null;
+document.addEventListener('input',e=>{if(e.target.id==='ed'&&CUR){clearTimeout(dT);const v=e.target.value,id=CUR;dT=setTimeout(()=>{drafts[id]=v;saveDrafts()},400)}});
+document.addEventListener('keydown',e=>{
+  if(e.target.id==='ed'){
+    if(e.key==='Tab'){e.preventDefault();const t=e.target,s=t.selectionStart,en=t.selectionEnd;t.value=t.value.slice(0,s)+'  '+t.value.slice(en);t.selectionStart=t.selectionEnd=s+2}
+    if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&TR[curLesson()?.t]?.run){e.preventDefault();doRun(false)}
+  }
+  if(e.key==='Escape'&&!$('#modal').classList.contains('hidden'))closeModal();
+});
+document.addEventListener('click',async e=>{
+  if(e.target.id==='modal')return closeModal();
+  const day=e.target.closest('[data-day]');
+  if(day){S.sel=S.sel===day.dataset.day?null:day.dataset.day;S.page=1;render();return}
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const v=b.dataset.v,l=curLesson();
+  const A={
+    mprev:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);render()},
+    mnext:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);render()},
+    mtoday:()=>{const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1);S.sel=null;render()},
+    pprev:()=>{S.page--;render()},pnext:()=>{S.page++;render()},
+    open:()=>{if(!v)return;closeModal();if(CUR&&$('#ed')&&TR[l?.t])drafts[CUR]=$('#ed').value,saveDrafts();openLesson(v)},
+    startnext:()=>openLesson(recommend().id),lclose:closeLesson,
+    catalog:()=>catalog(v),rosetta:()=>{RI=0;rosetta()},rtab:()=>{RI=+v;rosetta()},schema:schemaModal,close:closeModal,
+    copy:async()=>{try{await navigator.clipboard.writeText(l.ex);toast('Copied')}catch{}},
+    copyr:async()=>{try{await navigator.clipboard.writeText(ROSETTA[RI][v]);toast('Copied')}catch{}},
+    runex:async()=>{const o=$('#exOut');o.innerHTML='<div class="fb info">Running example…</div>';
+      try{if(l.t==='sql')o.innerHTML=resTable(await runSQL(l.ex));else{const r=await runPyCode(l.ex,m=>o.innerHTML=`<div class="fb info">${m}</div>`);o.innerHTML=(r.out?`<pre style="margin-top:8px">${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no">${esc(r.err)}</div>`:'')+(r.res?resTable(r.res):'')}}
+      catch(err){o.innerHTML=`<div class="fb no">${esc(err.message||err)}</div>`}},
+    run:()=>doRun(false),checkc:()=>doRun(true),
+    hint:()=>{pr(l.id).hint++;save();setFb('info','💡 '+esc(l.hint))},
+    sol:()=>{if(!confirm('Show the solution? You can still complete the lesson, but without the first-try bonus.'))return;pr(l.id).rev++;save();
+      setFb('info',`<b>Solution</b><pre style="margin-top:8px">${esc(l.sol)}</pre><button class="btn xs" data-act="usesol" style="margin-top:8px">Put it in the editor</button>`)},
+    usesol:()=>{$('#ed').value=l.sol;drafts[l.id]=l.sol;saveDrafts()},
+    reset:()=>{if(confirm('Reset the editor to the starter code?')){$('#ed').value=l.start;drafts[l.id]=l.start;saveDrafts()}},
+    ans:()=>{const i=+v,p=pr(l.id),ok=i===l.quiz.a;
+      if(p.done){setFb(ok?'ok':'no',(ok?'✓ ':'Not quite. ')+esc(l.quiz.why));return}
+      p.att++;logEvent('quiz',ok);
+      document.querySelectorAll('.opt').forEach((o,j)=>{o.classList.remove('wrong');if(j===i&&!ok)o.classList.add('wrong')});
+      if(ok){b.classList.add('right');complete(l,p.att===1);const fbh=`✓ Correct${p.att===1?' — first try!':''} ${esc(l.quiz.why)}`;drawLesson();setFb('ok',fbh)}
+      else setFb('no','Not quite — think about it and try another option.')},
+    reveal:()=>{drafts[l.id]=$('#ed').value;saveDrafts();
+      $('#pracSol').innerHTML=`<div class="codeh"><b>MODEL ANSWER</b></div><pre>${esc(l.prac.sol)}</pre><div class="mact"><span class="mu" style="font-size:12px">Did yours match?</span><button class="btn xs go" data-act="self" data-v="1">I got it</button><button class="btn xs" data-act="self" data-v="0">Not yet</button></div>`},
+    self:()=>{logEvent('self',v==='1');toast(v==='1'?'Nice — logged':'Logged — worth another try later');$('#pracSol').querySelector('.mact').innerHTML='<span class="mu" style="font-size:12px">Logged ✓</span>'},
+    data:dataForm,export:exportCSV,backup:()=>download(`extract-lab-backup-${today()}.json`,JSON.stringify({version:1,progress,events,sessions,drafts,settings},null,1),'application/json'),
+    savedata:async()=>{settings.goal=Math.max(5,+$('#s_goal').value||30);settings.focus=Math.max(0,+$('#s_focus').value||0);save();const f=$('#i_file').files[0];closeModal();if(f)await restore(f);else render()},
+    clear:()=>{if(confirm('Reset ALL progress, attempts, study history and drafts? Make a backup first if you want to keep them.')){progress={};events=[];sessions=[];drafts={};save();saveDrafts();closeModal();render()}}
+  };
+  await A[b.dataset.act]?.();
+});
+
+render();
+if(new URLSearchParams(location.search).has('start')){history.replaceState(null,'',location.pathname);openLesson(recommend().id)}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
