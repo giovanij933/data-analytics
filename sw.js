@@ -1,4 +1,4 @@
-const CACHE = 'xl-v3';
+const CACHE = 'xl-v5';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './brand.css', './brand.js'];
 
 self.addEventListener('install', e => {
@@ -7,7 +7,7 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  // keep the big runtime downloads from the old cache by copying them over, then drop old caches
+  // carry the big SQL/Python runtime downloads over from the old cache, then drop old caches
   e.waitUntil((async () => {
     const keys = await caches.keys();
     const next = await caches.open(CACHE);
@@ -25,7 +25,7 @@ self.addEventListener('activate', e => {
   })());
 });
 
-// Cache-first for app files and the SQL/Python runtimes; YouTube is always fetched live (never cached).
+// Cache-first for app files and runtimes; YouTube is always fetched live (never cached).
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = e.request.url;
