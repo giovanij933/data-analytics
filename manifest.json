@@ -1,6 +1,6 @@
 {
-  "name": "ISIONXXX // JOURNAL",
-  "short_name": "JOURNAL",
+  "name": "ISIONXXX // EXTRACT",
+  "short_name": "EXTRACT",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
