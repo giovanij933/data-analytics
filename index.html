@@ -23,7 +23,7 @@ button{cursor:pointer;background:none;border:0}
 .sel{background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23aaa' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--line);border-radius:6px;padding:7px 34px 7px 12px;min-width:170px;appearance:none;-webkit-appearance:none;font-weight:500}
 .ctx{font-size:11px;color:#cfcfcf}
 .sp{flex:1}
-.btn{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 10px;display:inline-flex;gap:6px;align-items:center;font-weight:600}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 10px;display:inline-flex;gap:6px;align-items:center;font-weight:600;text-decoration:none}
 .btn:hover{border-color:#484848}
 .btn:disabled{opacity:.5;cursor:default}
 .btn svg{width:14px;height:14px}
@@ -31,6 +31,8 @@ button{cursor:pointer;background:none;border:0}
 .btn.go{background:var(--g);border-color:var(--g);color:#06231c}
 .btn.dng{color:var(--r)}
 .btn.xs{padding:4px 8px;font-size:11px}
+.btn.yt{border-color:#5a1f26;background:#2a1215;color:#ffd2d8}
+.btn.yt:hover{border-color:#f0304a}
 .grid{display:grid;gap:16px;margin-bottom:22px}
 .g4{grid-template-columns:repeat(4,1fr)}
 .gm{grid-template-columns:2.05fr 1fr}
@@ -133,6 +135,13 @@ pre{background:#0f0f0f;border:1px solid var(--line);border-radius:6px;padding:12
 .fb.ok{background:#10322a;border:1px solid #1c4a3e;color:#bfeee0}
 .fb.no{background:#33161a;border:1px solid #5a1f26;color:#ffd2d8}
 .fb.info{background:#141a2a;border:1px solid #23305a;color:#cdd8ff}
+/* watch */
+.watch{background:#151212;border:1px solid #3a2226;border-radius:8px;padding:12px 14px;margin-top:16px}
+.watch .codeh{margin-top:0}
+.vid{position:relative;width:100%;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:#000;margin:8px 0 10px}
+.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vpin{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.vpin input{flex:1;min-width:200px;background:#101010;border:1px solid var(--line);border-radius:5px;padding:7px 9px;font-size:12px}
 /* lesson overlay */
 .po{position:fixed;inset:0;background:#0d0d0d;z-index:20;display:flex;justify-content:center;padding:0 max(12px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:auto;-webkit-overflow-scrolling:touch}
 .lv{width:100%;max-width:860px}
@@ -156,7 +165,7 @@ pre{background:#0f0f0f;border:1px solid var(--line);border-radius:6px;padding:12
 .rosetta .codeh{margin-top:0}
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.gm,.g3{grid-template-columns:1fr}}
 @media(max-width:620px){.g4{grid-template-columns:1fr}.sel{min-width:0;flex:1}.cell{height:54px}.cal{gap:4px}.ctx{width:100%}.fg,.rosetta{grid-template-columns:1fr}
-  .ed,.fg input,.fg select{font-size:16px}.lvb h2{font-size:18px}}
+  .ed,.fg input,.fg select,.vpin input{font-size:16px}.lvb h2{font-size:18px}}
 </style>
 </head>
 <body>
@@ -182,6 +191,35 @@ const TR={sql:{n:'SQL',col:'#4a78ff',run:1},py:{n:'Python',col:'#e8a33a',run:1},
 const TK=Object.keys(TR);
 const LV=['','Beginner','Intermediate','Advanced','Expert'],XPL=[0,10,20,30,50];
 const RANKS=[[0,'Novice'],[.15,'Apprentice'],[.35,'Practitioner'],[.6,'Specialist'],[.85,'Expert']];
+
+/* ================= video search config ================= */
+// Targeted YouTube searches per lesson (search links never go stale; pin a specific video per lesson in the app)
+const YTQ={
+  sql1:'SQL SELECT WHERE tutorial for beginners',sql2:'SQL ORDER BY LIMIT top N tutorial',sql3:'SQL GROUP BY COUNT SUM tutorial',
+  sql4:'SQL JOINs explained inner join tutorial',sql5:'SQL HAVING vs WHERE explained',sql6:'SQL CASE WHEN tutorial',
+  sql7:'SQL CTE WITH clause subquery tutorial',sql8:'SQL LEFT JOIN anti join find missing rows',sql9:'SQL window functions RANK ROW_NUMBER PARTITION BY',
+  sql10:'SQL running total SUM OVER window function',sql11:'SQL latest record per group ROW_NUMBER',sql12:'SQL cohort analysis tutorial',
+  py1:'pandas filter rows boolean indexing tutorial',py2:'pandas sort_values head tutorial',py3:'pandas groupby tutorial',
+  py4:'pandas merge join DataFrames tutorial',py5:'pandas pivot_table tutorial',py6:'numpy where pandas conditional column',
+  py7:'pandas datetime group by month tutorial',py8:'pandas top n per group rank',py9:'pandas json_normalize nested JSON tutorial',
+  py10:'pandas str.extract regex tutorial',py11:'pandas drop_duplicates keep last latest record',
+  sas1:'SAS DATA step SET WHERE KEEP tutorial',sas2:'SAS PROC SORT PROC PRINT tutorial',sas3:'SAS PROC SQL tutorial',
+  sas4:'SAS MERGE BY IN= tutorial',sas5:'SAS PROC MEANS CLASS OUTPUT tutorial',sas6:'SAS FIRST. LAST. BY group processing',
+  sas7:'SAS macro tutorial %macro %mend',sas8:'SAS SQL pass-through CONNECT TO tutorial',
+  tab1:'Tableau live connection vs extract',tab2:'Tableau dimensions vs measures aggregation',tab3:'Tableau relationships vs joins',
+  tab4:'Tableau calculated fields tutorial',tab5:'Tableau FIXED LOD expressions tutorial',tab6:'Tableau table calculations running total',
+  tab7:'Tableau order of operations context filters',tab8:'Tableau Hyper API Python tutorial'};
+const YTCH={sql:'Alex The Analyst',py:'Corey Schafer',sas:'SAS Users',tab:'Tableau'};
+const YTFULL={sql:'SQL full course for beginners',py:'pandas full course data analysis',sas:'SAS programming full course beginners',tab:'Tableau full course for beginners'};
+const ytSearch=q=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+function parseYT(url){
+  const s=String(url||'').trim();if(!s)return null;
+  const m=s.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/)||s.match(/^([\w-]{11})$/);
+  if(!m)return null;
+  const t=s.match(/[?&](?:t|start)=(\d+h)?(\d+m)?(\d+)s?/);
+  let start=0;if(t){start=(parseInt(t[1])||0)*3600+(parseInt(t[2])||0)*60+(parseInt(t[3])||0)}
+  return{id:m[1],start};
+}
 
 /* ================= lessons ================= */
 const LESSONS=[
@@ -897,12 +935,13 @@ const SCHEMA=[['customers','id INTEGER · name TEXT · region TEXT · segment TE
   ['orders','id INTEGER · customer_id INTEGER · order_date TEXT · status TEXT (completed / returned / cancelled)'],['order_items','order_id INTEGER · product_id INTEGER · qty INTEGER · unit_price REAL']];
 
 /* ================= storage ================= */
-const K={p:'xl.progress.v1',e:'xl.events.v1',s:'xl.sessions.v1',d:'xl.drafts.v1',c:'xl.settings.v1'};
+const K={p:'xl.progress.v1',e:'xl.events.v1',s:'xl.sessions.v1',d:'xl.drafts.v1',c:'xl.settings.v1',v:'xl.videos.v1'};
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}};
-let progress=load(K.p,{}),events=load(K.e,[]),sessions=load(K.s,[]),drafts=load(K.d,{}),settings=Object.assign({goal:30,focus:25,last:null},load(K.c,{}));
+let progress=load(K.p,{}),events=load(K.e,[]),sessions=load(K.s,[]),drafts=load(K.d,{}),videos=load(K.v,{}),settings=Object.assign({goal:30,focus:25,last:null},load(K.c,{}));
 if(!Array.isArray(events))events=[];if(!Array.isArray(sessions))sessions=[];
 const save=()=>{localStorage.setItem(K.p,JSON.stringify(progress));localStorage.setItem(K.e,JSON.stringify(events));localStorage.setItem(K.s,JSON.stringify(sessions));localStorage.setItem(K.c,JSON.stringify(settings))};
 const saveDrafts=()=>localStorage.setItem(K.d,JSON.stringify(drafts));
+const saveVideos=()=>localStorage.setItem(K.v,JSON.stringify(videos));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
 /* ================= helpers ================= */
@@ -941,7 +980,8 @@ const I={
   data:`<svg ${SV}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>`,
   dl:`<svg ${SV}><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg>`,
   copy:`<svg ${SV}><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>`,
-  check:`<svg ${SV}><path d="M5 12l5 5L20 7"/></svg>`};
+  check:`<svg ${SV}><path d="M5 12l5 5L20 7"/></svg>`,
+  yt:`<svg viewBox="0 0 24 24"><path fill="currentColor" d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></svg>`};
 $('#barBtns').innerHTML=`<button class="btn" data-act="data">${I.data}Settings</button><button class="btn" data-act="rosetta">${I.swap}Rosetta</button><button class="btn" data-act="catalog">${I.book}All lessons</button><button class="btn go" data-act="startnext">${I.play}Start session</button>`;
 
 /* ================= runtimes ================= */
@@ -1160,6 +1200,7 @@ function todayHTML(){
     ${row('XP earned',xp?'+'+xp:'0',xp?'grn':'')}
     ${row('Study streak',streak()+' day'+(streak()===1?'':'s'),streak()?'grn':'mu')}
     ${row('Overall progress',`${LESSONS.filter(l=>isDone(l.id)).length} / ${LESSONS.length}`)}
+    ${row('Videos pinned',`${Object.keys(videos).length} / ${LESSONS.length}`)}
     <div class="hb" style="margin-top:12px"><i style="width:${X/maxXP*100}%;background:linear-gradient(90deg,#1fae8f,#4a78ff)"></i></div></div>
     <div class="ft"><span class="mu">Same task in 4 languages</span><button class="btn" data-act="rosetta">${I.swap}Rosetta</button></div></div>`;
 }
@@ -1262,7 +1303,7 @@ function render(){
   $('#fTrack').value=S.track;$('#fRange').value=S.range;
   const st=stats(),F=foot(fdate(st.from),fdate(st.to));
   $('#ctx').textContent=`${S.track==='all'?'All tracks':TR[S.track].n} - ${S.sel?fdate(S.sel):RL[S.range]}`;
-  const ban=events.length||sessions.length?'':`<div class="card ban"><div><h3 style="margin:0 0 4px">Welcome to Extract Lab</h3><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice.</div></div>
+  const ban=events.length||sessions.length?'':`<div class="card ban"><div><h3 style="margin:0 0 4px">Welcome to Extract Lab</h3><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">${I.play}Start with SQL</button><button class="btn" data-act="open" data-v="py1">Start with Python</button><button class="btn" data-act="catalog">All lessons</button></div></div>`;
   $('#app').innerHTML=ban+`<div class="grid gm">${continueHTML()}${todayHTML()}</div>`+topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
 }
@@ -1291,6 +1332,20 @@ function openLesson(id){
   $('#po').classList.remove('hidden');document.body.style.overflow='hidden';drawLesson();$('#po').scrollTop=0;
 }
 function closeLesson(){stEnd();CUR=null;$('#po').classList.add('hidden');$('#po').innerHTML='';document.body.style.overflow='';render()}
+function watchHTML(l){
+  const v=videos[l.id],q=YTQ[l.id]||`${TR[l.t].n} ${l.title} tutorial`;
+  return`<div class="watch" id="watch">
+    <div class="codeh"><b style="color:#ffd2d8">${I.yt.replace('<svg','<svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"')}WATCH</b>${v?`<button class="btn xs" data-act="vremove">Unpin</button>`:''}</div>
+    ${v?`<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v.id)}?rel=0${v.start?'&start='+v.start:''}" title="${esc(l.title)} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`:
+      `<div class="mu" style="font-size:12px;line-height:1.5;margin:4px 0 10px">Find a short explainer for this exact topic, then paste its link below to pin it here.</div>`}
+    <div class="chips">
+      <a class="btn xs yt" href="${ytSearch(q)}" target="_blank" rel="noopener">${I.yt}Search: ${esc(q)}</a>
+      <a class="btn xs yt" href="${ytSearch(q+' '+YTCH[l.t])}" target="_blank" rel="noopener">${I.yt}+ ${esc(YTCH[l.t])}</a>
+      <a class="btn xs yt" href="${ytSearch(YTFULL[l.t])}" target="_blank" rel="noopener">${I.yt}${TR[l.t].n} full course</a>
+    </div>
+    <div class="vpin"><input id="vurl" placeholder="${v?'Replace with another YouTube link…':'Paste a YouTube link to pin it to this lesson'}" autocomplete="off"><button class="btn xs" data-act="vpin">Pin video</button></div>
+  </div>`;
+}
 function drawLesson(){
   const l=curLesson(),p=pr(l.id),ls=tLessons(l.t),idx=ls.indexOf(l),prev=ls[idx-1],next=ls[idx+1],run=TR[l.t].run;
   const code=drafts[l.id]??l.start;
@@ -1301,6 +1356,7 @@ function drawLesson(){
     <div class="lvb">
       <h2>${esc(l.title)} ${p.done?`<span class="pill" style="color:var(--g);border-color:#1c4a3e;background:#10322a;vertical-align:middle">✓ ${p.xp} XP</span>`:`<span class="mu" style="font-size:12px;font-weight:500">· ${XPL[l.lv]} XP (+50% first try)</span>`}</h2>
       ${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
+      ${watchHTML(l)}
       <div class="codeh"><b>EXAMPLE</b>${run?`<button class="btn xs" data-act="runex">${I.play}Run example</button>`:''}<button class="btn xs" data-act="copy" data-v="ex">${I.copy}Copy</button></div>
       <pre id="exCode">${esc(l.ex)}</pre>
       <div id="exOut"></div>
@@ -1354,15 +1410,16 @@ async function doRun(check){
     setFb('no',`<b>Error:</b> ${esc(msg)}`);
   }
 }
-function drawLessonKeep(){const sc=$('#po').scrollTop,fb=$('#fb').innerHTML,out=$('#out')?.innerHTML;drawLesson();$('#fb').innerHTML=fb;if(out&&$('#out'))$('#out').innerHTML=out;$('#po').scrollTop=sc}
+function drawLessonKeep(){const sc=$('#po').scrollTop,fb=$('#fb').innerHTML,out=$('#out')?.innerHTML,ed=$('#ed')?.value;drawLesson();$('#fb').innerHTML=fb;if(out&&$('#out'))$('#out').innerHTML=out;if(ed!=null&&$('#ed'))$('#ed').value=ed;$('#po').scrollTop=sc}
 
 /* ================= modals ================= */
 const openModal=(h,wide)=>{$('#mbox').className='box'+(wide?' wide':'');$('#mbox').innerHTML=h;$('#modal').classList.remove('hidden')};
 const closeModal=()=>$('#modal').classList.add('hidden');
 function catalog(only){
   openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">All lessons</h3><button class="btn" data-act="close">Close</button></div>
+    <p class="mu">🎬 = a video is pinned to that lesson.</p>
     ${TK.filter(t=>!only||t===only).map(t=>`<div style="margin-top:16px">${pill(t)} <span class="mu" style="font-size:11px">${tLessons(t).filter(l=>isDone(l.id)).length}/${tLessons(t).length} · ${TR[t].run?'runs & auto-grades in the browser':'concepts, quizzes & practice'}</span>
-      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v].toUpperCase()}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span><b>${esc(l.title)}</b><span class="mu">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
+      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v].toUpperCase()}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span><b>${esc(l.title)}${videos[l.id]?' 🎬':''}</b><span class="mu">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
 }
 let RI=0;
 function rosetta(){
@@ -1382,7 +1439,7 @@ function dataForm(){
     <label>Daily study goal (min)<input id="s_goal" type="number" min="5" step="5" value="${settings.goal}"></label>
     <label>Focus chime after (min, 0 = off)<input id="s_focus" type="number" min="0" step="5" value="${settings.focus}"></label>
     <label class="full">Restore from backup (.json)<input id="i_file" type="file" accept=".json,application/json"></label></div>
-    <p class="mu" style="margin-top:10px">Progress, drafts and study history stay on this device. The SQL engine and Python runtime are downloaded once from public CDNs and then cached for offline use.</p>
+    <p class="mu" style="margin-top:10px">Progress, drafts, pinned videos and study history stay on this device. The SQL engine and Python runtime are downloaded once from public CDNs and then cached for offline use; videos always need a connection.</p>
     <div class="mact"><button class="btn dng" data-act="clear">Reset all progress</button><div class="sp"></div><button class="btn" data-act="backup">${I.dl}Backup</button><button class="btn pri" data-act="savedata">Save</button></div>`);
 }
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
@@ -1393,7 +1450,7 @@ function exportCSV(){
 async function restore(file){
   try{const o=JSON.parse(await file.text());if(!o||typeof o.progress!=='object')throw 0;
     if(!confirm('Replace all current progress with this backup?'))return;
-    progress=o.progress;events=o.events||[];sessions=o.sessions||[];drafts=o.drafts||{};settings=Object.assign(settings,o.settings||{});save();saveDrafts();render();toast('Backup restored')}
+    progress=o.progress;events=o.events||[];sessions=o.sessions||[];drafts=o.drafts||{};videos=o.videos||{};settings=Object.assign(settings,o.settings||{});save();saveDrafts();saveVideos();render();toast('Backup restored')}
   catch{toast('Not a valid backup file')}
 }
 
@@ -1412,8 +1469,10 @@ document.addEventListener('keydown',e=>{
     if(e.key==='Tab'){e.preventDefault();const t=e.target,s=t.selectionStart,en=t.selectionEnd;t.value=t.value.slice(0,s)+'  '+t.value.slice(en);t.selectionStart=t.selectionEnd=s+2}
     if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&TR[curLesson()?.t]?.run){e.preventDefault();doRun(false)}
   }
+  if(e.key==='Enter'&&e.target.id==='vurl'){e.preventDefault();document.querySelector('[data-act="vpin"]')?.click()}
   if(e.key==='Escape'&&!$('#modal').classList.contains('hidden'))closeModal();
 });
+function redrawWatch(){const w=$('#watch');if(!w||!curLesson())return;const tmp=document.createElement('div');tmp.innerHTML=watchHTML(curLesson());w.replaceWith(tmp.firstElementChild)}
 document.addEventListener('click',async e=>{
   if(e.target.id==='modal')return closeModal();
   const day=e.target.closest('[data-day]');
@@ -1424,11 +1483,13 @@ document.addEventListener('click',async e=>{
     mnext:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);render()},
     mtoday:()=>{const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1);S.sel=null;render()},
     pprev:()=>{S.page--;render()},pnext:()=>{S.page++;render()},
-    open:()=>{if(!v)return;closeModal();if(CUR&&$('#ed')&&TR[l?.t])drafts[CUR]=$('#ed').value,saveDrafts();openLesson(v)},
+    open:()=>{if(!v)return;closeModal();if(CUR&&$('#ed'))drafts[CUR]=$('#ed').value,saveDrafts();openLesson(v)},
     startnext:()=>openLesson(recommend().id),lclose:closeLesson,
     catalog:()=>catalog(v),rosetta:()=>{RI=0;rosetta()},rtab:()=>{RI=+v;rosetta()},schema:schemaModal,close:closeModal,
     copy:async()=>{try{await navigator.clipboard.writeText(l.ex);toast('Copied')}catch{}},
     copyr:async()=>{try{await navigator.clipboard.writeText(ROSETTA[RI][v]);toast('Copied')}catch{}},
+    vpin:()=>{const p=parseYT($('#vurl').value);if(!p)return toast('That doesn’t look like a YouTube link');videos[l.id]=p;saveVideos();redrawWatch();toast('Video pinned to this lesson')},
+    vremove:()=>{delete videos[l.id];saveVideos();redrawWatch()},
     runex:async()=>{const o=$('#exOut');o.innerHTML='<div class="fb info">Running example…</div>';
       try{if(l.t==='sql')o.innerHTML=resTable(await runSQL(l.ex));else{const r=await runPyCode(l.ex,m=>o.innerHTML=`<div class="fb info">${m}</div>`);o.innerHTML=(r.out?`<pre style="margin-top:8px">${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no">${esc(r.err)}</div>`:'')+(r.res?resTable(r.res):'')}}
       catch(err){o.innerHTML=`<div class="fb no">${esc(err.message||err)}</div>`}},
@@ -1447,9 +1508,9 @@ document.addEventListener('click',async e=>{
     reveal:()=>{drafts[l.id]=$('#ed').value;saveDrafts();
       $('#pracSol').innerHTML=`<div class="codeh"><b>MODEL ANSWER</b></div><pre>${esc(l.prac.sol)}</pre><div class="mact"><span class="mu" style="font-size:12px">Did yours match?</span><button class="btn xs go" data-act="self" data-v="1">I got it</button><button class="btn xs" data-act="self" data-v="0">Not yet</button></div>`},
     self:()=>{logEvent('self',v==='1');toast(v==='1'?'Nice — logged':'Logged — worth another try later');$('#pracSol').querySelector('.mact').innerHTML='<span class="mu" style="font-size:12px">Logged ✓</span>'},
-    data:dataForm,export:exportCSV,backup:()=>download(`extract-lab-backup-${today()}.json`,JSON.stringify({version:1,progress,events,sessions,drafts,settings},null,1),'application/json'),
+    data:dataForm,export:exportCSV,backup:()=>download(`extract-lab-backup-${today()}.json`,JSON.stringify({version:2,progress,events,sessions,drafts,videos,settings},null,1),'application/json'),
     savedata:async()=>{settings.goal=Math.max(5,+$('#s_goal').value||30);settings.focus=Math.max(0,+$('#s_focus').value||0);save();const f=$('#i_file').files[0];closeModal();if(f)await restore(f);else render()},
-    clear:()=>{if(confirm('Reset ALL progress, attempts, study history and drafts? Make a backup first if you want to keep them.')){progress={};events=[];sessions=[];drafts={};save();saveDrafts();closeModal();render()}}
+    clear:()=>{if(confirm('Reset ALL progress, attempts, study history and drafts? Pinned videos are kept. Make a backup first if you want to keep the rest.')){progress={};events=[];sessions=[];drafts={};save();saveDrafts();closeModal();render()}}
   };
   await A[b.dataset.act]?.();
 });
