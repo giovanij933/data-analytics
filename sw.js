@@ -1,5 +1,5 @@
-const CACHE = 'xl-v2';
-const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
+const CACHE = 'xl-v3';
+const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './brand.css', './brand.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
