@@ -9,8 +9,8 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet"><title>ISIONXXX // EXTRACT</title>
-  
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>ISIONXXX // EXTRACT</title>
 <style>
 :root{--bg:#121212;--card:#171717;--cell:#1c1c1c;--line:#2b2b2b;--tx:#ececec;--mu:#a3a3a3;--g:#1fae8f;--r:#f0304a;--a:#e8a33a;--b:#4a78ff;--blue:#3050ff}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -65,9 +65,9 @@ h3{font-size:13px;font-weight:700;margin-bottom:20px}
 .cell.hatch{background:repeating-linear-gradient(135deg,#1a1a1a 0 5px,#252525 5px 6px)}
 .cell.out,.cell.wk{cursor:default}
 .cell.fut span{color:#555}
-.cell.on b{font-size:10px;color:#e8fff8}
+.cell.on b{font-size:10px;color:#eafff1}
 .cell.sel{border-color:var(--blue)}
-.cell small{font-size:8px;color:#cfe}
+.cell small{font-size:8px;color:#b8f5cf}
 .cell.wk{border:1px dashed #353535;background:transparent;color:#555}
 .cell.wk b{font-size:10px}
 .cdots{display:flex;gap:2px}.cdots i{width:5px;height:5px;border-radius:50%}
@@ -132,7 +132,7 @@ pre{background:#0f0f0f;border:1px solid var(--line);border-radius:6px;padding:12
 .rt th{background:#161616;color:#bbb;font-weight:600}
 .outw{max-height:320px;overflow:auto;margin-top:8px;border-radius:6px}
 .fb{border-radius:6px;padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.5}
-.fb.ok{background:#10322a;border:1px solid #1c4a3e;color:#bfeee0}
+.fb.ok{background:#0f2417;border:1px solid #1d6b3f;color:#b8f5cf}
 .fb.no{background:#33161a;border:1px solid #5a1f26;color:#ffd2d8}
 .fb.info{background:#141a2a;border:1px solid #23305a;color:#cdd8ff}
 /* watch */
@@ -155,12 +155,12 @@ pre{background:#0f0f0f;border:1px solid var(--line);border-radius:6px;padding:12
 .task b{color:#9fd9c9}
 .opts{display:grid;gap:8px;margin-top:10px}
 .opt{text-align:left;border:1px solid var(--line);border-radius:8px;padding:11px 14px;background:#121212;font-size:13px;line-height:1.45}
-.opt.right{border-color:var(--g);background:#10322a}.opt.wrong{border-color:var(--r);background:#33161a}
+.opt.right{border-color:#33e07a;background:#0f2417}.opt.wrong{border-color:var(--r);background:#33161a}
 .lnav{display:flex;gap:8px;justify-content:space-between;margin-top:24px;flex-wrap:wrap}
 .ltrk{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:8px}
 .li{text-align:left;border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#121212;font-size:12px;display:flex;gap:8px;align-items:center}
 .li b{flex:1;font-weight:500}
-.li.done{border-color:#1c4a3e}
+.li.done{border-color:#1d6b3f}
 .rosetta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
 .rosetta .codeh{margin-top:0}
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.gm,.g3{grid-template-columns:1fr}}
@@ -187,15 +187,17 @@ pre{background:#0f0f0f;border:1px solid var(--line);border-radius:6px;padding:12
 
 <script>
 const $=s=>document.querySelector(s);
+const ACC='var(--acc,#ffb000)';                       // brand amber (measurement)
+const AMBER=s=>s.split('#1fae8f').join('#ffb000');    // force a chart to brand amber
 const R=String.raw;
 /* ================= tracks & levels ================= */
-const TR={sql:{n:'SQL',col:'#4a78ff',run:1},py:{n:'Python',col:'#e8a33a',run:1},sas:{n:'SAS',col:'#1fae8f'},tab:{n:'Tableau',col:'#b06cf0'}};
+const TR={sql:{n:'SQL',col:'#7f9cb0',run:1},py:{n:'Python',col:'#ffb000',run:1},sas:{n:'SAS',col:'#9c8aa5'},tab:{n:'Tableau',col:'#c8b38a'}};
 const TK=Object.keys(TR);
 const LV=['','Beginner','Intermediate','Advanced','Expert'],XPL=[0,10,20,30,50];
+const LVC=['','#e6d3a8','#ffc233','#ffb000','#b37a00'];   // amber ramp, light → deep
 const RANKS=[[0,'Novice'],[.15,'Apprentice'],[.35,'Practitioner'],[.6,'Specialist'],[.85,'Expert']];
 
 /* ================= video search config ================= */
-// Targeted YouTube searches per lesson (search links never go stale; pin a specific video per lesson in the app)
 const YTQ={
   sql1:'SQL SELECT WHERE tutorial for beginners',sql2:'SQL ORDER BY LIMIT top N tutorial',sql3:'SQL GROUP BY COUNT SUM tutorial',
   sql4:'SQL JOINs explained inner join tutorial',sql5:'SQL HAVING vs WHERE explained',sql6:'SQL CASE WHEN tutorial',
@@ -1123,11 +1125,12 @@ function stats(){
 }
 
 /* ================= svg charts ================= */
+// segment colors: g = brand amber, v = positive (terminal green), r = red, a = warning, b = secondary, n = neutral
 function gauge(segs,text){
   const cx=100,cy=92,r=72,id='g'+uid();
   const P=f=>{const a=Math.PI*(1-f);return(cx+r*Math.cos(a)).toFixed(2)+' '+(cy-r*Math.sin(a)).toFixed(2)};
   const arc=(a,b)=>`M${P(a)}A${r} ${r} 0 0 1 ${P(b)}`;
-  const col={g:`url(#${id}g)`,r:`url(#${id}r)`,a:'#e8a33a',b:'#4a78ff',n:'#4a4a4a'};
+  const col={g:`url(#${id}g)`,r:`url(#${id}r)`,a:'#e8a33a',b:'#4a78ff',n:'#4a4a4a',v:'#33e07a'};
   let s=0,p='';
   for(const[f,c]of segs){if(!(f>0))continue;const e=Math.min(1,s+f);p+=`<path d="${arc(s,e)}" stroke="${col[c]}" stroke-width="17" fill="none"/>`;s=e}
   return`<svg class="gauge" viewBox="0 0 200 104"><defs>
@@ -1185,10 +1188,10 @@ function recommend(){
 function continueHTML(){
   const rec=recommend();
   const rows=TK.map(t=>{const ls=tLessons(t),d=ls.filter(l=>isDone(l.id)).length,n=nextIn(t),lv=trackLevel(t);
-    return`<div class="tk"><div class="tkh">${pill(t)}<b>${n?esc(n.title):'Track complete 🎉'}</b><span class="mu" style="font-size:11px">${n?LV[n.lv]:''}</span>
+    return`<div class="tk"><div class="tkh">${pill(t)}<b>${n?esc(n.title):'<span class="grn">Track complete 🎉</span>'}</b><span class="mu" style="font-size:11px">${n?LV[n.lv]:''}</span>
       ${n?`<button class="btn xs ${n.id===rec.id?'go':''}" data-act="open" data-v="${n.id}">${I.play}${isDone(n.id)?'Review':'Start'}</button>`:`<button class="btn xs" data-act="catalog" data-v="${t}">Review</button>`}</div>
       <div class="hb"><i style="width:${d/ls.length*100}%;background:${TR[t].col}"></i></div>
-      <div class="row mu"><span>${d} / ${ls.length} lessons</span><span>${lv?'Cleared: '+LV[lv]:'Level 1 in progress'}</span></div></div>`}).join('');
+      <div class="row mu"><span>${d} / ${ls.length} lessons</span><span>${lv?'Cleared: <span class="grn">'+LV[lv]+'</span>':'Level 1 in progress'}</span></div></div>`}).join('');
   return`<div class="card"><div class="bd" style="padding-bottom:4px"><h3 style="margin-bottom:6px">Continue learning</h3><div class="lbl" style="margin-bottom:8px">Beginner → Intermediate → Advanced → Expert in each track</div>${rows}</div>
     <div class="ft"><span>Up next: ${pill(rec.t)} <b>${esc(rec.title)}</b> <span class="mu">· ${LV[rec.lv]}</span></span><button class="btn go" data-act="open" data-v="${rec.id}">${I.play}Start session</button></div></div>`;
 }
@@ -1196,14 +1199,14 @@ function todayHTML(){
   const t=today(),m=sessions.filter(s=>dayOf(s)===t).reduce((s,x)=>s+x.min,0)+(ST?ST.acc/60:0);
   const dl=LESSONS.filter(l=>progress[l.id]?.date===t),xp=dl.reduce((s,l)=>s+progress[l.id].xp,0),X=totalXP();
   const row=(l,v,c='')=>`<div class="tl"><span>${l}</span><b class="${c}" style="font-weight:500">${v}</b></div>`;
-  return`<div class="card"><div class="bd"><h3 style="margin-bottom:6px">Today</h3><div class="lbl" style="margin-bottom:12px">Rank: <b class="grn">${rank(X)}</b> · ${X} / ${maxXP} XP</div>
+  return`<div class="card"><div class="bd"><h3 style="margin-bottom:6px">Today</h3><div class="lbl" style="margin-bottom:12px">Rank: <b style="color:var(--acc,#ffb000)">${rank(X)}</b> · ${X} / ${maxXP} XP</div>
     ${row('Study time',`${fmin(m)} / ${settings.goal}m`,m>=settings.goal?'grn':'')}
-    ${row('Lessons completed',dl.length)}
+    ${row('Lessons completed',dl.length,dl.length?'grn':'')}
     ${row('XP earned',xp?'+'+xp:'0',xp?'grn':'')}
     ${row('Study streak',streak()+' day'+(streak()===1?'':'s'),streak()?'grn':'mu')}
     ${row('Overall progress',`${LESSONS.filter(l=>isDone(l.id)).length} / ${LESSONS.length}`)}
     ${row('Videos pinned',`${Object.keys(videos).length} / ${LESSONS.length}`)}
-    <div class="hb" style="margin-top:12px"><i style="width:${X/maxXP*100}%;background:linear-gradient(90deg,#1fae8f,#4a78ff)"></i></div></div>
+    <div class="hb" style="margin-top:12px"><i style="width:${X/maxXP*100}%;background:linear-gradient(90deg,#b37a00,#ffb000)"></i></div></div>
     <div class="ft"><span class="mu">Same task in 4 languages</span><button class="btn" data-act="rosetta">${I.swap}Rosetta</button></div></div>`;
 }
 function topCards(st,F){
@@ -1213,14 +1216,14 @@ function topCards(st,F){
   return`<div class="grid g4">
   <div class="card"><div class="bd"><h3>Course progress</h3><div class="lbl">Lessons completed (all time)</div><div class="big">${d} / ${ls.length}</div>
     ${gauge([[d/ls.length,'g']],pct(d,ls.length))}
-    ${lr('#1fae8f','Beginner',lvc(1))}${lr('#4a78ff','Intermediate',lvc(2))}${lr('#e8a33a','Advanced',lvc(3))}${lr('#f0304a','Expert',lvc(4))}</div>${F}</div>
+    ${lr(LVC[1],'Beginner',lvc(1))}${lr(LVC[2],'Intermediate',lvc(2))}${lr(LVC[3],'Advanced',lvc(3))}${lr(LVC[4],'Expert',lvc(4))}</div>${F}</div>
   <div class="card"><div class="bd"><h3>Accuracy</h3><div class="lbl">First-try completions in range</div><div class="big ${D?fr>=.6?'grn':fr>=.35?'amb':'red':''}">${D?pct(st.first,D):'—'}</div>
-    ${gauge(D?[[fr,'g'],[1-fr,'a']]:[],D?pct(st.first,D):'—')}
+    ${gauge(D?[[fr,'v'],[1-fr,'a']]:[],D?pct(st.first,D):'—')}
     ${lr('var(--g)','First try (no hint/solution)',st.first)}${lr('var(--a)','Needed more tries',D-st.first)}${lr('#4a4a4a','Hints · solutions viewed',`${st.hints} · ${st.revs}`)}</div>${F}</div>
-  <div class="card"><div class="bd"><h3>Study time</h3><div class="lbl">Avg minutes / day</div><div class="big">${fnum(Math.round(st.avgMin))}m</div>
+  <div class="card"><div class="bd"><h3>Study time</h3><div class="lbl">Avg minutes / day</div><div class="big ${st.avgMin>=g?'grn':''}">${fnum(Math.round(st.avgMin))}m</div>
     ${gauge(gf<=1?[[gf,'g']]:[[1/gf,'g'],[1-1/gf,'b']],Math.round(gf*100)+'%')}
-    ${lr('var(--g)','Total',fmin(st.tot))}${lr('#4a4a4a','Sessions',st.ses.length)}${lr('var(--b)','Longest session',fmin(st.longest))}</div>${F}</div>
-  <div class="card"><div class="bd"><h3>Experience</h3><div class="lbl">Rank · ${S.track==='all'?'all tracks':TR[S.track].n}</div><div class="big grn">${rank(X/mx*maxXP)}</div>
+    ${lr(ACC,'Total',fmin(st.tot))}${lr('#4a4a4a','Sessions',st.ses.length)}${lr('var(--b)','Longest session',fmin(st.longest))}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Experience</h3><div class="lbl">Rank · ${S.track==='all'?'all tracks':TR[S.track].n}</div><div class="big" style="color:var(--acc,#ffb000)">${rank(X/mx*maxXP)}</div>
     ${gauge([[X/mx,'g']],X+' XP')}
     ${TK.map(t=>lr(TR[t].col,TR[t].n,`${tLessons(t).reduce((s,l)=>s+(progress[l.id]?.xp||0),0)} XP`,trackLevel(t)?LV[trackLevel(t)].slice(0,5)+'.':'—')).join('')}</div>${F}</div>
   </div>`;
@@ -1237,13 +1240,13 @@ function calendarHTML(){
       if(d.getMonth()!==mo){h+='<div class="cell hatch out"></div>';continue}
       if(v){wm+=v;wd++;tm+=v;td++}
       const done=LESSONS.filter(l=>progress[l.id]?.date===k&&tOk(l.t)).length;
-      h+=`<div class="cell${v?' on':''}${k>tk?' fut':''}${S.sel===k?' sel':''}" data-day="${k}"${v?` style="background:rgba(31,174,143,${(.08+.3*Math.min(1,v/settings.goal)).toFixed(2)})"`:''}>
+      h+=`<div class="cell${v?' on':''}${k>tk?' fut':''}${S.sel===k?' sel':''}" data-day="${k}"${v?` style="background:rgba(51,224,122,${(.06+.22*Math.min(1,v/settings.goal)).toFixed(2)})"`:''}>
         <span>${d.getDate()}</span>${v?`<b>${fmin(v)}</b><small>${done?done+' done':'&nbsp;'}</small><div class="cdots">${[...(dt[k]||[])].map(t=>`<i style="background:${TR[t].col}"></i>`).join('')}</div>`:''}</div>`;
     }
     h+=`<div class="cell wk">${wd?`<b class="grn">${fmin(wm)}</b><small>${wd} days</small>`:'—'}</div>`;
   }
   return`<div class="card"><div class="bd"><h3 style="margin-bottom:10px">Study Calendar</h3><div class="lbl">Total study time</div>
-    <div class="calhd"><div class="big">${fmin(tm)}</div><div class="wl">Days: <b class="grn" style="font-weight:500">${td}</b> &nbsp;&nbsp; Streak: <b style="font-weight:500;color:#4a78ff">${streak()}</b></div></div>
+    <div class="calhd"><div class="big">${fmin(tm)}</div><div class="wl">Days: <b class="grn" style="font-weight:500">${td}</b> &nbsp;&nbsp; Streak: <b class="${streak()?'grn':''}" style="font-weight:500">${streak()}</b></div></div>
     <div class="cal">${h}</div></div>
     <div class="ft calft"><div class="nav"><button data-act="mprev">‹</button><span>${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</span><button data-act="mnext">›</button><button class="tb" data-act="mtoday">Today</button></div>
     <span>${td} study days</span></div></div>`;
@@ -1261,7 +1264,7 @@ function evalHTML(st){
     ${er(st.hints?'var(--a)':'transparent','Hints used',st.hints)}
     ${er(st.revs?'var(--a)':'transparent','Solutions viewed',st.revs,'Viewing the solution removes the first-try bonus — try a hint first')}
     <hr><h4>CONSISTENCY</h4>
-    ${er(st.streak?'var(--b)':'transparent','Study streak',st.streak+' day'+(st.streak===1?'':'s'))}
+    ${er(st.streak?'var(--g)':'transparent','Study streak',`<span class="${st.streak?'grn':''}">${st.streak} day${st.streak===1?'':'s'}</span>`)}
     ${er(CV[c(st.days/st.span,.7,.4)],'Days studied',`${st.days} / ${st.span}`)}
     ${er(st.since==null?'transparent':st.since>2?'var(--a)':'var(--g)','Days since last study',st.since??'—')}
     ${er('transparent','Last 5 attempts',`<span class="l5">${st.last5.map(e=>`<i title="${esc(LM[e.lesson]?.title)}" style="background:${e.ok?'var(--g)':'var(--r)'}"></i>`).join('')||'—'}</span>`)}
@@ -1275,7 +1278,7 @@ function chartsHTML(st,F){
   const gd=st.evs.filter(e=>e.kind!=='self'),acc=[];let ok=0;gd.forEach((e,i)=>{ok+=e.ok?1:0;acc.push(Math.round(ok/(i+1)*100))});
   return`<div class="grid gm">
     <div class="card"><div class="bd"><div class="eqh"><div><div class="lbl">Study time trend</div><div class="big" style="font-size:20px">${fmin(st.tot)}</div><div class="lbl" style="margin-top:4px">${fdate(st.from)} - ${fdate(st.to)} · dashed = ${settings.goal}m goal</div></div>
-      <div class="ks"><div>SESSIONS<b>${st.ses.length}</b></div><div>LESSONS<b>${st.done.length}</b></div><div>XP<b class="grn">+${st.xp}</b></div><div>SUCCESS<b>${st.okRate==null?'—':Math.round(st.okRate*100)+'%'}</b></div><div>STREAK<b>${st.streak}</b></div></div></div>
+      <div class="ks"><div>SESSIONS<b>${st.ses.length}</b></div><div>LESSONS<b class="${st.done.length?'grn':''}">${st.done.length}</b></div><div>XP<b class="grn">+${st.xp}</b></div><div>SUCCESS<b>${st.okRate==null?'—':Math.round(st.okRate*100)+'%'}</b></div><div>STREAK<b class="${st.streak?'grn':''}">${st.streak}</b></div></div></div>
       ${trend.length>1?area(trend,'#1fae8f',{tgt:settings.goal}):bars(trend)}</div>${F}</div>
     <div class="card"><div class="bd"><h3>XP by week</h3><div class="lbl">Last 8 weeks</div><div class="big">${wk.at(-1).xp} XP <span class="mu" style="font-size:12px;font-weight:500">this week</span></div>
       ${bars(wk.map(w=>w.xp),{labels:wk.map(w=>fsd(w.ws))})}</div>${F}</div>
@@ -1283,7 +1286,7 @@ function chartsHTML(st,F){
   <div class="grid g3">
     <div class="card"><div class="bd"><h3>Mastery map</h3><div class="lbl">Core = Beginner + Intermediate · Adv = Advanced + Expert</div><div class="big">${Math.round(av.reduce((s,x)=>s+x,0)/av.length*100)}%</div>${radar(ax,av)}</div>${F}</div>
     <div class="card"><div class="bd"><h3>Progress by level</h3><div class="lbl">% of lessons completed</div><div class="big">${lvp.join(' / ')}</div>
-      ${bars(lvp,{labels:['Beginner','Intermed.','Advanced','Expert'],max:100,cols:['#1fae8f','#4a78ff','#e8a33a','#f0304a']})}</div>${F}</div>
+      ${bars(lvp,{labels:['Beginner','Intermed.','Advanced','Expert'],max:100,cols:LVC.slice(1)})}</div>${F}</div>
     <div class="card"><div class="bd"><h3>Accuracy trend</h3><div class="lbl">Cumulative success rate of attempts in range</div><div class="big">${acc.length?acc.at(-1)+'%':'—'}</div>
       ${acc.length>1?area(acc,'#4a78ff',{max:100}):'<div class="empty">Run Check or answer quizzes to see this</div>'}</div>${F}</div>
   </div>`;
@@ -1356,7 +1359,7 @@ function drawLesson(){
       <button class="btn xs" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ Prev</button><button class="btn xs" data-act="open" data-v="${next?.id||''}" ${next?'':'disabled'}>Next ›</button>
       <button class="btn" data-act="lclose">Done</button></div>
     <div class="lvb">
-      <h2>${esc(l.title)} ${p.done?`<span class="pill" style="color:var(--g);border-color:#1c4a3e;background:#10322a;vertical-align:middle">✓ ${p.xp} XP</span>`:`<span class="mu" style="font-size:12px;font-weight:500">· ${XPL[l.lv]} XP (+50% first try)</span>`}</h2>
+      <h2>${esc(l.title)} ${p.done?`<span class="pill" style="color:var(--g);border-color:#1d6b3f;background:#0f2417;vertical-align:middle">✓ ${p.xp} XP</span>`:`<span class="mu" style="font-size:12px;font-weight:500">· ${XPL[l.lv]} XP (+50% first try)</span>`}</h2>
       ${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
       ${watchHTML(l)}
       <div class="codeh"><b>EXAMPLE</b>${run?`<button class="btn xs" data-act="runex">${I.play}Run example</button>`:''}<button class="btn xs" data-act="copy" data-v="ex">${I.copy}Copy</button></div>
@@ -1421,7 +1424,7 @@ function catalog(only){
   openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">All lessons</h3><button class="btn" data-act="close">Close</button></div>
     <p class="mu">🎬 = a video is pinned to that lesson.</p>
     ${TK.filter(t=>!only||t===only).map(t=>`<div style="margin-top:16px">${pill(t)} <span class="mu" style="font-size:11px">${tLessons(t).filter(l=>isDone(l.id)).length}/${tLessons(t).length} · ${TR[t].run?'runs & auto-grades in the browser':'concepts, quizzes & practice'}</span>
-      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v].toUpperCase()}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span><b>${esc(l.title)}${videos[l.id]?' 🎬':''}</b><span class="mu">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
+      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v].toUpperCase()}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span><b>${esc(l.title)}${videos[l.id]?' 🎬':''}</b><span class="${isDone(l.id)?'grn':'mu'}">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
 }
 let RI=0;
 function rosetta(){
@@ -1510,7 +1513,7 @@ document.addEventListener('click',async e=>{
     reveal:()=>{drafts[l.id]=$('#ed').value;saveDrafts();
       $('#pracSol').innerHTML=`<div class="codeh"><b>MODEL ANSWER</b></div><pre>${esc(l.prac.sol)}</pre><div class="mact"><span class="mu" style="font-size:12px">Did yours match?</span><button class="btn xs go" data-act="self" data-v="1">I got it</button><button class="btn xs" data-act="self" data-v="0">Not yet</button></div>`},
     self:()=>{logEvent('self',v==='1');toast(v==='1'?'Nice — logged':'Logged — worth another try later');$('#pracSol').querySelector('.mact').innerHTML='<span class="mu" style="font-size:12px">Logged ✓</span>'},
-    data:dataForm,export:exportCSV,backup:()=>download(`extract-lab-backup-${today()}.json`,JSON.stringify({version:2,progress,events,sessions,drafts,videos,settings},null,1),'application/json'),
+    data:dataForm,export:exportCSV,backup:()=>download(`isionxxx-extract-backup-${today()}.json`,JSON.stringify({version:2,progress,events,sessions,drafts,videos,settings},null,1),'application/json'),
     savedata:async()=>{settings.goal=Math.max(5,+$('#s_goal').value||30);settings.focus=Math.max(0,+$('#s_focus').value||0);save();const f=$('#i_file').files[0];closeModal();if(f)await restore(f);else render()},
     clear:()=>{if(confirm('Reset ALL progress, attempts, study history and drafts? Pinned videos are kept. Make a backup first if you want to keep the rest.')){progress={};events=[];sessions=[];drafts={};save();saveDrafts();closeModal();render()}}
   };
