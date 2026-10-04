@@ -1,12 +1,12 @@
 {
-  "name": "Extract Lab",
-  "short_name": "Extract Lab",
+  "name": "ISIONXXX // JOURNAL",
+  "short_name": "JOURNAL",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#121212",
-  "theme_color": "#121212",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ],
