@@ -1,14 +1,15 @@
 {
   "name": "ISIONXXX // EXTRACT",
   "short_name": "EXTRACT",
+  "description": "SQL, Python, SAS and Tableau practice log",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#070707",
+  "theme_color": "#070707",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "shortcuts": [
     { "name": "Continue learning", "short_name": "Continue", "url": "./?start=1", "icons": [{ "src": "icon.svg", "sizes": "any" }] }

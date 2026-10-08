@@ -1,5 +1,6 @@
-const CACHE = 'xl-v5';
-const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './brand.css', './brand.js'];
+// Bump the version string whenever you change index.html so clients pick up the new shell.
+const CACHE = 'isx-extract-v6';
+const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
