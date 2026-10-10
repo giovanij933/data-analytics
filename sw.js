@@ -1,6 +1,6 @@
 // Bump the version string whenever you change index.html so clients pick up the new shell.
-const CACHE = 'isx-extract-v7';
-const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './sync.js'];
+const CACHE = 'isx-extract-v8';
+const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './sync.js', './apple-touch-icon.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
