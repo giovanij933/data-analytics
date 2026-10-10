@@ -1,6 +1,6 @@
 // Bump the version string whenever you change index.html so clients pick up the new shell.
-const CACHE = 'isx-extract-v6';
-const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
+const CACHE = 'isx-extract-v7';
+const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './sync.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -29,6 +29,7 @@ self.addEventListener('activate', e => {
 // Cache-first for app files and runtimes; YouTube is always fetched live (never cached).
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  if (/api\.github\.com|githubusercontent\.com/.test(e.request.url)) return;   // sync talks to GitHub live, never from cache
   const url = e.request.url;
   if (/youtube|ytimg|googlevideo|ggpht/.test(url)) return;
   const nav = e.request.mode === 'navigate';
