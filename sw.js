@@ -1,5 +1,7 @@
 // Bump the version string whenever you change index.html so clients pick up the new shell.
-const CACHE = 'isx-extract-v8';
+const CACHE = 'isx-extract-v9';
+// all ISIONXXX apps share one site and one cache storage: only ever clear this app's own old caches
+const MINE = k => k.startsWith('isx-extract-') || k.startsWith('xl-');
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './sync.js', './apple-touch-icon.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -12,7 +14,7 @@ self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
     const next = await caches.open(CACHE);
-    for (const k of keys.filter(k => k !== CACHE)) {
+    for (const k of keys.filter(k => MINE(k) && k !== CACHE)) {
       const old = await caches.open(k);
       for (const req of await old.keys()) {
         if (/cdnjs|jsdelivr|fonts\.g/.test(req.url)) {
