@@ -96,7 +96,7 @@ button{cursor:pointer;background:none;border:0}
 .cdots{display:flex;gap:2px}.cdots i{width:5px;height:5px}
 .calft{padding:10px 16px}
 .nav{display:flex;gap:8px;align-items:center}
-.nav button{border:1px solid var(--line2);min-width:24px;height:24px;padding:0 6px;font-size:12px}
+.nav button{border:1px solid var(--line2);min-width:33px;height:33px;padding:0 10px;font-size:12px}
 .nav button:hover{border-color:var(--acc);color:var(--acc)}
 .nav .tb{font-size:11px;letter-spacing:.06em;text-transform:uppercase}
 
@@ -134,7 +134,7 @@ td .acts button:hover{border-color:var(--acc);color:var(--acc)}
 .th h3{margin:0;flex:1}
 .tf{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;color:var(--mu);gap:10px;flex-wrap:wrap}
 .pg{display:flex;align-items:center;gap:6px}
-.pg button{border:1px solid var(--line2);min-width:24px;height:24px}
+.pg button{border:1px solid var(--line2);min-width:33px;height:33px}
 .pg button:hover{border-color:var(--acc);color:var(--acc)}
 .pg input{width:40px;text-align:center;background:var(--bg);border:1px solid var(--line2);padding:3px}
 .rs{background:var(--bg);border:1px solid var(--line2);padding:3px 6px}
@@ -1348,7 +1348,7 @@ function chartsHTML(st,F){
   const lvp=[1,2,3,4].map(v=>{const ls=LESSONS.filter(l=>tOk(l.t)&&l.lv===v);return ls.length?Math.round(ls.filter(l=>isDone(l.id)).length/ls.length*100):0});
   const gd=st.evs.filter(e=>e.kind!=='self'),acc=[];let ok=0;gd.forEach((e,i)=>{ok+=e.ok?1:0;acc.push(Math.round(ok/(i+1)*100))});
   return`<div class="grid gm">
-    <div class="card"><div class="bd"><div class="eqh"><div><div class="lbl">Study time trend</div><div class="big" style="font-size:20px">${fmin(st.tot)}</div><div class="lbl" style="margin-top:4px">${fdate(st.from)} - ${fdate(st.to)} · dashed = ${settings.goal}m goal</div></div>
+    <div class="card"><div class="bd"><div class="eqh"><div><h3>Study time trend</h3><div class="big" style="font-size:20px">${fmin(st.tot)}</div><div class="lbl" style="margin-top:4px">Dashed = ${settings.goal}m daily goal</div></div>
       <div class="ks"><div>SESSIONS<b>${st.ses.length}</b></div><div>LESSONS<b class="${st.done.length?'grn':''}">${st.done.length}</b></div><div>XP<b class="grn">+${st.xp}</b></div><div>SUCCESS<b>${st.okRate==null?'—':Math.round(st.okRate*100)+'%'}</b></div><div>STREAK<b class="${st.streak?'grn':''}">${st.streak}</b></div></div></div>
       ${trend.length>1?area(trend,'#ffb000',{tgt:settings.goal}):bars(trend)}</div>${F}</div>
     <div class="card"><div class="bd"><h3>XP by week</h3><div class="lbl">Last 8 weeks</div><div class="big">${wk.at(-1).xp} XP <span class="mu" style="font-size:12px;font-weight:500">this week</span></div>
@@ -1377,8 +1377,8 @@ function tableHTML(st){
 }
 function render(){
   $('#fTrack').value=S.track;$('#fRange').value=S.range;
-  const st=stats(),F=foot(fdate(st.from),fdate(st.to));
-  $('#ctx').textContent=`${S.track==='all'?'All tracks':TR[S.track].n} - ${S.sel?fdate(S.sel):RL[S.range]}`;
+  const st=stats(),F='';   // the date range is shown once, under the filters, like the other apps
+  $('#ctx').textContent=`Statistics for ${S.track==='all'?'All Tracks':TR[S.track].n} — ${S.sel?fdate(S.sel):RL[S.range]} · ${fdate(st.from)} → ${fdate(st.to)}`;
   const ban=events.length||sessions.length?'':`<div class="card ban"><div><h3 style="margin:0 0 4px">Welcome to Extract Lab</h3><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">${I.play}Start with SQL</button><button class="btn" data-act="open" data-v="py1">Start with Python</button><button class="btn" data-act="catalog">All lessons</button></div></div>`;
   $('#app').innerHTML=ban+`<div class="grid gm">${continueHTML()}${todayHTML()}</div>`+topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
