@@ -286,6 +286,10 @@ const YTQ={
   tab1:'Tableau live connection vs extract',tab2:'Tableau dimensions vs measures aggregation',tab3:'Tableau relationships vs joins',
   tab4:'Tableau calculated fields tutorial',tab5:'Tableau FIXED LOD expressions tutorial',tab6:'Tableau table calculations running total',
   tab7:'Tableau order of operations context filters',tab8:'Tableau Hyper API Python tutorial'};
+// a track can follow a YouTube course: its playlist plays in every lesson of the track (a pinned video still wins),
+// starting at the video that covers the lesson where there is one (position in the playlist, counting from 1)
+const COURSE={sql:{list:'PLi01XoE8jYojRqM4qGBF1U90Ee1Ecb5tt',name:'Socratica · SQL',
+  at:{sql1:[5,'SELECT queries'],sql2:[6,'More SELECT queries'],sql3:[6,'More SELECT queries'],sql4:[10,'Introduction to joins'],sql8:[11,'More on joins']}}};
 const YTCH={sql:'Alex The Analyst',py:'Corey Schafer',sas:'SAS Users',tab:'Tableau'};
 const YTFULL={sql:'SQL full course for beginners',py:'pandas full course data analysis',sas:'SAS programming full course beginners',tab:'Tableau full course for beginners'};
 const ytSearch=q=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q);
@@ -1409,15 +1413,17 @@ function openLesson(id){
 }
 function closeLesson(){stEnd();CUR=null;$('#po').classList.add('hidden');$('#po').innerHTML='';document.body.style.overflow='';render()}
 function watchHTML(l){
-  const v=videos[l.id],q=YTQ[l.id]||`${TR[l.t].n} ${l.title} tutorial`;
+  const v=videos[l.id],q=YTQ[l.id]||`${TR[l.t].n} ${l.title} tutorial`,C=COURSE[l.t],at=C?.at[l.id];
   return`<div class="watch" id="watch">
     <div class="codeh"><b style="color:#ffc9c9">${I.yt.replace('<svg','<svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"')}WATCH</b>${v?`<button class="btn xs" data-act="vremove">Unpin</button>`:''}</div>
     ${v?`<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v.id)}?rel=0${v.start?'&start='+v.start:''}" title="${esc(l.title)} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`:
+      C?`<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=${C.list}${at?'&index='+(at[0]-1):''}&rel=0" title="${esc(C.name)} course" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+      <div class="mu" style="font-size:12px;line-height:1.5;margin:-2px 0 10px">${esc(C.name)} course${at?` · <b style="color:var(--tx)">${esc(at[1])}</b>`:' · this topic isn\'t in the course, so the searches below find a video for it'}. Pick any video from the playlist menu in the player.</div>`:
       `<div class="mu" style="font-size:12px;line-height:1.5;margin:4px 0 10px">Find a short explainer for this exact topic, then paste its link below to pin it here.</div>`}
     <div class="chips">
       <a class="btn xs yt" href="${ytSearch(q)}" target="_blank" rel="noopener">${I.yt}Search: ${esc(q)}</a>
       <a class="btn xs yt" href="${ytSearch(q+' '+YTCH[l.t])}" target="_blank" rel="noopener">${I.yt}+ ${esc(YTCH[l.t])}</a>
-      <a class="btn xs yt" href="${ytSearch(YTFULL[l.t])}" target="_blank" rel="noopener">${I.yt}${TR[l.t].n} full course</a>
+      ${C?`<a class="btn xs yt" href="https://www.youtube.com/playlist?list=${C.list}" target="_blank" rel="noopener">${I.yt}${esc(C.name)} playlist</a>`:`<a class="btn xs yt" href="${ytSearch(YTFULL[l.t])}" target="_blank" rel="noopener">${I.yt}${TR[l.t].n} full course</a>`}
     </div>
     <div class="vpin"><input id="vurl" placeholder="${v?'Replace with another YouTube link…':'Paste a YouTube link to pin it to this lesson'}" autocomplete="off"><button class="btn xs" data-act="vpin">Pin video</button></div>
   </div>`;
