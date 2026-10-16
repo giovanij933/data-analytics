@@ -1034,10 +1034,14 @@ const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ymd(d)};
 const diffDays=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
 const monday=s=>{const d=pd(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d)};
 const today=()=>ymd(new Date());
-const dayOf=x=>ymd(new Date(x.time));
-const fdate=s=>pd(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+// an event's day, worked out once per timestamp: renders ask for it thousands of times (capped so it can't grow forever)
+const DOC=new Map(),dayOf=x=>{let d=DOC.get(x.time);if(d===undefined){if(DOC.size>50000)DOC.clear();d=ymd(new Date(x.time));DOC.set(x.time,d)}return d};
+// formatters made once: toLocaleString builds a new one on every call, which adds up over long tables and charts
+const FMT={dmy:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}),dt:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}),
+  n0:new Intl.NumberFormat('en-US',{maximumFractionDigits:0}),n1:new Intl.NumberFormat('en-US',{maximumFractionDigits:1}),n2:new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})};
+const fdate=s=>FMT.dmy.format(pd(s));
 const fsd=s=>pd(s).toLocaleDateString('en-US',{month:'numeric',day:'numeric'});
-const fnum=v=>(+v).toLocaleString('en-US',{maximumFractionDigits:1});
+const fnum=v=>FMT.n1.format(+v);
 const fmin=m=>{m=Math.round(m||0);return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`};
 const mmss=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600);return h?`${h}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`:`${Math.floor(s/60)}:${pad(s%60)}`};
 const pct=(a,b)=>b?Math.round(a/b*100)+'%':'0%';
