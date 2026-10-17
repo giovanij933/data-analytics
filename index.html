@@ -20,7 +20,7 @@
 :root{
   color-scheme:dark;
   --bg:#070707;--card:#0c0c0c;--cell:#0a0a0a;--line:#1c1c1c;--line2:#2c2c2c;
-  --tx:#d9d5c8;--mu:#78746a;--acc:#ffb000;--amber:#ffb000;
+  --tx:#d9d5c8;--mu:#8f8a7e;--acc:#ffb000;--amber:#ffb000;
   --g:#33ff66;--r:#ff4545;--a:#ff7a33;--b:#7f9cb0;--blue:#ffb000;
   --f:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
@@ -87,7 +87,7 @@ button{cursor:pointer;background:none;border:0}
 .cell{min-height:66px;background:var(--cell);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:11px;color:var(--mu);cursor:pointer;position:relative;overflow:hidden}
 .cell.hatch{background:repeating-linear-gradient(135deg,#0a0a0a 0 6px,#111 6px 7px)}
 .cell.out{cursor:default;border-color:transparent;opacity:.5}
-.cell.fut span{color:#3a3a3a}
+.cell.fut span{color:#827d72}
 .cell.on{border-color:rgba(51,255,102,.3)}
 .cell.on b{font-size:12px;color:var(--tx)}
 .cell.sel{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
@@ -121,7 +121,7 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0 8px}
 svg text{font-family:var(--f)}
 
 /* table */
-.tw{overflow-x:auto}
+.tw{overflow-x:auto;position:relative}
 table{width:100%;border-collapse:collapse}
 th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:11px;font-weight:500;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
@@ -240,22 +240,24 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
   .ed,.fg input,.fg select,.fg textarea,.vpin input{font-size:16px}
   .lvb h2{font-size:16px}
 }
+h1.brand{margin:0}
+.cell span{color:#a9a498}
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="brand">ISIONXXX <b>//</b> LEARN<i class="cur"></i></div>
+  <h1 class="brand">ISIONXXX <b>//</b> LEARN<i class="cur"></i></h1>
   <div class="acts" id="barBtns"></div>
 </header>
 <div class="bar">
-  <select id="fTrack" class="sel"><option value="all">All tracks</option><option value="sql">SQL</option><option value="py">Python</option><option value="sas">SAS</option><option value="tab">Tableau</option></select>
-  <select id="fRange" class="sel">
+  <select id="fTrack" aria-label="Track" class="sel"><option value="all">All tracks</option><option value="sql">SQL</option><option value="py">Python</option><option value="sas">SAS</option><option value="tab">Tableau</option></select>
+  <select id="fRange" aria-label="Date range" class="sel">
     <option value="today">Today</option><option value="week">This week</option><option value="7d">Last 7 days</option>
     <option value="30d">Last 30 days</option><option value="90d">Last 90 days</option><option value="all">All time</option>
   </select>
   <span id="ctx" class="ctx"></span>
 </div>
-<div id="app"></div>
+<div id="app" role="main"></div>
 <div id="po" class="po hidden"></div>
 <div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
 
@@ -1213,7 +1215,7 @@ function gauge(segs,text){
   const cx=100,cy=92,r=72,id='g'+uid();
   const P=f=>{const a=Math.PI*(1-f);return(cx+r*Math.cos(a)).toFixed(2)+' '+(cy-r*Math.sin(a)).toFixed(2)};
   const arc=(a,b)=>`M${P(a)}A${r} ${r} 0 0 1 ${P(b)}`;
-  const col={g:'#ffb000',r:'#ff4545',a:'#ff7a33',b:'#7f9cb0',n:'#78746a',v:'#33ff66'};
+  const col={g:'#ffb000',r:'#ff4545',a:'#ff7a33',b:'#7f9cb0',n:'#8f8a7e',v:'#33ff66'};
   let s=0,p='';
   for(const[f,c]of segs){if(!(f>0))continue;const e=Math.min(1,s+f);p+=`<path d="${arc(s,e)}" stroke="${col[c]}" stroke-width="12" fill="none"/>`;s=e}
   return`<svg class="gauge" viewBox="0 0 200 104">
@@ -1241,7 +1243,7 @@ function bars(vals,{labels,max,cols}={}){
   if(!vals.length||!Math.max(...vals))return'<div class="empty">No data in range</div>';
   const W=400,H=200,p=labels?30:14,mx=max||Math.max(1,...vals)*1.08,n=vals.length,slot=(W-20)/n,bw=Math.min(slot*.66,300),id='b'+uid(),Y=v=>H-p-v/mx*(H-p-14);
   const rects=vals.map((v,i)=>{const x=10+i*slot+(slot-bw)/2,y=Y(v);
-    return`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,H-p-y).toFixed(1)}" fill="${cols?cols[i]:'#ffb000'}"/>${labels?`<text x="${(x+bw/2).toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="10" fill="#78746a">${labels[i]}</text>`:''}`}).join('');
+    return`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,H-p-y).toFixed(1)}" fill="${cols?cols[i]:'#ffb000'}"/>${labels?`<text x="${(x+bw/2).toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="10" fill="#8f8a7e">${labels[i]}</text>`:''}`}).join('');
   return`<svg class="chart" viewBox="0 0 ${W} ${H}" ${labels?'':'preserveAspectRatio="none"'}>${rects}</svg>`;
 }
 function radar(labels,vals){
@@ -1249,7 +1251,7 @@ function radar(labels,vals){
   const pt=(i,v)=>[cx+R*v*Math.cos(A[i]),cy+R*v*Math.sin(A[i])];
   const poly=f=>A.map((_,i)=>pt(i,f(i)).map(x=>x.toFixed(1)).join(',')).join(' ');
   const lab=labels.map((l,i)=>{const[x,y]=pt(i,1.22),c=Math.cos(A[i]);return`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${Math.abs(c)<.2?'middle':c>0?'start':'end'}">${l}</text>`}).join('');
-  return`<svg class="radar" viewBox="0 0 320 250" font-size="10" letter-spacing=".08em" fill="#78746a">
+  return`<svg class="radar" viewBox="0 0 320 250" font-size="10" letter-spacing=".08em" fill="#8f8a7e">
     ${[1,.75,.5,.25].map(v=>`<polygon points="${poly(()=>v)}" fill="none" stroke="#2c2c2c"/>`).join('')}
     ${A.map((_,i)=>{const[x,y]=pt(i,1);return`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#2c2c2c"/>`}).join('')}
     <polygon points="${poly(i=>Math.max(.03,vals[i]))}" fill="#ffb000" fill-opacity=".16" stroke="#ffb000" stroke-width="1.5"/>${lab}</svg>`;
@@ -1377,19 +1379,19 @@ function tableHTML(st){
   const rows=f.slice((S.page-1)*S.rows,S.page*S.rows),tf=d=>new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
   const KIND={check:'Code check',quiz:'Quiz',self:'Practice (self-check)'};
   return`<div class="th"><h3>Attempt log</h3><button class="btn" data-act="export">${I.dl}Export CSV</button></div>
-  <div class="tw"><table><thead><tr><th>Time (local)</th><th>Lesson</th><th>Track</th><th>Level</th><th>Type</th><th>Result</th><th></th></tr></thead><tbody>
+  <div class="tw" tabindex="0" role="region" aria-label="Table"><table><thead><tr><th>Time (local)</th><th>Lesson</th><th>Track</th><th>Level</th><th>Type</th><th>Result</th><th><span class="ui-sr">Actions</span></th></tr></thead><tbody>
   ${rows.map(e=>{const l=LM[e.lesson];if(!l)return'';return`<tr><td class="mu2">${tf(e.time)}</td><td><b>${esc(l.title)}</b></td><td>${pill(l.t)}</td><td class="mu2">${LV[l.lv]}</td><td class="mu2">${KIND[e.kind]}</td>
     <td class="${e.ok?'grn':'red'}">${e.ok?'✓ Correct':'✗ Not yet'}</td><td><button class="btn xs" data-act="open" data-v="${l.id}">Open</button></td></tr>`}).join('')
-  ||'<tr><td colspan="7" style="text-align:center;color:#555;padding:30px">No attempts in this range</td></tr>'}
+  ||'<tr><td colspan="7" style="text-align:center;color:#8f8a7e;padding:30px">No attempts in this range</td></tr>'}
   </tbody></table></div>
-  <div class="tf"><div class="pg"><button data-act="pprev">‹</button>Page <input id="pgIn" type="number" min="1" value="${S.page}"> of ${pages}<button data-act="pnext">›</button></div>
-  <div class="pg"><select id="rowsSel" class="rs">${[10,20,50,100].map(n=>`<option value="${n}" ${n===S.rows?'selected':''}>${n} rows</option>`).join('')}</select><span style="margin-left:8px">${f.length} records</span></div></div>`;
+  <div class="tf"><div class="pg"><button data-act="pprev">‹</button>Page <input id="pgIn" aria-label="Page" type="number" min="1" value="${S.page}"> of ${pages}<button data-act="pnext">›</button></div>
+  <div class="pg"><select id="rowsSel" aria-label="Rows per page" class="rs">${[10,20,50,100].map(n=>`<option value="${n}" ${n===S.rows?'selected':''}>${n} rows</option>`).join('')}</select><span style="margin-left:8px">${f.length} records</span></div></div>`;
 }
 function render(){
   $('#fTrack').value=S.track;$('#fRange').value=S.range;
   const st=stats(),F='';   // the date range is shown once, under the filters, like the other apps
   $('#ctx').textContent=`Statistics for ${S.track==='all'?'All Tracks':TR[S.track].n} — ${S.sel?fdate(S.sel):RL[S.range]} · ${fdate(st.from)} → ${fdate(st.to)}`;
-  const ban=events.length||sessions.length?'':`<div class="card ban"><div><h3 style="margin:0 0 4px">Welcome to LEARN</h3><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
+  const ban=events.length||sessions.length?'':`<div class="card ban"><div><h2 style="margin:0 0 4px;font-size:1.17em">Welcome to LEARN</h2><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">${I.play}Start with SQL</button><button class="btn" data-act="open" data-v="py1">Start with Python</button><button class="btn" data-act="catalog">All lessons</button></div></div>`;
   $('#app').innerHTML=ban+heroToday()+`<div class="grid gm">${continueHTML()}${todayHTML()}</div>`+topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
 }
