@@ -1307,6 +1307,7 @@ function calendarHTML(){
   const tk=today();let h=['Sun','Mon','Tue','Wed','Thu','Fri','Sat','Week'].map(d=>`<div class="dh">${d}</div>`).join(''),tm=0,td=0;
   for(let w=0;w<6;w++){
     let wm=0,wd=0;
+    {const d0=new Date(start);d0.setDate(start.getDate()+w*7);if(w&&d0.getMonth()!==mo)break}   // no row that's all next month
     for(let i=0;i<7;i++){
       const d=new Date(start);d.setDate(start.getDate()+w*7+i);const k=ymd(d),v=dm[k];
       if(d.getMonth()!==mo){h+='<div class="cell hatch out"></div>';continue}
