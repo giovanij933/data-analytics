@@ -249,6 +249,7 @@ h1.brand{margin:0}
   <h1 class="brand">ISIONXXX <b>//</b> LEARN<i class="cur"></i></h1>
   <div class="acts" id="barBtns"></div>
 </header>
+<div id="top"></div>
 <div class="bar">
   <select id="fTrack" aria-label="Track" class="sel"><option value="all">All tracks</option><option value="sql">SQL</option><option value="py">Python</option><option value="sas">SAS</option><option value="tab">Tableau</option></select>
   <select id="fRange" aria-label="Date range" class="sel">
@@ -1280,20 +1281,6 @@ function continueHTML(){
   return`<div class="card"><div class="bd" style="padding-bottom:4px"><h3 style="margin-bottom:6px">Continue learning</h3><div class="lbl" style="margin-bottom:8px">Beginner → Intermediate → Advanced → Expert in each track</div>${rows}</div>
     <div class="ft"><span>Up next: ${pill(rec.t)} <b>${esc(rec.title)}</b> <span class="mu">· ${LV[rec.lv]}</span></span><button class="btn go" data-act="open" data-v="${rec.id}">${I.play}Start session</button></div></div>`;
 }
-function todayHTML(){
-  const t=today(),m=sessions.filter(s=>dayOf(s)===t).reduce((s,x)=>s+x.min,0)+(ST?ST.acc/60:0);
-  const dl=LESSONS.filter(l=>progress[l.id]?.date===t),xp=dl.reduce((s,l)=>s+progress[l.id].xp,0),X=totalXP();
-  const row=(l,v,c='')=>`<div class="tl"><span>${l}</span><b class="${c}" style="font-weight:500">${v}</b></div>`;
-  return`<div class="card"><div class="bd"><h3 style="margin-bottom:6px">Today</h3><div class="lbl" style="margin-bottom:12px">Rank: <b style="color:var(--acc,#ffb000)">${rank(X)}</b> · ${X} / ${maxXP} XP</div>
-    ${row('Study time',`${fmin(m)} / ${settings.goal}m`,m>=settings.goal?'grn':'')}
-    ${row('Lessons completed',dl.length,dl.length?'grn':'')}
-    ${row('XP earned',xp?'+'+xp:'0',xp?'grn':'')}
-    ${row('Study streak',streak()+' day'+(streak()===1?'':'s'),streak()?'grn':'mu')}
-    ${row('Overall progress',`${LESSONS.filter(l=>isDone(l.id)).length} / ${LESSONS.length}`)}
-    ${row('Videos pinned',`${Object.keys(videos).length} / ${LESSONS.length}`)}
-    <div class="hb" style="margin-top:12px"><i style="width:${X/maxXP*100}%;background:#ffb000"></i></div></div>
-    <div class="ft"><span class="mu">Same task in 4 languages</span><button class="btn" data-act="rosetta">${I.swap}Rosetta</button></div></div>`;
-}
 function topCards(st,F){
   const ls=LESSONS.filter(l=>tOk(l.t)),d=ls.filter(l=>isDone(l.id)).length,lvc=v=>{const x=ls.filter(l=>l.lv===v);return`${x.filter(l=>isDone(l.id)).length} / ${x.length}`};
   const D=st.done.length,fr=D?st.first/D:0,g=settings.goal,gf=st.avgMin/g,X=S.track==='all'?totalXP():tLessons(S.track).reduce((s,l)=>s+(progress[l.id]?.xp||0),0);
@@ -1395,7 +1382,9 @@ function render(){
   $('#ctx').textContent=`Statistics for ${S.track==='all'?'All Tracks':TR[S.track].n} — ${S.sel?fdate(S.sel):RL[S.range]} · ${fdate(st.from)} → ${fdate(st.to)}`;
   const ban=events.length||sessions.length?'':`<div class="card ban"><div><h2 style="margin:0 0 4px;font-size:1.17em">Welcome to LEARN</h2><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">${I.play}Start with SQL</button><button class="btn" data-act="open" data-v="py1">Start with Python</button><button class="btn" data-act="catalog">All lessons</button></div></div>`;
-  $('#app').innerHTML=ban+heroToday()+`<div class="grid gm">${continueHTML()}${todayHTML()}</div>`+topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
+  // today and what to learn next don't depend on the filters, so they sit above them (today's numbers are in the hero)
+  $('#top').innerHTML=ban+heroToday()+continueHTML();
+  $('#app').innerHTML=topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
 }
 
 /* ================= study session timing ================= */
@@ -1628,7 +1617,7 @@ function heroToday(){
     log:[...S1.map(x=>({at:Date.parse(x.time),tag:'Study',text:`${Math.round(+x.min||0)} min${x.lessons?.length?` · ${x.lessons.length} lesson${x.lessons.length>1?'s':''}`:''}`})),
       ...passed.map(e=>({at:Date.parse(e.time),tag:'Passed',text:LM[e.lesson]?.title||'Exercise',tone:'pos'}))]});
 }
-{const r0=render;render=function(...a){r0.apply(this,a);UI.animate($('#app'),{onDone:l=>toast(`${l.join(' + ')} goal met ✓`)})};UI.animate($('#app'))}
+{const r0=render;render=function(...a){r0.apply(this,a);UI.animate($('#app'));UI.animate($('#top'),{onDone:l=>toast(`${l.join(' + ')} goal met ✓`)})};UI.animate($('#top'));UI.animate($('#app'))}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
