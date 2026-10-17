@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <title>ISIONXXX // LEARN</title>
+<link rel="stylesheet" href="ui.css">
 <style>
 :root{
   color-scheme:dark;
@@ -259,6 +260,7 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 <div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
 
 <script src="sync.js" data-keys="xl.progress.v1 xl.events.v1 xl.sessions.v1 xl.drafts.v1 xl.settings.v1 xl.videos.v1"></script>
+<script src="ui.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const ACC='var(--acc,#ffb000)';                       // brand amber (measurement)
@@ -1389,7 +1391,7 @@ function render(){
   $('#ctx').textContent=`Statistics for ${S.track==='all'?'All Tracks':TR[S.track].n} — ${S.sel?fdate(S.sel):RL[S.range]} · ${fdate(st.from)} → ${fdate(st.to)}`;
   const ban=events.length||sessions.length?'':`<div class="card ban"><div><h3 style="margin:0 0 4px">Welcome to LEARN</h3><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">${I.play}Start with SQL</button><button class="btn" data-act="open" data-v="py1">Start with Python</button><button class="btn" data-act="catalog">All lessons</button></div></div>`;
-  $('#app').innerHTML=ban+`<div class="grid gm">${continueHTML()}${todayHTML()}</div>`+topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
+  $('#app').innerHTML=ban+heroToday()+`<div class="grid gm">${continueHTML()}${todayHTML()}</div>`+topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
 }
 
 /* ================= study session timing ================= */
@@ -1609,6 +1611,20 @@ addEventListener('storage',e=>{if(e.key===K.s){const v=load(K.s,[]);sessions=Arr
 function doAct(a){if(!/^\w+$/.test(a||''))return;const b=document.querySelector(`[data-a="${a}"],[data-act="${a}"]`);if(b)b.click()}
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.isx==='do')doAct(e.data.act)});
 {const m=/do=(\w+)/.exec(location.hash);if(m){history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>doAct(m[1]),0)}}
+/* ---------- today at a glance (shared hero, timeline and motion from ui.js) ---------- */
+function heroToday(){
+  if(!sessions.length&&!events.length)return '';
+  const t=today(),S1=sessions.filter(x=>dayOf(x)===t),min=Math.round(S1.reduce((a,x)=>a+(+x.min||0),0)),goal=settings.goal||30;
+  const doneT=LESSONS.filter(l=>progress[l.id]?.done&&progress[l.id].date===t),xp=doneT.reduce((a,l)=>a+(progress[l.id].xp||0),0),st=streak();
+  const passed=events.filter(e=>dayOf(e)===t&&e.kind==='check'&&e.ok);
+  return UI.hero({key:'learn',title:'Today',sub:`${st}-day streak · ${LESSONS.filter(l=>isDone(l.id)).length}/${LESSONS.length} lessons done`,
+    big:{value:`+${xp}`,label:'XP today'},
+    rings:[{key:'min',label:'Study',value:min,max:goal,display:`${min}/${goal} min`},{key:'lesson',label:'Lesson',value:doneT.length,max:1,display:doneT.length?`${doneT.length} done`:'not yet'},{key:'streak',label:'Streak',value:Math.min(st,7),max:7,display:`${st} day${st===1?'':'s'}`}],
+    action:{label:'▶ Next lesson',act:'startnext'}})
+  +UI.timeline({items:[...S1.map(x=>({at:Date.parse(x.time),tag:'Study',text:`${Math.round(+x.min||0)} min${x.lessons?.length?` · ${x.lessons.length} lesson${x.lessons.length>1?'s':''}`:''}`})),
+      ...passed.map(e=>({at:Date.parse(e.time),tag:'Passed',text:LM[e.lesson]?.title||'Exercise',tone:'pos'}))],empty:'Nothing studied yet today. Start the next lesson and it shows up here.'});
+}
+{const r0=render;render=function(...a){r0.apply(this,a);UI.animate($('#app'),{onDone:l=>toast(`${l.join(' + ')} goal met ✓`)})};UI.animate($('#app'))}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
