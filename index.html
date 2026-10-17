@@ -1624,9 +1624,9 @@ function heroToday(){
   return UI.hero({key:'learn',title:'Today',sub:`${st}-day streak · ${LESSONS.filter(l=>isDone(l.id)).length}/${LESSONS.length} lessons done`,
     big:{value:`+${xp}`,label:'XP today'},
     rings:[{key:'min',label:'Study',value:min,max:goal,display:`${min}/${goal} min`},{key:'lesson',label:'Lesson',value:doneT.length,max:1,display:doneT.length?`${doneT.length} done`:'not yet'},{key:'streak',label:'Streak',value:Math.min(st,7),max:7,display:`${st} day${st===1?'':'s'}`}],
-    action:{label:'▶ Next lesson',act:'startnext'}})
-  +UI.timeline({items:[...S1.map(x=>({at:Date.parse(x.time),tag:'Study',text:`${Math.round(+x.min||0)} min${x.lessons?.length?` · ${x.lessons.length} lesson${x.lessons.length>1?'s':''}`:''}`})),
-      ...passed.map(e=>({at:Date.parse(e.time),tag:'Passed',text:LM[e.lesson]?.title||'Exercise',tone:'pos'}))],empty:'Nothing studied yet today. Start the next lesson and it shows up here.'});
+    action:{label:'▶ Next lesson',act:'startnext'},
+    log:[...S1.map(x=>({at:Date.parse(x.time),tag:'Study',text:`${Math.round(+x.min||0)} min${x.lessons?.length?` · ${x.lessons.length} lesson${x.lessons.length>1?'s':''}`:''}`})),
+      ...passed.map(e=>({at:Date.parse(e.time),tag:'Passed',text:LM[e.lesson]?.title||'Exercise',tone:'pos'}))]});
 }
 {const r0=render;render=function(...a){r0.apply(this,a);UI.animate($('#app'),{onDone:l=>toast(`${l.join(' + ')} goal met ✓`)})};UI.animate($('#app'))}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
