@@ -1024,9 +1024,11 @@ const K={p:'xl.progress.v1',e:'xl.events.v1',s:'xl.sessions.v1',d:'xl.drafts.v1'
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}};
 let progress=load(K.p,{}),events=load(K.e,[]),sessions=load(K.s,[]),drafts=load(K.d,{}),videos=load(K.v,{}),settings=Object.assign({goal:30,focus:25,last:null},load(K.c,{}));
 if(!Array.isArray(events))events=[];if(!Array.isArray(sessions))sessions=[];
-const save=()=>{localStorage.setItem(K.p,JSON.stringify(progress));localStorage.setItem(K.e,JSON.stringify(events));localStorage.setItem(K.s,JSON.stringify(sessions));localStorage.setItem(K.c,JSON.stringify(settings))};
-const saveDrafts=()=>localStorage.setItem(K.d,JSON.stringify(drafts));
-const saveVideos=()=>localStorage.setItem(K.v,JSON.stringify(videos));
+// a full disk must not abort the click that saved; sync.js says what happened and how to make room
+const keep=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+const save=()=>{if(![[K.p,progress],[K.e,events],[K.s,sessions],[K.c,settings]].every(([k,v])=>keep(k,v)))toast('Storage write failed — take a backup')};
+const saveDrafts=()=>keep(K.d,drafts);
+const saveVideos=()=>{if(!keep(K.v,videos))toast('Storage write failed — take a backup')};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
 /* ================= helpers ================= */
