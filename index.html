@@ -1613,7 +1613,7 @@ function heroToday(){
   // each lesson passed today once, at its first pass
   const passed=events.filter(e=>dayOf(e)===t&&e.kind==='check'&&e.ok).sort((a,b)=>Date.parse(a.time)-Date.parse(b.time)).filter((e,i,a)=>a.findIndex(x=>x.lesson===e.lesson)===i);
   return UI.hero({key:'learn',title:'Today',sub:`${st}-day streak · ${LESSONS.filter(l=>isDone(l.id)).length}/${LESSONS.length} lessons done`,
-    big:{value:`+${xp}`,label:'XP today'},
+    big:{value:`+${xp}`,label:'XP today',tone:xp>0?'pos':''},
     rings:[{key:'min',label:'Study',value:min,max:goal,display:`${min}/${goal} min`},{key:'lesson',label:'Lesson',value:doneT.length,max:1,display:doneT.length?`${doneT.length} done`:'not yet'},{key:'streak',label:'Streak',value:Math.min(st,7),max:7,display:`${st} day${st===1?'':'s'}`,done:min>0||doneT.length>0||passed.length>0}],
     action:{label:'▶ Next lesson',act:'startnext'},
     log:[...S1.map(x=>({at:Date.parse(x.time),tag:'Study',text:`${Math.round(+x.min||0)} min${x.lessons?.length?` · ${x.lessons.length} lesson${x.lessons.length>1?'s':''}`:''}`})),
