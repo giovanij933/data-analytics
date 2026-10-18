@@ -71,9 +71,10 @@ button{cursor:pointer;background:none;border:0}
 .lbl{font-size:11px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
 .big{font-size:22px;font-weight:600;margin:2px 0 8px}
 .gauge{display:block;width:150px;max-width:100%;margin:6px auto 10px}
-.gauge text{font-weight:600}
-.lr{display:flex;align-items:center;padding:2px 0}
-.lr span{flex:1}.lr b{min-width:24px;text-align:right}.lr em{font-style:normal;width:48px;text-align:right;color:var(--mu)}
+.gauge path{fill:none;stroke-width:9}
+.gauge text{fill:var(--tx);font:600 17px var(--f)}
+.lr{display:grid;grid-template-columns:14px 1fr auto 46px;align-items:center;padding:2px 0}
+.lr span{min-width:0}.lr b{text-align:right}.lr em{font-style:normal;text-align:right;color:var(--mu)}
 .dot{width:7px;height:7px;margin-right:7px;display:inline-block;flex:none}
 .row{display:flex;justify-content:space-between;gap:8px;padding:5px 0}
 .hb{height:8px;background:#111;margin:6px 0 4px;overflow:hidden}
@@ -1206,16 +1207,12 @@ function stats(){
 
 /* ================= svg charts ================= */
 // segment colors: g = brand amber, v = positive (terminal green), r = red, a = warning, b = secondary, n = neutral
+const ARC='M12 62A50 50 0 0 1 112 62';
 function gauge(segs,text){
-  const cx=100,cy=92,r=72,id='g'+uid();
-  const P=f=>{const a=Math.PI*(1-f);return(cx+r*Math.cos(a)).toFixed(2)+' '+(cy-r*Math.sin(a)).toFixed(2)};
-  const arc=(a,b)=>`M${P(a)}A${r} ${r} 0 0 1 ${P(b)}`;
   const col={g:'#ffb000',r:'#ff4545',a:'#ff7a33',b:'#7f9cb0',n:'#8f8a7e',v:'#33ff66'};
-  let s=0,p='';
-  for(const[f,c]of segs){if(!(f>0))continue;const e=Math.min(1,s+f);p+=`<path d="${arc(s,e)}" stroke="${col[c]}" stroke-width="12" fill="none"/>`;s=e}
-  return`<svg class="gauge" viewBox="0 0 200 104">
-    <path d="${arc(0,1)}" stroke="#2c2c2c" stroke-width="12" fill="none"/>${p}
-    <text x="100" y="${cy-2}" text-anchor="middle" font-size="22" font-weight="600" fill="#d9d5c8">${text}</text></svg>`;
+  let off=0;
+  const arcs=segs.filter(([f])=>f>0).map(([f,c])=>{f=Math.min(f,1-off);const a=`<path d="${ARC}" stroke="${col[c]}" pathLength="100" stroke-dasharray="${(f*100).toFixed(2)} 100" stroke-dashoffset="${(-off*100).toFixed(2)}"/>`;off+=f;return a}).join('');
+  return`<svg class="gauge" viewBox="0 0 124 70"><path d="${ARC}" stroke="#2c2c2c"/>${arcs}<text x="62" y="60" text-anchor="middle">${text}</text></svg>`;
 }
 function smooth(pts){
   let d=`M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
@@ -1254,7 +1251,7 @@ function radar(labels,vals){
 
 /* ================= dashboard sections ================= */
 const foot=(a,b)=>`<div class="ft"><span>${a}</span><span>${b}</span></div>`;
-const lr=(col,label,v,p)=>`<div class="lr"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${v}</b>${p!==undefined?`<em>${p}</em>`:''}</div>`;
+const lr=(col,label,v,p)=>`<div class="lr"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${v}</b><em>${p??''}</em></div>`;
 const er=(col,label,val,tip='')=>`<div class="er"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${val}</b><i class="q" title="${esc(tip)}">i</i></div>`;
 function recommend(){
   const last=settings.last&&LM[settings.last]?.t;
@@ -1274,22 +1271,22 @@ function continueHTML(){
     <div class="ft"><span>Up next: ${pill(rec.t)} <b>${esc(rec.title)}</b> <span class="mu">· ${LV[rec.lv]}</span></span><button class="btn go" data-act="open" data-v="${rec.id}">&#9654; START SESSION</button></div></div>`;
 }
 function topCards(st,F){
-  const ls=LESSONS.filter(l=>tOk(l.t)),d=ls.filter(l=>isDone(l.id)).length,lvc=v=>{const x=ls.filter(l=>l.lv===v);return`${x.filter(l=>isDone(l.id)).length} / ${x.length}`};
+  const ls=LESSONS.filter(l=>tOk(l.t)),d=ls.filter(l=>isDone(l.id)).length,lvx=v=>{const x=ls.filter(l=>l.lv===v);return[x.filter(l=>isDone(l.id)).length,x.length]},lvc=v=>lvx(v).join(' / '),lvd=v=>{const[a,b]=lvx(v);return b&&a===b?'var(--g)':'#2c2c2c'};
   const D=st.done.length,fr=D?st.first/D:0,g=settings.goal,gf=st.avgMin/g,X=S.track==='all'?totalXP():tLessons(S.track).reduce((s,l)=>s+(progress[l.id]?.xp||0),0);
   const mx=S.track==='all'?maxXP:tLessons(S.track).reduce((s,l)=>s+Math.round(XPL[l.lv]*1.5),0);
   return`<div class="grid g4">
   <div class="card"><div class="bd"><h3>Course progress</h3><div class="lbl">Lessons completed (all time)</div><div class="big">${d} / ${ls.length}</div>
     ${gauge([[d/ls.length,'v']],pct(d,ls.length))}
-    ${lr(LVC[1],'Beginner',lvc(1))}${lr(LVC[2],'Intermediate',lvc(2))}${lr(LVC[3],'Advanced',lvc(3))}${lr(LVC[4],'Expert',lvc(4))}</div>${F}</div>
+    ${lr(lvd(1),'Beginner',lvc(1))}${lr(lvd(2),'Intermediate',lvc(2))}${lr(lvd(3),'Advanced',lvc(3))}${lr(lvd(4),'Expert',lvc(4))}</div>${F}</div>
   <div class="card"><div class="bd"><h3>Accuracy</h3><div class="lbl">First-try completions in range</div><div class="big ${D?fr>=.6?'grn':fr<.35?'red':'':''}">${D?pct(st.first,D):'—'}</div>
     ${gauge(D?[[fr,'v'],[1-fr,'r']]:[],D?pct(st.first,D):'—')}
-    ${lr('var(--g)','First try (no hint/solution)',st.first)}${lr('var(--r)','Needed more tries',D-st.first)}${lr('#3a3a3a','Hints · solutions viewed',`${st.hints} · ${st.revs}`)}</div>${F}</div>
+    ${lr('var(--g)','First try (no hint/solution)',st.first)}${lr('var(--r)','Needed more tries',D-st.first)}${lr('#2c2c2c','Hints · solutions viewed',`${st.hints} · ${st.revs}`)}</div>${F}</div>
   <div class="card"><div class="bd"><h3>Study time</h3><div class="lbl">Avg minutes / day</div><div class="big ${st.avgMin>=g?'grn':''}">${fnum(Math.round(st.avgMin))}m</div>
     ${gauge([[Math.min(1,gf),'v']],Math.round(gf*100)+'%')}
-    ${lr('var(--g)','Total',fmin(st.tot))}${lr('#3a3a3a','Sessions',st.ses.length)}${lr(ACC,'Longest session',fmin(st.longest))}</div>${F}</div>
+    ${lr('var(--g)','Total',fmin(st.tot))}${lr('#2c2c2c','Sessions',st.ses.length)}${lr('#2c2c2c','Longest session',fmin(st.longest))}</div>${F}</div>
   <div class="card"><div class="bd"><h3>Experience</h3><div class="lbl">Rank · ${S.track==='all'?'all tracks':TR[S.track].n}</div><div class="big ${X>0?'grn':''}">${rank(X/mx*maxXP)}</div>
     ${gauge([[X/mx,'v']],X+' XP')}
-    ${TK.map(t=>lr(TR[t].col,TR[t].n,`${tLessons(t).reduce((s,l)=>s+(progress[l.id]?.xp||0),0)} XP`,trackLevel(t)?LV[trackLevel(t)].slice(0,5)+'.':'—')).join('')}</div>${F}</div>
+    ${TK.map(t=>{const x=tLessons(t).reduce((s,l)=>s+(progress[l.id]?.xp||0),0);return lr(x?'var(--g)':'#2c2c2c',TR[t].n,`${x} XP`,trackLevel(t)?LV[trackLevel(t)].slice(0,3)+'.':'—')}).join('')}</div>${F}</div>
   </div>`;
 }
 function calendarHTML(){
