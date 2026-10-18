@@ -160,6 +160,16 @@ td .acts button:hover{border-color:var(--acc);color:var(--acc)}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px}.kv span{color:var(--mu)}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:90vw;background:var(--card);border:1px solid var(--acc);color:var(--acc);padding:8px 14px;z-index:40}
 
+/* daily review: a script to read top to bottom (as in JOURNAL) */
+.box.rvd{max-width:680px}
+.rvh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.rvh h3{margin:0;flex:1}.rvh .btn{min-width:33px;justify-content:center}
+.rv{border-top:1px solid var(--line);padding:14px 0 4px;font-size:13.5px;line-height:1.7}
+.rv h4{margin:0 0 6px;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}
+.rv p{margin:0 0 8px}.rv b{font-weight:600}
+.rv ol,.rv ul{margin:0 0 8px;padding-left:22px}.rv li{margin:0 0 6px}.rv li::marker{color:var(--mu)}
+.rv .tr{display:block;color:var(--mu);font-size:12px}
+.rvf .btn:first-child{margin-right:auto}
+
 /* chips */
 .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .chip{border:1px solid var(--line2);padding:7px 10px;font-size:12px;letter-spacing:.06em}
@@ -1067,7 +1077,7 @@ const trackLevel=t=>{let lv=0;for(let v=1;v<=4;v++){const ls=tLessons(t).filter(
 const pill=t=>`<span class="pill" style="color:${TR[t].col};border-color:${TR[t].col}55;background:${TR[t].col}1a">${TR[t].n}</span>`;
 const I={   // the YouTube mark on the WATCH heading; buttons with a text label carry no icon, like the other apps
   yt:`<svg viewBox="0 0 24 24"><path fill="currentColor" d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></svg>`};
-$('#barBtns').innerHTML=`<button class="btn go" data-act="startnext">&#9654; START</button><button class="btn" data-act="catalog">LESSONS</button><button class="btn" data-act="rosetta">ROSETTA</button><button class="btn" data-act="data">SETTINGS</button>`;
+$('#barBtns').innerHTML=`<button class="btn go" data-act="startnext">&#9654; START</button><button class="btn" data-act="catalog">LESSONS</button><button class="btn" data-act="rosetta">ROSETTA</button><button class="btn" data-act="review">REVIEW</button><button class="btn" data-act="data">SETTINGS</button>`;
 
 /* ================= runtimes ================= */
 const SQLJS='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/';
@@ -1523,6 +1533,107 @@ function dataForm(){
     <p class="mu" style="margin-top:10px;font-size:11px">Everything stays on this device. The SQL engine and Python runtime are downloaded once from public CDNs and then cached for offline use; videos always need a connection.</p>
     <div class="mact"><button type="button" class="btn pri" data-act="savedata">SAVE</button></div>`);
 }
+/* ================= daily review: a script to read over at the end of each study day =================
+   Built from the day's sessions and attempts (in the track filter), the days before it, lesson progress and the morning check-in.
+   Plain sentences first, then the sessions in order, what went well, what to look at, what's next and questions to answer. */
+const svOk=s=>S.track==='all'||(s.tracks||[]).includes(S.track);
+function rvDays(){const D=new Set();sessions.forEach(s=>{if(svOk(s))D.add(dayOf(s))});events.forEach(e=>{if(tOk(LM[e.lesson]?.t))D.add(dayOf(e))});return [...D].sort()}
+function rvDefault(){
+  const D=rvDays(),t=today();
+  return S.sel&&D.includes(S.sel)?S.sel:D.includes(t)?t:D.filter(d=>d<=t).at(-1)||D.at(-1);
+}
+function review(day){
+  const ses=sessions.filter(svOk),evs=events.filter(e=>LM[e.lesson]&&tOk(LM[e.lesson].t)),g=settings.goal||30;
+  const S1=ses.filter(s=>dayOf(s)===day).sort((a,b)=>Date.parse(a.time)-Date.parse(b.time)),E1=evs.filter(e=>dayOf(e)===day).sort((a,b)=>Date.parse(a.time)-Date.parse(b.time));
+  const pl=(k,w,ws=w+'s')=>`${k} ${k===1?w:ws}`,mins=m=>{m=Math.round(m);return m>=60?fmin(m):pl(m,'minute')},hm=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,lt=l=>`<b>${esc(l.title)}</b> (${TR[l.t].n}, ${LV[l.lv]})`,list=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a.at(-1);
+  const sec=(h,b)=>b?`<section class="rv"><h4>${h}</h4>${b}</section>`:'',ul=a=>a.length?`<ul>${a.map(x=>`<li>${x}</li>`).join('')}</ul>`:'';
+  const min=S1.reduce((a,s)=>a+(+s.min||0),0),gr=E1.filter(e=>e.kind!=='self'),ok=gr.filter(e=>e.ok).length;
+  // the lessons touched today, in the order you first touched them
+  const W=[...new Set([...S1.flatMap(s=>s.lessons||[]),...E1.map(e=>e.lesson)])].filter(id=>LM[id]&&tOk(LM[id].t)).map(id=>LM[id]);
+  const done=LESSONS.filter(l=>tOk(l.t)&&progress[l.id]?.done&&progress[l.id].date===day),first=done.filter(l=>progress[l.id].first),xp=done.reduce((a,l)=>a+(progress[l.id].xp||0),0);
+  const fails=id=>E1.filter(e=>e.lesson===id&&e.kind!=='self'&&!e.ok).length;
+  // the day
+  let p=`<p>On <b>${pd(day).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</b>${S.track==='all'?'':` (${TR[S.track].n} only)`} `+
+    (S1.length?`you studied <b>${mins(min)}</b> in ${S1.length===1?'one session':pl(S1.length,'session')}, ${min>=g?`<b class="grn">meeting your ${g}-minute goal</b>`:`<b class="amb">${mins(g-min)} short</b> of your ${g}-minute goal`}.`:'no study session was timed, but you did work on lessons.')+'</p>';
+  if(W.length)p+=`<p>You worked on ${list(W.map(lt))}${done.length?`, and completed ${done.length===W.length?(done.length===1?'it':'all of them'):list(done.map(l=>`<b>${esc(l.title)}</b>`))}`:`, but didn't complete ${W.length===1?'it':'any of them'} yet`}.</p>`;
+  if(gr.length)p+=`<p>You made ${pl(gr.length,'graded attempt')} and ${ok?`${ok} passed (${pct(ok,gr.length)})`:'none passed'}.${done.length===1?` It ${first.length?'went through on the first try':'took more than one try'}.`:done.length?` ${first.length} of the ${done.length} completed lessons went through on the first try (${pct(first.length,done.length)}).`:''}${xp?` You earned <b class="grn">${xp} XP</b>.`:''}</p>`;
+  let out=sec('The day',p);
+  // in context: the 14 study days before, the streak, the course so far, the week
+  const D=rvDays(),DS=new Set(D),dm={};ses.forEach(s=>{const d=dayOf(s);dm[d]=(dm[d]||0)+(+s.min||0)});
+  const prev=D.filter(k=>k<day).slice(-14),ap=avg(prev.map(k=>dm[k]||0));
+  let st=0;for(let d=day;DS.has(d)&&st<3650;d=addDays(d,-1))st++;
+  const LS=LESSONS.filter(l=>tOk(l.t)),dn=LS.filter(l=>progress[l.id]?.done&&progress[l.id].date<=day),X=dn.reduce((a,l)=>a+(progress[l.id].xp||0),0),mx=LS.reduce((s,l)=>s+Math.round(XPL[l.lv]*1.5),0);
+  const ws=monday(day),wk=D.filter(k=>k>=ws&&k<=day).length,wn=diffDays(ws,day)+1;
+  out+=sec('In context',(prev.length&&S1.length?`<p>Over your previous ${pl(prev.length,'study day')} you averaged ${mins(ap)} a day, so this was ${min>ap*1.15?'<b class="grn">more</b> than usual':min<ap*.85?'<b class="amb">less</b> than usual':'<b>about your usual</b>'}.</p>`:prev.length?'':'<p>This is the first study day in your history'+(S.track==='all'?'':' for this track')+', so there is nothing to compare it with yet.</p>')+
+    `<p>${st>1?`That makes <b>${st} study days in a row</b>.`:DS.has(addDays(day,-1))?'':'This day started a new streak.'} By the end of it you had completed ${dn.length} of ${LS.length} lessons (${pct(dn.length,LS.length)}), rank <b>${rank(mx?X/mx*maxXP:0)}</b>. `+
+    (wn===1?'It was the first day of the week.':`You studied on ${wk} of the ${wn} days of that week${wn<7?' so far':''}.`)+'</p>');
+  // the sessions in order; each attempt goes to the latest session that started before it
+  const at=(id,es)=>{const l=LM[id],q=pr(id),parts=[];let f=0;
+      es.forEach(e=>{if(e.kind==='self'){parts.push(e.ok?'self-check: got it':'self-check: not yet');return}if(!e.ok){f++;return}parts.push(`${f?pl(f,e.kind==='quiz'?'wrong answer':'failed check')+', then ':''}${e.kind==='quiz'?'the right answer':'a pass'} at ${hm(e.time)}`);f=0});
+      if(f)parts.push(`${pl(f,es.at(-1).kind==='quiz'?'wrong answer':'failed check')}, not passed yet`);
+      const hs=[q.hint?pl(q.hint,'hint'):'',q.rev?`the solution ${q.rev===1?'once':q.rev+' times'}`:''].filter(Boolean);
+      return `<span class="tr">${esc(l.title)}: ${parts.length?parts.join('; '):'read through, nothing checked'}.${hs.length?` You've viewed ${list(hs)} on this lesson in all.`:''}</span>`};
+  const grp=S1.map(()=>[]),loose=[];E1.forEach(e=>{let i=-1;S1.forEach((s,j)=>{if(Date.parse(s.time)<=Date.parse(e.time))i=j});(i<0?loose:grp[i]).push(e)});
+  const sub=(ids,es)=>ids.map(id=>at(id,es.filter(e=>e.lesson===id))).join('');
+  const rows=S1.map((s,i)=>{const ids=[...new Set([...(s.lessons||[]),...grp[i].map(e=>e.lesson)])].filter(id=>LM[id]&&tOk(LM[id].t));
+    return `<li>${hm(s.time)} · <b>${mins(s.min)}</b>${ids.length?' · '+ids.map(id=>esc(LM[id].title)).join(', '):''}${sub(ids,grp[i])}</li>`});
+  if(loose.length){const ids=[...new Set(loose.map(e=>e.lesson))];rows.push(`<li>${S1.length?'Before your first timed session':'Untimed work'} · ${ids.map(id=>esc(LM[id].title)).join(', ')}${sub(ids,loose)}</li>`)}
+  out+=sec('How it unfolded',rows.length?`<ol>${rows.join('')}</ol>`:'');
+  // what went well
+  const good=[],look=[],before=evs.filter(e=>dayOf(e)<day);
+  if(first.length)good.push(`${list(first.map(l=>`<b>${esc(l.title)}</b>`))} went through on the first try, with no hint or solution.`);
+  if(S1.length&&min>=g)good.push(`You hit your daily goal: ${mins(min)} against ${g}.`);
+  if(st>1)good.push(`You kept the streak going (${st} days).`);
+  TK.filter(tOk).forEach(t=>{const wt=W.filter(l=>l.t===t);if(!wt.length)return;
+    if(!before.some(e=>LM[e.lesson].t===t))return good.push(`You started the <b>${TR[t].n}</b> track.`);
+    const v=Math.max(...wt.map(l=>l.lv));if(v>1&&!before.some(e=>LM[e.lesson].t===t&&LM[e.lesson].lv>=v))good.push(`${list(wt.filter(l=>l.lv===v).map(l=>`<b>${esc(l.title)}</b>`))} was your first ${LV[v]} lesson in ${TR[t].n}.`);
+    for(let v=4;v>=1;v--){const x=tLessons(t).filter(l=>l.lv===v);if(x.every(l=>progress[l.id]?.done&&progress[l.id].date<=day)&&x.some(l=>progress[l.id].date===day)){good.push(`You cleared <b>${LV[v]}</b> in ${TR[t].n}.`);break}}});
+  // what to look at: 3+ failed checks on a lesson, a solution viewed, a lesson open 3+ days, a session under 10 minutes, a track left 7+ days
+  W.forEach(l=>{const f=fails(l.id),q=progress[l.id]||{};
+    if(f>=3)look.push(`<b>${esc(l.title)}</b> took ${pl(f,'failed attempt')} before ${E1.some(e=>e.lesson===l.id&&e.ok)?'it passed':'you stopped'}.`);
+    if(q.rev)look.push(`You opened the solution for <b>${esc(l.title)}</b>${q.rev>1?` ${q.rev} times`:''}. Could you write it from scratch now?`);
+    if(!(q.done&&q.date<=day)){const f0=[...evs.filter(e=>e.lesson===l.id).map(dayOf),...ses.filter(s=>(s.lessons||[]).includes(l.id)).map(dayOf)].sort()[0],n=diffDays(f0,day)+1;
+      if(n>=3)look.push(`<b>${esc(l.title)}</b> has been in progress for ${n} days (since ${fdate(f0)}).`)}});
+  S1.filter(s=>s.min<10).forEach(s=>look.push(`The ${hm(s.time)} session lasted only ${mins(s.min)}.`));
+  const T0=new Set([...before.map(e=>LM[e.lesson].t),...ses.filter(s=>dayOf(s)<day).flatMap(s=>s.tracks||[])]);
+  TK.filter(t=>tOk(t)&&T0.has(t)&&!W.some(l=>l.t===t)).forEach(t=>{const last=[...before.filter(e=>LM[e.lesson].t===t).map(dayOf),...ses.filter(s=>dayOf(s)<day&&(s.tracks||[]).includes(t)).map(dayOf)].sort().at(-1),n=diffDays(last,day);
+    if(n>=7)look.push(`You haven't touched ${TR[t].n} in ${n} days (last on ${fdate(last)}).`)});
+  out+=sec('What went well',ul(good))+sec('What to look at',ul(look));
+  // the morning check-in for this date, when there is one
+  let ci=null;try{ci=(JSON.parse(localStorage.getItem('isx.checkin.v1'))?.log||[]).find(e=>e.day===day)}catch(e){}
+  if(ci){const Q=['','poor','restless','OK','good','great'],E=['','drained','low','steady','good','charged'];
+    out+=sec('Your state',`<p>You slept <b>${ci.sleep} h</b> (${Q[ci.q]||'unrated'} sleep) and your energy was <b>${E[ci.energy]||'unrated'}</b>.${ci.sleep<7&&S1.length&&min<g?' Short sleep on a short study day: worth watching if it repeats.':''}</p>`)}
+  // next up: the same lesson the START button opens
+  const nx=S.track==='all'?recommend():nextIn(S.track);
+  out+=sec('Next up',nx?`<p>${day===today()?'Next':'As things stand now, next'} is ${lt(nx)}${progress[nx.id]?.att?`, where you've already made ${pl(progress[nx.id].att,'attempt')}`:''}. Press <b>START</b> to pick it up.</p>`:`<p>You've completed every ${S.track==='all'?'':TR[S.track].n+' '}lesson. Revisit the ones that took the most attempts.</p>`);
+  // questions, most specific first
+  const hard=W.slice().sort((a,b)=>fails(b.id)-fails(a.id))[0],q=[];
+  if(hard)q.push(`Explain ${esc(hard.title)} in one sentence without looking.`);
+  if(hard&&fails(hard.id))q.push(fails(hard.id)>1?`What did your failed attempts on ${esc(hard.title)} have in common?`:`What did your failed attempt on ${esc(hard.title)} miss?`);
+  W.filter(l=>progress[l.id]?.rev).slice(0,1).forEach(l=>q.push(`Could you solve ${esc(l.title)} again from a blank editor?`));
+  W.filter(l=>!(progress[l.id]?.done&&progress[l.id].date<=day)).slice(0,1).forEach(l=>q.push(`What's the one step in ${esc(l.title)} you're still unsure of?`));
+  if(S1.length&&min<g)q.push(`What got in the way of the full ${g} minutes?`);
+  q.push('One thing to keep doing tomorrow. One thing to change.');
+  out+=sec('Questions to answer',`<ol>${q.map(x=>`<li>${x}</li>`).join('')}</ol>`);
+  return out;
+}
+function reviewForm(day){
+  const D=rvDays();if(!D.length)return toast('Nothing to review yet');
+  day=D.includes(day)?day:rvDefault();const i=D.indexOf(day);
+  openModal(`<div class="rvh"><h3>Daily review // ${pd(day).toLocaleDateString('en-US',{weekday:'short'})}, ${fdate(day)}</h3>
+    <button type="button" class="btn" data-act="rvgo" data-v="${D[i-1]||''}" ${i>0?'':'disabled'} aria-label="Previous study day">&lt;</button><button type="button" class="btn" data-act="rvgo" data-v="${D[i+1]||''}" ${i<D.length-1?'':'disabled'} aria-label="Next study day">&gt;</button></div>
+    <div id="rvb">${review(day)}</div>
+    <div class="mact rvf"><button type="button" class="btn" data-act="rvcopy">Copy</button><button type="button" class="btn pri" data-act="close">Done</button></div>`);
+  $('#mbox').classList.add('rvd');$('#mbox').scrollTop=0;
+}
+// plain text of the review, for pasting into a notes app
+function reviewText(){
+  const b=$('#rvb');if(!b)return '';
+  const tx=el=>el.textContent.replace(/\s+/g,' ').trim(),li=x=>{const c=x.cloneNode(true),tr=[...c.querySelectorAll('.tr')].map(s=>'   '+tx(s));tr.forEach((_,i)=>c.querySelector('.tr').remove());return [tx(c),...tr].join('\n')};
+  return [$('.rvh h3').textContent.toUpperCase(),...[...b.querySelectorAll('.rv')].map(x=>[x.querySelector('h4').textContent.toUpperCase(),
+    ...[...x.children].slice(1).map(el=>el.matches('ol,ul')?[...el.children].map((l,i)=>`${el.matches('ol')?i+1+'.':'-'} ${li(l)}`).join('\n'):tx(el))].join('\n'))].join('\n\n');
+}
 /* ================= sample learner ================= */
 // four weeks ending yesterday: a session most days, the first SQL and Python lessons in order, checks that mostly pass. Fixed seed: the same every time.
 function sample(){
@@ -1607,6 +1718,8 @@ document.addEventListener('click',async e=>{
     reveal:()=>{drafts[l.id]=$('#ed').value;saveDrafts();
       $('#pracSol').innerHTML=`<div class="codeh"><b>MODEL ANSWER</b></div><pre>${esc(l.prac.sol)}</pre><div class="mact"><span class="mu" style="font-size:12px">Did yours match?</span><button class="btn xs go" data-act="self" data-v="1">I got it</button><button class="btn xs" data-act="self" data-v="0">Not yet</button></div>`},
     self:()=>{logEvent('self',v==='1');toast(v==='1'?'Nice — logged':'Logged — worth another try later');$('#pracSol').querySelector('.mact').innerHTML='<span class="mu" style="font-size:12px">Logged ✓</span>'},
+    review:()=>reviewForm(rvDefault()),rvgo:()=>v&&reviewForm(v),
+    rvcopy:()=>{const t=reviewText();(navigator.clipboard?.writeText(t)||Promise.reject()).then(()=>toast('Review copied'),()=>toast('Copy failed — select the text instead'))},
     data:dataForm,sample,restore:()=>$('#i_file').click(),sync:()=>{closeModal();document.getElementById('isx-sync')?.click()},export:exportCSV,backup:()=>download(`isionxxx-extract-backup-${today()}.json`,JSON.stringify({version:2,progress,events,sessions,drafts,videos,settings},null,1),'application/json'),
     savedata:async()=>{settings.goal=Math.max(5,+$('#s_goal').value||30);settings.focus=Math.max(0,+$('#s_focus').value||0);save();closeModal();render()},
     clear:()=>{if(confirm('Reset ALL progress, attempts, study history and drafts? Pinned videos are kept. Make a backup first if you want to keep the rest.')){progress={};events=[];sessions=[];drafts={};save();saveDrafts();closeModal();render()}}
