@@ -131,7 +131,7 @@ th{font-size:11px;font-weight:500;color:var(--mu);letter-spacing:.08em;text-tran
 td .acts button{width:24px;height:24px;border:1px solid var(--line2);color:var(--tx);display:inline-flex;align-items:center;justify-content:center}
 td .acts button:hover{border-color:var(--acc);color:var(--acc)}
 .acts svg{width:13px;height:13px}
-.th{display:flex;align-items:center;gap:12px;padding:16px 16px 4px}
+.th{display:flex;align-items:flex-start;gap:12px;padding:16px 16px 4px}   /* title on the same line as every other card title */
 .th h3{margin:0;flex:1}
 .dim{color:var(--mu)}
 /* table pager, as in the other apps */
@@ -1362,7 +1362,7 @@ function tableHTML(st){
   const KIND={check:'Code check',quiz:'Quiz',self:'Practice (self-check)'};
   return`<div class="th"><h3>Log</h3><button class="btn" data-act="export">EXPORT CSV</button></div>
   <div class="tw" tabindex="0" role="region" aria-label="Table"><table><thead><tr><th>Time (local)</th><th>Lesson</th><th>Track</th><th>Level</th><th>Type</th><th>Result</th><th><span class="ui-sr">Actions</span></th></tr></thead><tbody>
-  ${rows.map(e=>{const l=LM[e.lesson];if(!l)return'';return`<tr><td class="mu2">${tf(e.time)}</td><td><b>${esc(l.title)}</b></td><td>${pill(l.t)}</td><td class="mu2">${LV[l.lv]}</td><td class="mu2">${KIND[e.kind]}</td>
+  ${rows.map(e=>{const l=LM[e.lesson];if(!l)return'';return`<tr><td class="mu2">${tf(e.time)}</td><td><b>${esc(l.title)}</b></td><td>${pill(l.t)}</td><td class="mu2">${LV[l.lv]}</td><td class="mu2">${KIND[e.kind]||esc(e.kind||"—")}</td>
     <td class="${e.ok?'grn':'red'}">${e.ok?'✓ Correct':'✗ Not yet'}</td><td><button class="btn xs" data-act="open" data-v="${l.id}">Open</button></td></tr>`}).join('')
   ||'<tr><td colspan="7" style="text-align:center;color:#8f8a7e;padding:30px">No attempts in this range</td></tr>'}
   </tbody></table></div>
