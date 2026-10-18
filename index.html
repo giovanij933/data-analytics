@@ -110,6 +110,16 @@ button{cursor:pointer;background:none;border:0}
 .q{width:12px;height:12px;border:1px solid var(--line2);font-size:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--mu);font-style:normal;flex:none;cursor:help}
 hr{border:0;border-top:1px solid var(--line);margin:4px 0 8px}
 
+/* cross-filters: anything with .pick narrows every card and the log; the filters show as chips under the bar */
+.pick{cursor:pointer}.pick:focus-visible{outline:1px solid var(--acc);outline-offset:2px}
+.lr.pick,.er.pick{margin:0 -6px;padding-left:6px;padding-right:6px}.lr.pick:hover,.er.pick:hover{background:#121212}
+.lr.on,.er.on{background:#1a1406;box-shadow:inset 2px 0 0 var(--acc)}
+.gauge path.pick:hover{filter:brightness(1.3)}.gauge path.off,.chart .off{opacity:.25}
+.chart .hit{fill:transparent}.chart .hit:hover{fill:rgba(255,176,0,.08)}.chart .hit.on{fill:rgba(255,176,0,.14)}
+.xf{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 12px}
+.xf span{color:var(--mu);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
+.xf button{border:1px solid var(--acc);color:var(--acc);padding:5px 8px;font-size:12px}.xf button b{font-weight:600}.xf .clr{border-color:var(--line2);color:var(--mu)}
+.xf button:hover{background:#1a1406}.xf[hidden]{display:none}
 /* charts */
 .chart{width:100%;height:160px;display:block;margin-top:8px}
 .chart *{vector-effect:non-scaling-stroke}
@@ -269,6 +279,7 @@ h1.brand{margin:0}
   </select>
   <span id="ctx" class="ctx"></span>
 </div>
+<div id="xf" class="xf" hidden></div>
 <div id="app" role="main"></div>
 <div id="po" class="po hidden"></div>
 <div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
@@ -1273,24 +1284,38 @@ function chime(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)(
   [[660,0],[880,.22],[990,.44]].forEach(([f,o])=>{const s=AC.createOscillator(),g=AC.createGain();s.frequency.value=f;g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(.15,t+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t+o+1);s.connect(g).connect(AC.destination);s.start(t+o);s.stop(t+o+1.1)})}catch{}}
 
 /* ================= state & stats ================= */
-const S={track:'all',range:'all',sel:null,month:null,page:1,rows:20};   // 20 log rows a page, like the other apps
+const S={track:'all',range:'all',sel:null,month:null,page:1,rows:20,x:{}};   // 20 log rows a page, like the other apps; x: cross-filters set by clicking a card (lv, first, res, kind, wk)
 {const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1)}
 const RL={today:'Today',week:'This week',month:'This month',all:'All time'};
 const tOk=t=>S.track==='all'||t===S.track;
-function range(){
-  if(S.sel)return[S.sel,S.sel];
+function range(noSel){
+  if(S.sel&&!noSel)return[S.sel,S.sel];
   const t=today();
   switch(S.range){case'today':return[t,t];case'week':return[monday(t),t];case'month':return[t.slice(0,8)+'01',t];default:return['0000-00-00','9999-99-99']}
 }
 const studyDays=()=>new Set([...sessions.map(dayOf),...events.map(dayOf)]);
 function streak(){const s=studyDays();let c=0,d=today();if(!s.has(d))d=addDays(d,-1);while(s.has(d)&&c<3650){c++;d=addDays(d,-1)}return c}
-function stats(){
-  let[from,to]=range();
+// every filter at once: the track and day (S.track, S.sel), the range, and the cross-filters in S.x.
+// skip leaves one filter out: a card that sets a filter shows every option, with its own choice highlighted
+const xval=k=>k==='track'?(S.track==='all'?null:S.track):k==='day'?S.sel:S.x[k];
+function view(useRange=true,skip=''){
+  const x=S.x,on=k=>k!==skip&&xval(k)!=null;
+  let[from,to]=useRange?range(skip==='day'):['0000-00-00','9999-99-99'];
+  if(on('wk')){from=from>x.wk?from:x.wk;const e=addDays(x.wk,6),t=today();to=[to,e,t].sort()[0]}
+  const dOk=d=>d>=from&&d<=to;
+  // a lesson passes on its track, level and first-try outcome; an attempt also on its result and type
+  const lOk=id=>{const l=LM[id];return(!on('track')||l?.t===S.track)&&(!on('lv')||l?.lv===x.lv)&&(!on('first')||!!progress[id]?.done&&(progress[id].first?'y':'n')===x.first)};
+  const evs=events.filter(e=>dOk(dayOf(e))&&lOk(e.lesson)&&(!on('res')||(e.ok?'ok':'no')===x.res)&&(!on('kind')||e.kind===x.kind));
+  // with a result or type chosen, lessons and sessions count when they hold such an attempt
+  const byEv=on('res')||on('kind'),L=new Set(evs.map(e=>e.lesson)),lk=id=>lOk(id)&&(!byEv||L.has(id)),byL=byEv||on('lv')||on('first');
+  const done=LESSONS.filter(l=>isDone(l.id)&&dOk(progress[l.id].date)&&lk(l.id));
+  const ses=sessions.filter(s=>dOk(dayOf(s))&&(!on('track')||(s.tracks||[]).includes(S.track))&&(!byL||(s.lessons||[]).some(lk)));
+  return{from,to,evs,done,ses,lk};
+}
+function stats(V=view()){
+  let{from,to,ses,evs,done}=V;
   if(from==='0000-00-00'){const all=[...sessions.map(dayOf),...events.map(dayOf)].sort();from=all[0]||today();to=today()}
-  const inR=d=>d>=from&&d<=to,span=Math.max(1,diffDays(from,to)+1);
-  const ses=sessions.filter(s=>inR(dayOf(s))&&(S.track==='all'||(s.tracks||[]).includes(S.track)));
-  const evs=events.filter(e=>inR(dayOf(e))&&tOk(LM[e.lesson]?.t));
-  const done=LESSONS.filter(l=>tOk(l.t)&&progress[l.id]?.done&&inR(progress[l.id].date));
+  const span=Math.max(1,diffDays(from,to)+1);
   const dm={};ses.forEach(s=>{const d=dayOf(s);dm[d]=(dm[d]||0)+s.min});
   const tot=ses.reduce((s,x)=>s+x.min,0);
   const graded=evs.filter(e=>e.kind!=='self');
@@ -1308,7 +1333,8 @@ const ARC='M12 62A50 50 0 0 1 112 62';
 function gauge(segs,text){
   const col={g:'#ffb000',r:'#ff4545',a:'#ff7a33',b:'#7f9cb0',n:'#8f8a7e',v:'#33ff66'};
   let off=0;
-  const arcs=segs.filter(([f])=>f>0).map(([f,c])=>{f=Math.min(f,1-off);const a=`<path d="${ARC}" stroke="${col[c]}" pathLength="100" stroke-dasharray="${(f*100).toFixed(2)} 100" stroke-dashoffset="${(-off*100).toFixed(2)}"/>`;off+=f;return a}).join('');
+  // a segment can carry a cross-filter (x = 'key:value') and a tooltip: click it to filter; it stays bright, the others dim
+  const arcs=segs.filter(([f])=>f>0).map(([f,c,x,t])=>{f=Math.min(f,1-off);const a=`<path${x?` class="pick${xoff(x)?' off':''}" data-act="xf" data-v="${x}"`:''} d="${ARC}" stroke="${col[c]}" pathLength="100" stroke-dasharray="${(f*100).toFixed(2)} 100" stroke-dashoffset="${(-off*100).toFixed(2)}">${t?`<title>${esc(t)}</title>`:''}</path>`;off+=f;return a}).join('');
   return`<svg class="gauge" viewBox="0 0 124 70"><path d="${ARC}" stroke="#2c2c2c"/>${arcs}<text x="62" y="60" text-anchor="middle">${text}</text></svg>`;
 }
 function smooth(pts){
@@ -1319,27 +1345,31 @@ function smooth(pts){
   }
   return d;
 }
-function area(series,color,{tgt,max}={}){
+// at(i) → {a, title, on} for point or bar i: what clicking its full-height column does, what hovering says.
+// The columns are paths, not rects, so UI.animate's bar growth leaves them alone
+const hit=m=>m?`${m.a?` class="hit pick${m.on?' on':''}" ${m.a}`:' class="hit"'}><title>${esc(m.title)}</title></path>`:' class="hit"/>';
+function area(series,color,{tgt,max,at}={}){
   if(series.length<2)return'<div class="empty">Not enough data yet</div>';
   const W=800,H=200,p=12,mx=max||Math.max(1,...series,(tgt||0))*1.08,X=i=>p+i*(W-2*p)/(series.length-1),Y=v=>p+(mx-v)/mx*(H-2*p);
   const d=smooth(series.map((v,i)=>[X(i),Y(Math.max(0,Math.min(mx,v)))])),id='a'+uid();
   return`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
     <path d="${d} L${X(series.length-1)},${Y(0)} L${X(0)},${Y(0)} Z" fill="${color}" fill-opacity=".1"/>
     ${tgt?`<line x1="${p}" x2="${W-p}" y1="${Y(tgt)}" y2="${Y(tgt)}" stroke="#2c2c2c" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>`:''}
-    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>${at?series.map((_,i)=>{const cw=(W-2*p)/(series.length-1),x0=Math.max(0,X(i)-cw/2);return`<path d="M${x0.toFixed(1)} 0h${cw.toFixed(1)}v${H}h-${cw.toFixed(1)}z"${hit(at(i))}`}).join(''):''}</svg>`;
 }
-function bars(vals,{labels,max,cols}={}){
+function bars(vals,{labels,max,cols,at}={}){
   if(!vals.length||!Math.max(...vals))return'<div class="empty">No data in range</div>';
   const W=400,H=200,p=labels?30:14,mx=max||Math.max(1,...vals)*1.08,n=vals.length,slot=(W-20)/n,bw=Math.min(slot*.66,300),id='b'+uid(),Y=v=>H-p-v/mx*(H-p-14);
-  const rects=vals.map((v,i)=>{const x=10+i*slot+(slot-bw)/2,y=Y(v);
-    return`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,H-p-y).toFixed(1)}" fill="${cols?cols[i]:'#ffb000'}"/>${labels?`<text x="${(x+bw/2).toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="10" fill="#8f8a7e">${labels[i]}</text>`:''}`}).join('');
+  // with at(i), each bar gets a full-height column to click or hover, and dims unless it's the one chosen (m.off)
+  const rects=vals.map((v,i)=>{const x=10+i*slot+(slot-bw)/2,y=Y(v),m=at&&at(i);
+    return`<rect${m&&m.off?' class="off"':''} x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,H-p-y).toFixed(1)}" fill="${cols?cols[i]:'#ffb000'}"/>${labels?`<text x="${(x+bw/2).toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="10" fill="#8f8a7e">${labels[i]}</text>`:''}${m?`<path d="M${(10+i*slot).toFixed(1)} 0h${slot.toFixed(1)}v${H}h-${slot.toFixed(1)}z"${hit(m)}`:''}`}).join('');
   return`<svg class="chart" viewBox="0 0 ${W} ${H}" ${labels?'':'preserveAspectRatio="none"'}>${rects}</svg>`;
 }
-function radar(labels,vals){
+function radar(labels,vals,tips=[]){
   const n=labels.length,cx=160,cy=124,R=76,A=labels.map((_,i)=>(-90+i*360/n)*Math.PI/180);
   const pt=(i,v)=>[cx+R*v*Math.cos(A[i]),cy+R*v*Math.sin(A[i])];
   const poly=f=>A.map((_,i)=>pt(i,f(i)).map(x=>x.toFixed(1)).join(',')).join(' ');
-  const lab=labels.map((l,i)=>{const[x,y]=pt(i,1.22),c=Math.cos(A[i]);return`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${Math.abs(c)<.2?'middle':c>0?'start':'end'}">${l}</text>`}).join('');
+  const lab=labels.map((l,i)=>{const[x,y]=pt(i,1.22),c=Math.cos(A[i]);return`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${Math.abs(c)<.2?'middle':c>0?'start':'end'}">${l}${tips[i]?`<title>${esc(tips[i])}</title>`:''}</text>`}).join('');
   return`<svg class="radar" viewBox="0 0 320 250" font-size="10" letter-spacing=".08em" fill="#8f8a7e">
     ${[1,.75,.5,.25].map(v=>`<polygon points="${poly(()=>v)}" fill="none" stroke="#2c2c2c"/>`).join('')}
     ${A.map((_,i)=>{const[x,y]=pt(i,1);return`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#2c2c2c"/>`}).join('')}
@@ -1348,8 +1378,12 @@ function radar(labels,vals){
 
 /* ================= dashboard sections ================= */
 const foot=(a,b)=>`<div class="ft"><span>${a}</span><span>${b}</span></div>`;
-const lr=(col,label,v,p)=>`<div class="lr"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${v}</b><em>${p??''}</em></div>`;
-const er=(col,label,val,tip='')=>`<div class="er"><i class="dot" style="background:${col}"></i><span>${label}</span><b>${val}</b><i class="q" title="${esc(tip)}">i</i></div>`;
+// x = 'key:value' makes the row a cross-filter: click (or Enter) to narrow everything to it, again to clear it
+const xon=f=>{const[k,v]=f.split(':');return xval(k)!=null&&String(xval(k))===v},xoff=f=>{const k=f.split(':')[0];return xval(k)!=null&&!xon(f)};
+const xa=x=>x?` role="button" tabindex="0" aria-pressed="${xon(x)}" data-act="xf" data-v="${x}"`:'',xc=x=>x?' pick'+(xon(x)?' on':''):'';
+const lr=(col,label,v,p,x)=>`<div class="lr${xc(x)}"${xa(x)}><i class="dot" style="background:${col}"></i><span>${label}</span><b>${v}</b><em>${p??''}</em></div>`;
+const er=(col,label,val,tip='',x)=>`<div class="er${xc(x)}"${xa(x)}><i class="dot" style="background:${col}"></i><span>${label}</span><b>${val}</b><i class="q" title="${esc(tip)}">i</i></div>`;
+const dl=k=>pd(k).toLocaleDateString('en-US',{month:'short',day:'numeric'});
 function recommend(){
   const last=settings.last&&LM[settings.last]?.t;
   if(last&&nextIn(last))return nextIn(last);
@@ -1368,27 +1402,31 @@ function continueHTML(){
     <div class="ft"><span>Up next: ${pill(rec.t)} <b>${esc(rec.title)}</b> <span class="mu">· ${LV[rec.lv]}</span></span><button class="btn go" data-act="open" data-v="${rec.id}">&#9654; START SESSION</button></div></div>`;
 }
 function topCards(st,F){
-  const ls=LESSONS.filter(l=>tOk(l.t)),d=ls.filter(l=>isDone(l.id)).length,lvx=v=>{const x=ls.filter(l=>l.lv===v);return[x.filter(l=>isDone(l.id)).length,x.length]},lvc=v=>lvx(v).join(' / '),lvd=v=>{const[a,b]=lvx(v);return b&&a===b?'var(--g)':'#2c2c2c'};
-  const D=st.done.length,fr=D?st.first/D:0,g=settings.goal,gf=st.avgMin/g,X=S.track==='all'?totalXP():tLessons(S.track).reduce((s,l)=>s+(progress[l.id]?.xp||0),0);
-  const mx=S.track==='all'?maxXP:tLessons(S.track).reduce((s,l)=>s+Math.round(XPL[l.lv]*1.5),0);
+  // course progress and experience count all time; a card leaves out the filter its rows set
+  const VL=view(false,'lv'),VT=view(false,'track'),sa=stats(view(true,'first'));
+  const ls=LESSONS.filter(l=>VL.lk(l.id)),d=ls.filter(l=>isDone(l.id)).length,lvx=v=>{const x=ls.filter(l=>l.lv===v);return[x.filter(l=>isDone(l.id)).length,x.length]},lvc=v=>lvx(v).join(' / '),lvd=v=>{const[a,b]=lvx(v);return b&&a===b?'var(--g)':'#2c2c2c'};
+  const D=sa.done.length,fr=D?sa.first/D:0,g=settings.goal,gf=st.avgMin/g,xpOf=L=>L.reduce((s,l)=>s+(progress[l.id]?.xp||0),0);
+  const XL=(S.track==='all'?LESSONS:tLessons(S.track)).filter(l=>VT.lk(l.id)),X=xpOf(XL),mx=XL.reduce((s,l)=>s+Math.round(XPL[l.lv]*1.5),0)||1;
   return`<div class="grid g4">
   <div class="card"><div class="bd"><h3>Course progress</h3><div class="lbl">Lessons completed (all time)</div><div class="big">${d} / ${ls.length}</div>
-    ${gauge([[d/ls.length,'v']],pct(d,ls.length))}
-    ${lr(lvd(1),'Beginner',lvc(1))}${lr(lvd(2),'Intermediate',lvc(2))}${lr(lvd(3),'Advanced',lvc(3))}${lr(lvd(4),'Expert',lvc(4))}</div>${F}</div>
-  <div class="card"><div class="bd"><h3>Accuracy</h3><div class="lbl">First-try completions in range</div><div class="big ${D?fr>=.6?'grn':fr<.35?'red':'':''}">${D?pct(st.first,D):'—'}</div>
-    ${gauge(D?[[fr,'v'],[1-fr,'r']]:[],D?pct(st.first,D):'—')}
-    ${lr('var(--g)','First try (no hint/solution)',st.first)}${lr('var(--r)','Needed more tries',D-st.first)}${lr('#2c2c2c','Hints · solutions viewed',`${st.hints} · ${st.revs}`)}</div>${F}</div>
+    ${gauge([[ls.length?d/ls.length:0,'v',null,`Completed: ${d} of ${ls.length} lessons`]],pct(d,ls.length))}
+    ${[1,2,3,4].map(v=>lr(lvd(v),LV[v],lvc(v),'',`lv:${v}`)).join('')}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Accuracy</h3><div class="lbl">First-try completions in range</div><div class="big ${D?fr>=.6?'grn':fr<.35?'red':'':''}">${D?pct(sa.first,D):'—'}</div>
+    ${gauge(D?[[fr,'v','first:y',`First try: ${sa.first} lesson${sa.first===1?'':'s'}`],[1-fr,'r','first:n',`Needed more tries: ${D-sa.first}`]]:[],D?pct(sa.first,D):'—')}
+    ${lr('var(--g)','First try (no hint/solution)',sa.first,'','first:y')}${lr('var(--r)','Needed more tries',D-sa.first,'','first:n')}${lr('#2c2c2c','Hints · solutions viewed',`${sa.hints} · ${sa.revs}`)}</div>${F}</div>
   <div class="card"><div class="bd"><h3>Study time</h3><div class="lbl">Avg minutes / day</div><div class="big ${st.avgMin>=g?'grn':''}">${fnum(Math.round(st.avgMin))}m</div>
-    ${gauge([[Math.min(1,gf),'v']],Math.round(gf*100)+'%')}
+    ${gauge([[Math.min(1,gf),'v',null,`${Math.round(st.avgMin)}m a day of a ${g}m goal`]],Math.round(gf*100)+'%')}
     ${lr('var(--g)','Total',fmin(st.tot))}${lr('#2c2c2c','Sessions',st.ses.length)}${lr('#2c2c2c','Longest session',fmin(st.longest))}</div>${F}</div>
   <div class="card"><div class="bd"><h3>Experience</h3><div class="lbl">Rank · ${S.track==='all'?'all tracks':TR[S.track].n}</div><div class="big ${X>0?'grn':''}">${rank(X/mx*maxXP)}</div>
-    ${gauge([[X/mx,'v']],X+' XP')}
-    ${TK.map(t=>{const x=tLessons(t).reduce((s,l)=>s+(progress[l.id]?.xp||0),0);return lr(x?'var(--g)':'#2c2c2c',TR[t].n,`${x} XP`,trackLevel(t)?LV[trackLevel(t)].slice(0,3)+'.':'—')}).join('')}</div>${F}</div>
+    ${gauge([[X/mx,'v',null,`${X} of ${mx} XP`]],X+' XP')}
+    ${TK.map(t=>{const x=xpOf(tLessons(t).filter(l=>VT.lk(l.id)));return lr(x?'var(--g)':'#2c2c2c',TR[t].n,`${x} XP`,trackLevel(t)?LV[trackLevel(t)].slice(0,3)+'.':'—',`track:${t}`)}).join('')}</div>${F}</div>
   </div>`;
 }
 function calendarHTML(){
-  const dm={},dt={};
-  sessions.forEach(s=>{if(S.track!=='all'&&!(s.tracks||[]).includes(S.track))return;const d=dayOf(s);dm[d]=(dm[d]||0)+s.min;(dt[d]??=new Set());(s.tracks||[]).forEach(t=>dt[d].add(t))});
+  // every filter but the range: the chosen day stays outlined
+  const V=view(false),dm={},dt={},dn={};
+  V.ses.forEach(s=>{const d=dayOf(s);dm[d]=(dm[d]||0)+s.min;(dt[d]??=new Set());(s.tracks||[]).forEach(t=>dt[d].add(t))});
+  V.done.forEach(l=>{const d=progress[l.id].date;dn[d]=(dn[d]||0)+1});
   const y=S.month.getFullYear(),mo=S.month.getMonth(),first=new Date(y,mo,1),start=new Date(first);start.setDate(1-first.getDay());
   const tk=today();let h=['Sun','Mon','Tue','Wed','Thu','Fri','Sat','Week'].map(d=>`<div class="dh">${d}</div>`).join(''),tm=0,td=0;
   for(let w=0;w<6;w++){
@@ -1398,8 +1436,8 @@ function calendarHTML(){
       const d=new Date(start);d.setDate(start.getDate()+w*7+i);const k=ymd(d),v=dm[k];
       if(d.getMonth()!==mo){h+='<div class="cell hatch out"></div>';continue}
       if(v){wm+=v;wd++;tm+=v;td++}
-      const done=LESSONS.filter(l=>progress[l.id]?.date===k&&tOk(l.t)).length;
-      h+=`<div class="cell${v?' on':''}${k>tk?' fut':''}${S.sel===k?' sel':''}" data-day="${k}"${v?` style="background:rgba(51,255,102,${(.04+.12*Math.min(1,v/settings.goal)).toFixed(2)})"`:''}>
+      const done=dn[k]||0;
+      h+=`<div class="cell${v?' on':''}${k>tk?' fut':''}${S.sel===k?' sel':''}" data-day="${k}" role="button" tabindex="0" aria-pressed="${S.sel===k}" title="${dl(k)}${v?`: ${fmin(v)}`:''} — click to show this day"${v?` style="background:rgba(51,255,102,${(.04+.12*Math.min(1,v/settings.goal)).toFixed(2)})"`:''}>
         <span>${d.getDate()}</span>${v?`<b>${fmin(v)}</b><small>${done?done+' done':'&nbsp;'}</small><div class="cdots">${[...(dt[k]||[])].map(t=>`<i style="background:${TR[t].col}"></i>`).join('')}</div>`:''}</div>`;
     }
     h+=`<div class="cell wk">${wd?`<b class="grn">${fmin(wm)}</b><small>${wd} days</small>`:'—'}</div>`;
@@ -1411,14 +1449,19 @@ function calendarHTML(){
     <span>${td} study days</span></div></div>`;
 }
 function evalHTML(st){
-  const c=(v,good,ok)=>v==null?'':v>=good?'grn':v>=ok?'amb':'red';
-  const trow=t=>{const ls=tLessons(t),d=ls.filter(l=>isDone(l.id)).length,f=d/ls.length,dn=ls.filter(l=>isDone(l.id)),fr=dn.length?dn.filter(l=>progress[l.id].first).length/dn.length:null;
-    return er(TR[t].col,TR[t].n,`${d}/${ls.length} · ${trackLevel(t)?LV[trackLevel(t)]:'—'}${fr!=null?` · <span class="${c(fr,.6,.35)}">${Math.round(fr*100)}% 1st</span>`:''}`,`${Math.round(f*100)}% complete · highest fully cleared level · first-try rate`)};
+  const c=(v,good,ok)=>v==null?'':v>=good?'grn':v>=ok?'amb':'red',VT=view(false,'track');
+  const trow=t=>{const ls=tLessons(t).filter(l=>VT.lk(l.id)),d=ls.filter(l=>isDone(l.id)).length,f=ls.length?d/ls.length:0,dn=ls.filter(l=>isDone(l.id)),fr=dn.length?dn.filter(l=>progress[l.id].first).length/dn.length:null;
+    return er(TR[t].col,TR[t].n,`${d}/${ls.length} · ${trackLevel(t)?LV[trackLevel(t)]:'—'}${fr!=null?` · <span class="${c(fr,.6,.35)}">${Math.round(fr*100)}% 1st</span>`:''}`,`${Math.round(f*100)}% complete · highest fully cleared level · first-try rate`,`track:${t}`)};
   const D=st.done.length,att=D?st.att/D:null,ok=st.okRate;
+  // the result and type rows leave their own filter out, so every option stays listed
+  const RE=view(true,'res').evs,KE=view(true,'kind').evs,nOk=RE.filter(e=>e.ok).length;
   return`<div class="card"><div class="bd ev"><h3>Skill report</h3>
     <h4>TRACKS</h4>${TK.map(trow).join('')}
     <hr><h4>QUALITY (IN RANGE)</h4>
     ${er(CV[c(ok,.6,.4)],'Check / quiz success rate',ok==null?'—':`<span class="${c(ok,.6,.4)}">${Math.round(ok*100)}%</span> of ${st.graded}`,'Share of Check runs and quiz answers that were correct')}
+    ${er('var(--g)','Correct attempts',`${nOk} <span class="mu">· ${pct(nOk,RE.length)}</span>`,'Checks, quiz answers and self-checks that passed','res:ok')}
+    ${er('var(--r)','Not yet',`${RE.length-nOk} <span class="mu">· ${pct(RE.length-nOk,RE.length)}</span>`,'Attempts that did not pass yet','res:no')}
+    ${Object.entries(LOGK).map(([k,n])=>{const a=KE.filter(e=>e.kind===k),o=a.filter(e=>e.ok).length;return er('#2c2c2c',n,a.length?`${a.length} <span class="mu">· ${pct(o,a.length)} ✓</span>`:'0',`${n} attempts · share correct`,`kind:${k}`)}).join('')}
     ${er('transparent','Avg attempts per lesson',att==null?'—':fnum(r1(att)))}
     ${er(st.hints?'var(--a)':'transparent','Hints used',st.hints)}
     ${er(st.revs?'var(--a)':'transparent','Solutions viewed',st.revs,'Viewing the solution removes the first-try bonus — try a hint first')}
@@ -1429,25 +1472,29 @@ function evalHTML(st){
     ${er('transparent','Last 5 attempts',`<span class="l5">${st.last5.map(e=>`<i title="${esc(LM[e.lesson]?.title)}" style="background:${e.ok?'var(--g)':'var(--r)'}"></i>`).join('')||'—'}</span>`)}
   </div></div>`;
 }
+// chart columns → their day (study time per day, accuracy per attempt) or week (XP); the chart leaves its own filter out
+const dayAt=(k,title)=>({a:`data-act="day" data-v="${k}"`,title:`${title} — click to show this day`,on:S.sel===k,off:!!S.sel&&S.sel!==k});
 function chartsHTML(st,F){
-  const n=Math.min(st.span,180),start=addDays(st.to,-(n-1)),trend=Array.from({length:n},(_,i)=>st.dm[addDays(start,i)]||0);
-  const m0=monday(today()),wk=Array.from({length:8},(_,i)=>{const ws=addDays(m0,-7*(7-i)),we=addDays(ws,6);return{ws,xp:LESSONS.filter(l=>tOk(l.t)&&progress[l.id]?.done&&progress[l.id].date>=ws&&progress[l.id].date<=we).reduce((s,l)=>s+progress[l.id].xp,0)}});
-  const ax=[],av=[];TK.forEach(t=>{[[1,2,'core'],[3,4,'adv']].forEach(([a,b,k])=>{const ls=tLessons(t).filter(l=>l.lv>=a&&l.lv<=b);ax.push(`${TR[t].n} ${k}`);av.push(ls.length?ls.filter(l=>isDone(l.id)).length/ls.length:0)})});
-  const lvp=[1,2,3,4].map(v=>{const ls=LESSONS.filter(l=>tOk(l.t)&&l.lv===v);return ls.length?Math.round(ls.filter(l=>isDone(l.id)).length/ls.length*100):0});
-  const gd=st.evs.filter(e=>e.kind!=='self'),acc=[];let ok=0;gd.forEach((e,i)=>{ok+=e.ok?1:0;acc.push(Math.round(ok/(i+1)*100))});
+  const sd=stats(view(true,'day')),n=Math.min(sd.span,180),start=addDays(sd.to,-(n-1)),days=Array.from({length:n},(_,i)=>addDays(start,i)),trend=days.map(k=>sd.dm[k]||0);
+  const VW=view(false,'wk'),VA=view(false),VL=view(false,'lv');
+  const m0=monday(today()),wk=Array.from({length:8},(_,i)=>{const ws=addDays(m0,-7*(7-i)),we=addDays(ws,6);return{ws,xp:VW.done.filter(l=>progress[l.id].date>=ws&&progress[l.id].date<=we).reduce((s,l)=>s+progress[l.id].xp,0)}});
+  const ax=[],av=[],at=[];TK.forEach(t=>{[[1,2,'core'],[3,4,'adv']].forEach(([a,b,k])=>{const ls=tLessons(t).filter(l=>l.lv>=a&&l.lv<=b&&VA.lk(l.id)),d=ls.filter(l=>isDone(l.id)).length;ax.push(`${TR[t].n} ${k}`);av.push(ls.length?d/ls.length:0);at.push(`${TR[t].n} ${k==='core'?'Beginner + Intermediate':'Advanced + Expert'}: ${d} / ${ls.length} lessons`)})});
+  const lvp=[1,2,3,4].map(v=>{const ls=LESSONS.filter(l=>VL.lk(l.id)&&l.lv===v);return ls.length?Math.round(ls.filter(l=>isDone(l.id)).length/ls.length*100):0});
+  const acc0=ev=>{let ok=0;return ev.map((e,i)=>{ok+=e.ok?1:0;return Math.round(ok/(i+1)*100)})},gd=sd.evs.filter(e=>e.kind!=='self'),acc=acc0(gd),accF=acc0(st.evs.filter(e=>e.kind!=='self'));
+  const tAt=i=>dayAt(days[i],`${dl(days[i])}: ${fmin(trend[i])}`),aAt=i=>{const e=gd[i];return dayAt(dayOf(e),`${dl(dayOf(e))} · ${LM[e.lesson]?.title||'—'} ${e.ok?'✓ correct':'✗ not yet'} · ${acc[i]}% so far`)};
   return`<div class="grid gm">
     <div class="card"><div class="bd"><div class="eqh"><div><h3>Study time trend</h3><div class="big" style="font-size:20px">${fmin(st.tot)}</div><div class="lbl" style="margin-top:4px">Dashed = ${settings.goal}m daily goal</div></div>
       <div class="ks"><div>SESSIONS<b>${st.ses.length}</b></div><div>LESSONS<b class="${st.done.length?'grn':''}">${st.done.length}</b></div><div>XP<b class="grn">+${st.xp}</b></div><div>SUCCESS<b>${st.okRate==null?'—':Math.round(st.okRate*100)+'%'}</b></div><div>STREAK<b class="${st.streak?'grn':''}">${st.streak}</b></div></div></div>
-      ${trend.length>1?area(trend,'#ffb000',{tgt:settings.goal}):bars(trend)}</div>${F}</div>
+      ${trend.length>1?area(trend,'#ffb000',{tgt:settings.goal,at:tAt}):bars(trend,{at:tAt})}</div>${F}</div>
     <div class="card"><div class="bd"><h3>XP by week</h3><div class="lbl">Last 8 weeks</div><div class="big">${wk.at(-1).xp} XP <span class="mu" style="font-size:12px;font-weight:500">this week</span></div>
-      ${bars(wk.map(w=>w.xp),{labels:wk.map(w=>fsd(w.ws))})}</div>${F}</div>
+      ${bars(wk.map(w=>w.xp),{labels:wk.map(w=>fsd(w.ws)),at:i=>({a:`data-act="xf" data-v="wk:${wk[i].ws}"`,title:`Week of ${dl(wk[i].ws)}: ${wk[i].xp} XP — click to show this week`,off:xoff('wk:'+wk[i].ws)})})}</div>${F}</div>
   </div>
   <div class="grid g3">
-    <div class="card"><div class="bd"><h3>Mastery map</h3><div class="lbl">Core = Beginner + Intermediate · Adv = Advanced + Expert</div><div class="big">${Math.round(av.reduce((s,x)=>s+x,0)/av.length*100)}%</div>${radar(ax,av)}</div>${F}</div>
+    <div class="card"><div class="bd"><h3>Mastery map</h3><div class="lbl">Core = Beginner + Intermediate · Adv = Advanced + Expert</div><div class="big">${Math.round(av.reduce((s,x)=>s+x,0)/av.length*100)}%</div>${radar(ax,av,at)}</div>${F}</div>
     <div class="card"><div class="bd"><h3>Progress by level</h3><div class="lbl">% of lessons completed</div><div class="big">${lvp.join(' / ')}</div>
-      ${bars(lvp,{labels:['Beginner','Intermed.','Advanced','Expert'],max:100,cols:LVC.slice(1)})}</div>${F}</div>
-    <div class="card"><div class="bd"><h3>Accuracy trend</h3><div class="lbl">Cumulative success rate of attempts in range</div><div class="big">${acc.length?acc.at(-1)+'%':'—'}</div>
-      ${acc.length>1?area(acc,'#7f9cb0',{max:100}):'<div class="empty">Run Check or answer quizzes to see this</div>'}</div>${F}</div>
+      ${bars(lvp,{labels:['Beginner','Intermed.','Advanced','Expert'],max:100,cols:LVC.slice(1),at:i=>({a:`data-act="xf" data-v="lv:${i+1}"`,title:`${LV[i+1]}: ${lvp[i]}% complete — click to show only this`,off:xoff('lv:'+(i+1))})})}</div>${F}</div>
+    <div class="card"><div class="bd"><h3>Accuracy trend</h3><div class="lbl">Cumulative success rate of attempts in range</div><div class="big">${accF.length?accF.at(-1)+'%':'—'}</div>
+      ${acc.length>1?area(acc,'#7f9cb0',{max:100,at:aAt}):'<div class="empty">Run Check or answer quizzes to see this</div>'}</div>${F}</div>
   </div>`;
 }
 // the log's columns, for sorting and filtering (UI.filter); the last column holds the row's button
@@ -1467,9 +1514,17 @@ function tableHTML(st){
   </tbody></table></div>
   <div class="calf"><div><button data-act="pp" aria-label="Previous page">&lt;</button> Page <b>${S.page}</b> of ${pages} <button data-act="pn" aria-label="Next page">&gt;</button></div><span class="dim">${n} record${n===1?'':'s'}${F.clear()}</span></div>`;
 }
+// the active filters, as chips under the bar: click one to drop it
+function xfBar(){
+  const F={y:'First try',n:'Needed more tries'},R={ok:'Correct',no:'Not yet'};
+  const c=[S.track!=='all'&&['track',TR[S.track].n],S.x.lv&&['lv',LV[S.x.lv]],S.x.first&&['first',F[S.x.first]],S.x.res&&['res',R[S.x.res]],S.x.kind&&['kind',LOGK[S.x.kind]],
+    S.x.wk&&['wk','Week of '+dl(S.x.wk)],S.sel&&['day',dl(S.sel)]].filter(Boolean);
+  const el=$('#xf');el.hidden=!c.length;
+  el.innerHTML=c.length?`<span>Filtered</span>${c.map(([k,l])=>`<button data-act="xclr" data-v="${k}" aria-label="Remove filter: ${l}"><b>${l}</b> ×</button>`).join('')}${c.length>1?'<button class="clr" data-act="xall">Clear all</button>':''}`:'';
+}
 function render(){
   if(!RL[S.range])S.range='all';   // an old range ('7d','30d','90d') isn't offered any more
-  $('#fTrack').value=S.track;$('#fRange').value=S.range;
+  $('#fTrack').value=S.track;$('#fRange').value=S.range;xfBar();
   const st=stats(),F='';   // the date range is shown once, under the filters, like the other apps
   $('#ctx').textContent=`Statistics for ${S.track==='all'?'All Tracks':TR[S.track].n} — ${S.sel?fdate(S.sel):RL[S.range]} · ${fdate(st.from)} → ${fdate(st.to)}`;
   const ban=events.length||sessions.length?'':`<div class="card ban"><div><h2 style="margin:0 0 4px;font-size:1.17em">Welcome to LEARN</h2><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
@@ -1770,6 +1825,9 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='vurl'){e.preventDefault();document.querySelector('[data-act="vpin"]')?.click()}
   if(e.key==='Escape'&&!$('#modal').classList.contains('hidden'))closeModal();
 });
+// rows that act as buttons (cross-filters, calendar days) answer Enter and Space too, and keep focus after the redraw
+document.addEventListener('keydown',e=>{const b=e.target.closest?.('[role=button][data-act],[role=button][data-day]');if(!b||(e.key!=='Enter'&&e.key!==' '))return;e.preventDefault();
+  const sel=b.dataset.day?`[data-day="${b.dataset.day}"]`:`[data-act="${b.dataset.act}"][data-v="${CSS.escape(b.dataset.v||'')}"]`,i=[...document.querySelectorAll(sel)].indexOf(b);b.click();document.querySelectorAll(sel)[i]?.focus()});
 function redrawWatch(){const w=$('#watch');if(!w||!curLesson())return;const tmp=document.createElement('div');tmp.innerHTML=watchHTML(curLesson());w.replaceWith(tmp.firstElementChild)}
 document.addEventListener('click',async e=>{
   if(e.target.id==='modal')return closeModal();
@@ -1780,6 +1838,12 @@ document.addEventListener('click',async e=>{
     mprev:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);render()},
     mnext:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);render()},
     mtoday:()=>{const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1);S.sel=null;render()},
+    // cross-filters: a card row, segment or bar toggles its 'key:value'; the track one is the Track select's S.track
+    xf:()=>{const i=v.indexOf(':'),k=v.slice(0,i);let x=v.slice(i+1);if(k==='lv')x=+x;
+      if(k==='track')S.track=S.track===x?'all':x;else if(S.x[k]===x)delete S.x[k];else S.x[k]=x;S.page=1;render()},
+    xclr:()=>{if(v==='track')S.track='all';else if(v==='day')S.sel=null;else delete S.x[v];S.page=1;render()},
+    xall:()=>{S.track='all';S.sel=null;S.x={};S.page=1;render()},
+    day:()=>{S.sel=S.sel===v?null:v;if(S.sel){const d=pd(v);S.month=new Date(d.getFullYear(),d.getMonth(),1)}S.page=1;render()},
     pp:()=>{if(S.page>1){S.page--;render()}},pn:()=>{S.page++;render()},   // tableHTML clamps to the last page
     open:()=>{if(!v)return;closeModal();if(CUR&&$('#ed'))drafts[CUR]=$('#ed').value,saveDrafts();openLesson(v)},
     startnext:()=>openLesson(recommend().id),lclose:closeLesson,
