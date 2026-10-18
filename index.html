@@ -1279,16 +1279,16 @@ function topCards(st,F){
   const mx=S.track==='all'?maxXP:tLessons(S.track).reduce((s,l)=>s+Math.round(XPL[l.lv]*1.5),0);
   return`<div class="grid g4">
   <div class="card"><div class="bd"><h3>Course progress</h3><div class="lbl">Lessons completed (all time)</div><div class="big">${d} / ${ls.length}</div>
-    ${gauge([[d/ls.length,'g']],pct(d,ls.length))}
+    ${gauge([[d/ls.length,'v']],pct(d,ls.length))}
     ${lr(LVC[1],'Beginner',lvc(1))}${lr(LVC[2],'Intermediate',lvc(2))}${lr(LVC[3],'Advanced',lvc(3))}${lr(LVC[4],'Expert',lvc(4))}</div>${F}</div>
-  <div class="card"><div class="bd"><h3>Accuracy</h3><div class="lbl">First-try completions in range</div><div class="big ${D?fr>=.6?'grn':fr>=.35?'amb':'red':''}">${D?pct(st.first,D):'—'}</div>
-    ${gauge(D?[[fr,'v'],[1-fr,'a']]:[],D?pct(st.first,D):'—')}
-    ${lr('var(--g)','First try (no hint/solution)',st.first)}${lr('var(--a)','Needed more tries',D-st.first)}${lr('#3a3a3a','Hints · solutions viewed',`${st.hints} · ${st.revs}`)}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Accuracy</h3><div class="lbl">First-try completions in range</div><div class="big ${D?fr>=.6?'grn':fr<.35?'red':'':''}">${D?pct(st.first,D):'—'}</div>
+    ${gauge(D?[[fr,'v'],[1-fr,'r']]:[],D?pct(st.first,D):'—')}
+    ${lr('var(--g)','First try (no hint/solution)',st.first)}${lr('var(--r)','Needed more tries',D-st.first)}${lr('#3a3a3a','Hints · solutions viewed',`${st.hints} · ${st.revs}`)}</div>${F}</div>
   <div class="card"><div class="bd"><h3>Study time</h3><div class="lbl">Avg minutes / day</div><div class="big ${st.avgMin>=g?'grn':''}">${fnum(Math.round(st.avgMin))}m</div>
-    ${gauge(gf<=1?[[gf,'g']]:[[1/gf,'g'],[1-1/gf,'b']],Math.round(gf*100)+'%')}
-    ${lr(ACC,'Total',fmin(st.tot))}${lr('#3a3a3a','Sessions',st.ses.length)}${lr('var(--b)','Longest session',fmin(st.longest))}</div>${F}</div>
-  <div class="card"><div class="bd"><h3>Experience</h3><div class="lbl">Rank · ${S.track==='all'?'all tracks':TR[S.track].n}</div><div class="big" style="color:var(--acc,#ffb000)">${rank(X/mx*maxXP)}</div>
-    ${gauge([[X/mx,'g']],X+' XP')}
+    ${gauge([[Math.min(1,gf),'v']],Math.round(gf*100)+'%')}
+    ${lr('var(--g)','Total',fmin(st.tot))}${lr('#3a3a3a','Sessions',st.ses.length)}${lr(ACC,'Longest session',fmin(st.longest))}</div>${F}</div>
+  <div class="card"><div class="bd"><h3>Experience</h3><div class="lbl">Rank · ${S.track==='all'?'all tracks':TR[S.track].n}</div><div class="big ${X>0?'grn':''}">${rank(X/mx*maxXP)}</div>
+    ${gauge([[X/mx,'v']],X+' XP')}
     ${TK.map(t=>lr(TR[t].col,TR[t].n,`${tLessons(t).reduce((s,l)=>s+(progress[l.id]?.xp||0),0)} XP`,trackLevel(t)?LV[trackLevel(t)].slice(0,5)+'.':'—')).join('')}</div>${F}</div>
   </div>`;
 }
