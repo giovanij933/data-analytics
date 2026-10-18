@@ -1643,9 +1643,9 @@ function review(day){
   const fails=id=>E1.filter(e=>e.lesson===id&&e.kind!=='self'&&!e.ok).length;
   // the day
   let p=`<p>On <b>${pd(day).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</b>${S.track==='all'?'':` (${TR[S.track].n} only)`} `+
-    (S1.length?`you studied <b>${mins(min)}</b> in ${S1.length===1?'one session':pl(S1.length,'session')}, ${min>=g?`<b class="grn">meeting your ${g}-minute goal</b>`:`<b class="amb">${mins(g-min)} short</b> of your ${g}-minute goal`}.`:'no study session was timed, but you did work on lessons.')+'</p>';
-  if(W.length)p+=`<p>You worked on ${list(W.map(lt))}${done.length?`, and completed ${done.length===W.length?(done.length===1?'it':'all of them'):list(done.map(l=>`<b>${esc(l.title)}</b>`))}`:`, but didn't complete ${W.length===1?'it':'any of them'} yet`}.</p>`;
-  if(gr.length)p+=`<p>You made ${pl(gr.length,'graded attempt')} and ${ok?`${ok} passed (${pct(ok,gr.length)})`:'none passed'}.${done.length===1?` It ${first.length?'went through on the first try':'took more than one try'}.`:done.length?` ${first.length} of the ${done.length} completed lessons went through on the first try (${pct(first.length,done.length)}).`:''}${xp?` You earned <b class="grn">${xp} XP</b>.`:''}</p>`;
+    (S1.length?`I studied <b>${mins(min)}</b> in ${S1.length===1?'one session':pl(S1.length,'session')}, ${min>=g?`<b class="grn">meeting my ${g}-minute goal</b>`:`<b class="amb">${mins(g-min)} short</b> of my ${g}-minute goal`}.`:'no study session was timed, but I did work on lessons.')+'</p>';
+  if(W.length)p+=`<p>I worked on ${list(W.map(lt))}${done.length?`, and completed ${done.length===W.length?(done.length===1?'it':'all of them'):list(done.map(l=>`<b>${esc(l.title)}</b>`))}`:`, but didn't complete ${W.length===1?'it':'any of them'} yet`}.</p>`;
+  if(gr.length)p+=`<p>I made ${pl(gr.length,'graded attempt')} and ${ok?`${ok} passed (${pct(ok,gr.length)})`:'none passed'}.${done.length===1?` It ${first.length?'went through on the first try':'took more than one try'}.`:done.length?` ${first.length} of the ${done.length} completed lessons went through on the first try (${pct(first.length,done.length)}).`:''}${xp?` I earned <b class="grn">${xp} XP</b>.`:''}</p>`;
   let out=sec('The day',p);
   // in context: the 14 study days before, the streak, the course so far, the week
   const D=rvDays(),DS=new Set(D),dm={};ses.forEach(s=>{const d=dayOf(s);dm[d]=(dm[d]||0)+(+s.min||0)});
@@ -1653,54 +1653,54 @@ function review(day){
   let st=0;for(let d=day;DS.has(d)&&st<3650;d=addDays(d,-1))st++;
   const LS=LESSONS.filter(l=>tOk(l.t)),dn=LS.filter(l=>progress[l.id]?.done&&progress[l.id].date<=day),X=dn.reduce((a,l)=>a+(progress[l.id].xp||0),0),mx=LS.reduce((s,l)=>s+Math.round(XPL[l.lv]*1.5),0);
   const ws=monday(day),wk=D.filter(k=>k>=ws&&k<=day).length,wn=diffDays(ws,day)+1;
-  out+=sec('In context',(prev.length&&S1.length?`<p>Over your previous ${pl(prev.length,'study day')} you averaged ${mins(ap)} a day, so this was ${min>ap*1.15?'<b class="grn">more</b> than usual':min<ap*.85?'<b class="amb">less</b> than usual':'<b>about your usual</b>'}.</p>`:prev.length?'':'<p>This is the first study day in your history'+(S.track==='all'?'':' for this track')+', so there is nothing to compare it with yet.</p>')+
-    `<p>${st>1?`That makes <b>${st} study days in a row</b>.`:DS.has(addDays(day,-1))?'':'This day started a new streak.'} By the end of it you had completed ${dn.length} of ${LS.length} lessons (${pct(dn.length,LS.length)}), rank <b>${rank(mx?X/mx*maxXP:0)}</b>. `+
-    (wn===1?'It was the first day of the week.':`You studied on ${wk} of the ${wn} days of that week${wn<7?' so far':''}.`)+'</p>');
+  out+=sec('In context',(prev.length&&S1.length?`<p>Over my previous ${pl(prev.length,'study day')} I averaged ${mins(ap)} a day, so this was ${min>ap*1.15?'<b class="grn">more</b> than usual':min<ap*.85?'<b class="amb">less</b> than usual':'<b>about my usual</b>'}.</p>`:prev.length?'':'<p>This is the first study day in my history'+(S.track==='all'?'':' for this track')+', so there is nothing to compare it with yet.</p>')+
+    `<p>${st>1?`That makes <b>${st} study days in a row</b>.`:DS.has(addDays(day,-1))?'':'This day started a new streak.'} By the end of it I had completed ${dn.length} of ${LS.length} lessons (${pct(dn.length,LS.length)}), rank <b>${rank(mx?X/mx*maxXP:0)}</b>. `+
+    (wn===1?'It was the first day of the week.':`I studied on ${wk} of the ${wn} days of that week${wn<7?' so far':''}.`)+'</p>');
   // the sessions in order; each attempt goes to the latest session that started before it
   const at=(id,es)=>{const l=LM[id],q=pr(id),parts=[];let f=0;
       es.forEach(e=>{if(e.kind==='self'){parts.push(e.ok?'self-check: got it':'self-check: not yet');return}if(!e.ok){f++;return}parts.push(`${f?pl(f,e.kind==='quiz'?'wrong answer':'failed check')+', then ':''}${e.kind==='quiz'?'the right answer':'a pass'} at ${hm(e.time)}`);f=0});
       if(f)parts.push(`${pl(f,es.at(-1).kind==='quiz'?'wrong answer':'failed check')}, not passed yet`);
       const hs=[q.hint?pl(q.hint,'hint'):'',q.rev?`the solution ${q.rev===1?'once':q.rev+' times'}`:''].filter(Boolean);
-      return `<span class="tr">${esc(l.title)}: ${parts.length?parts.join('; '):'read through, nothing checked'}.${hs.length?` You've viewed ${list(hs)} on this lesson in all.`:''}</span>`};
+      return `<span class="tr">${esc(l.title)}: ${parts.length?parts.join('; '):'read through, nothing checked'}.${hs.length?` I've viewed ${list(hs)} on this lesson in all.`:''}</span>`};
   const grp=S1.map(()=>[]),loose=[];E1.forEach(e=>{let i=-1;S1.forEach((s,j)=>{if(Date.parse(s.time)<=Date.parse(e.time))i=j});(i<0?loose:grp[i]).push(e)});
   const sub=(ids,es)=>ids.map(id=>at(id,es.filter(e=>e.lesson===id))).join('');
   const rows=S1.map((s,i)=>{const ids=[...new Set([...(s.lessons||[]),...grp[i].map(e=>e.lesson)])].filter(id=>LM[id]&&tOk(LM[id].t));
     return `<li>${hm(s.time)} · <b>${mins(s.min)}</b>${ids.length?' · '+ids.map(id=>esc(LM[id].title)).join(', '):''}${sub(ids,grp[i])}</li>`});
-  if(loose.length){const ids=[...new Set(loose.map(e=>e.lesson))];rows.push(`<li>${S1.length?'Before your first timed session':'Untimed work'} · ${ids.map(id=>esc(LM[id].title)).join(', ')}${sub(ids,loose)}</li>`)}
+  if(loose.length){const ids=[...new Set(loose.map(e=>e.lesson))];rows.push(`<li>${S1.length?'Before my first timed session':'Untimed work'} · ${ids.map(id=>esc(LM[id].title)).join(', ')}${sub(ids,loose)}</li>`)}
   out+=sec('How it unfolded',rows.length?`<ol>${rows.join('')}</ol>`:'');
   // what went well
   const good=[],look=[],before=evs.filter(e=>dayOf(e)<day);
   if(first.length)good.push(`${list(first.map(l=>`<b>${esc(l.title)}</b>`))} went through on the first try, with no hint or solution.`);
-  if(S1.length&&min>=g)good.push(`You hit your daily goal: ${mins(min)} against ${g}.`);
-  if(st>1)good.push(`You kept the streak going (${st} days).`);
+  if(S1.length&&min>=g)good.push(`I hit my daily goal: ${mins(min)} against ${g}.`);
+  if(st>1)good.push(`I kept the streak going (${st} days).`);
   TK.filter(tOk).forEach(t=>{const wt=W.filter(l=>l.t===t);if(!wt.length)return;
-    if(!before.some(e=>LM[e.lesson].t===t))return good.push(`You started the <b>${TR[t].n}</b> track.`);
-    const v=Math.max(...wt.map(l=>l.lv));if(v>1&&!before.some(e=>LM[e.lesson].t===t&&LM[e.lesson].lv>=v))good.push(`${list(wt.filter(l=>l.lv===v).map(l=>`<b>${esc(l.title)}</b>`))} was your first ${LV[v]} lesson in ${TR[t].n}.`);
-    for(let v=4;v>=1;v--){const x=tLessons(t).filter(l=>l.lv===v);if(x.every(l=>progress[l.id]?.done&&progress[l.id].date<=day)&&x.some(l=>progress[l.id].date===day)){good.push(`You cleared <b>${LV[v]}</b> in ${TR[t].n}.`);break}}});
+    if(!before.some(e=>LM[e.lesson].t===t))return good.push(`I started the <b>${TR[t].n}</b> track.`);
+    const v=Math.max(...wt.map(l=>l.lv));if(v>1&&!before.some(e=>LM[e.lesson].t===t&&LM[e.lesson].lv>=v))good.push(`${list(wt.filter(l=>l.lv===v).map(l=>`<b>${esc(l.title)}</b>`))} was my first ${LV[v]} lesson in ${TR[t].n}.`);
+    for(let v=4;v>=1;v--){const x=tLessons(t).filter(l=>l.lv===v);if(x.every(l=>progress[l.id]?.done&&progress[l.id].date<=day)&&x.some(l=>progress[l.id].date===day)){good.push(`I cleared <b>${LV[v]}</b> in ${TR[t].n}.`);break}}});
   // what to look at: 3+ failed checks on a lesson, a solution viewed, a lesson open 3+ days, a session under 10 minutes, a track left 7+ days
   W.forEach(l=>{const f=fails(l.id),q=progress[l.id]||{};
-    if(f>=3)look.push(`<b>${esc(l.title)}</b> took ${pl(f,'failed attempt')} before ${E1.some(e=>e.lesson===l.id&&e.ok)?'it passed':'you stopped'}.`);
-    if(q.rev)look.push(`You opened the solution for <b>${esc(l.title)}</b>${q.rev>1?` ${q.rev} times`:''}. Could you write it from scratch now?`);
+    if(f>=3)look.push(`<b>${esc(l.title)}</b> took ${pl(f,'failed attempt')} before ${E1.some(e=>e.lesson===l.id&&e.ok)?'it passed':'I stopped'}.`);
+    if(q.rev)look.push(`I opened the solution for <b>${esc(l.title)}</b>${q.rev>1?` ${q.rev} times`:''}. Could I write it from scratch now?`);
     if(!(q.done&&q.date<=day)){const f0=[...evs.filter(e=>e.lesson===l.id).map(dayOf),...ses.filter(s=>(s.lessons||[]).includes(l.id)).map(dayOf)].sort()[0],n=diffDays(f0,day)+1;
       if(n>=3)look.push(`<b>${esc(l.title)}</b> has been in progress for ${n} days (since ${fdate(f0)}).`)}});
   S1.filter(s=>s.min<10).forEach(s=>look.push(`The ${hm(s.time)} session lasted only ${mins(s.min)}.`));
   const T0=new Set([...before.map(e=>LM[e.lesson].t),...ses.filter(s=>dayOf(s)<day).flatMap(s=>s.tracks||[])]);
   TK.filter(t=>tOk(t)&&T0.has(t)&&!W.some(l=>l.t===t)).forEach(t=>{const last=[...before.filter(e=>LM[e.lesson].t===t).map(dayOf),...ses.filter(s=>dayOf(s)<day&&(s.tracks||[]).includes(t)).map(dayOf)].sort().at(-1),n=diffDays(last,day);
-    if(n>=7)look.push(`You haven't touched ${TR[t].n} in ${n} days (last on ${fdate(last)}).`)});
+    if(n>=7)look.push(`I haven't touched ${TR[t].n} in ${n} days (last on ${fdate(last)}).`)});
   out+=sec('What went well',ul(good))+sec('What to look at',ul(look));
   // the morning check-in for this date, when there is one
   let ci=null;try{ci=(JSON.parse(localStorage.getItem('isx.checkin.v1'))?.log||[]).find(e=>e.day===day)}catch(e){}
   if(ci){const Q=['','poor','restless','OK','good','great'],E=['','drained','low','steady','good','charged'];
-    out+=sec('Your state',`<p>You slept <b>${ci.sleep} h</b> (${Q[ci.q]||'unrated'} sleep) and your energy was <b>${E[ci.energy]||'unrated'}</b>.${ci.sleep<7&&S1.length&&min<g?' Short sleep on a short study day: worth watching if it repeats.':''}</p>`)}
+    out+=sec('My state',`<p>I slept <b>${ci.sleep} h</b> (${Q[ci.q]||'unrated'} sleep) and my energy was <b>${E[ci.energy]||'unrated'}</b>.${ci.sleep<7&&S1.length&&min<g?' Short sleep on a short study day: worth watching if it repeats.':''}</p>`)}
   // next up: the same lesson the START button opens
   const nx=S.track==='all'?recommend():nextIn(S.track);
-  out+=sec('Next up',nx?`<p>${day===today()?'Next':'As things stand now, next'} is ${lt(nx)}${progress[nx.id]?.att?`, where you've already made ${pl(progress[nx.id].att,'attempt')}`:''}. Press <b>START</b> to pick it up.</p>`:`<p>You've completed every ${S.track==='all'?'':TR[S.track].n+' '}lesson. Revisit the ones that took the most attempts.</p>`);
+  out+=sec('Next up',nx?`<p>${day===today()?'Next for me':'As things stand now, next for me'} is ${lt(nx)}${progress[nx.id]?.att?`, where I've already made ${pl(progress[nx.id].att,'attempt')}`:''}. Press <b>START</b> to pick it up.</p>`:`<p>I've completed every ${S.track==='all'?'':TR[S.track].n+' '}lesson. Revisit the ones that took the most attempts.</p>`);
   // questions, most specific first
   const hard=W.slice().sort((a,b)=>fails(b.id)-fails(a.id))[0],q=[];
   if(hard)q.push(`Explain ${esc(hard.title)} in one sentence without looking.`);
-  if(hard&&fails(hard.id))q.push(fails(hard.id)>1?`What did your failed attempts on ${esc(hard.title)} have in common?`:`What did your failed attempt on ${esc(hard.title)} miss?`);
-  W.filter(l=>progress[l.id]?.rev).slice(0,1).forEach(l=>q.push(`Could you solve ${esc(l.title)} again from a blank editor?`));
-  W.filter(l=>!(progress[l.id]?.done&&progress[l.id].date<=day)).slice(0,1).forEach(l=>q.push(`What's the one step in ${esc(l.title)} you're still unsure of?`));
+  if(hard&&fails(hard.id))q.push(fails(hard.id)>1?`What did my failed attempts on ${esc(hard.title)} have in common?`:`What did my failed attempt on ${esc(hard.title)} miss?`);
+  W.filter(l=>progress[l.id]?.rev).slice(0,1).forEach(l=>q.push(`Could I solve ${esc(l.title)} again from a blank editor?`));
+  W.filter(l=>!(progress[l.id]?.done&&progress[l.id].date<=day)).slice(0,1).forEach(l=>q.push(`What's the one step in ${esc(l.title)} I'm still unsure of?`));
   if(S1.length&&min<g)q.push(`What got in the way of the full ${g} minutes?`);
   q.push('One thing to keep doing tomorrow. One thing to change.');
   out+=sec('Questions to answer',`<ol>${q.map(x=>`<li>${x}</li>`).join('')}</ol>`);
