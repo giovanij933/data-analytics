@@ -1353,17 +1353,22 @@ function chartsHTML(st,F){
       ${acc.length>1?area(acc,'#7f9cb0',{max:100}):'<div class="empty">Run Check or answer quizzes to see this</div>'}</div>${F}</div>
   </div>`;
 }
+// the log's columns, for sorting and filtering (UI.filter); the last column holds the row's button
+const LOGK={check:'Code check',quiz:'Quiz',self:'Practice (self-check)'};
+const LOGC=[{label:'Time (local)',get:e=>+new Date(e.time),type:'time'},{label:'Lesson',get:e=>LM[e.lesson]?.title},{label:'Track',get:e=>TR[LM[e.lesson]?.t]?.n},
+  {label:'Level',get:e=>LV[LM[e.lesson]?.lv]},{label:'Type',get:e=>LOGK[e.kind]||e.kind},{label:'Result',get:e=>e.ok?'Correct':'Not yet'},null];
 function tableHTML(st){
-  const f=[...st.evs].reverse(),n=f.length,pages=Math.max(1,Math.ceil(n/S.rows));S.page=Math.max(1,Math.min(S.page,pages));
+  const F=UI.filter('log',LOGC,()=>{S.page=1;render()});
+  const f=F.apply([...st.evs].reverse()),n=f.length,pages=Math.max(1,Math.ceil(n/S.rows));S.page=Math.max(1,Math.min(S.page,pages));
   const rows=f.slice((S.page-1)*S.rows,S.page*S.rows),tf=d=>new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-  const KIND={check:'Code check',quiz:'Quiz',self:'Practice (self-check)'};
+  const KIND=LOGK;
   return`<div class="th"><h3>Log</h3><button class="btn" data-act="export">EXPORT CSV</button></div>
-  <div class="tw" tabindex="0" role="region" aria-label="Table"><table><thead><tr><th>Time (local)</th><th>Lesson</th><th>Track</th><th>Level</th><th>Type</th><th>Result</th><th><span class="ui-sr">Actions</span></th></tr></thead><tbody>
+  <div class="tw" tabindex="0" role="region" aria-label="Table"><table><thead><tr><th>${F.th(0)}</th><th>${F.th(1)}</th><th>${F.th(2)}</th><th>${F.th(3)}</th><th>${F.th(4)}</th><th>${F.th(5)}</th><th><span class="ui-sr">Actions</span></th></tr></thead><tbody>
   ${rows.map(e=>{const l=LM[e.lesson];if(!l)return'';return`<tr><td class="mu2">${tf(e.time)}</td><td><b>${esc(l.title)}</b></td><td>${pill(l.t)}</td><td class="mu2">${LV[l.lv]}</td><td class="mu2">${KIND[e.kind]||esc(e.kind||"—")}</td>
     <td class="${e.ok?'grn':'red'}">${e.ok?'✓ Correct':'✗ Not yet'}</td><td><button class="btn xs" data-act="open" data-v="${l.id}">Open</button></td></tr>`}).join('')
   ||'<tr><td colspan="7" style="text-align:center;color:#8f8a7e;padding:30px">No attempts in this range</td></tr>'}
   </tbody></table></div>
-  <div class="calf"><div><button data-act="pp" aria-label="Previous page">&lt;</button> Page <b>${S.page}</b> of ${pages} <button data-act="pn" aria-label="Next page">&gt;</button></div><span class="dim">${n} record${n===1?'':'s'}</span></div>`;
+  <div class="calf"><div><button data-act="pp" aria-label="Previous page">&lt;</button> Page <b>${S.page}</b> of ${pages} <button data-act="pn" aria-label="Next page">&gt;</button></div><span class="dim">${n} record${n===1?'':'s'}${F.clear()}</span></div>`;
 }
 function render(){
   if(!RL[S.range])S.range='all';   // an old range ('7d','30d','90d') isn't offered any more
