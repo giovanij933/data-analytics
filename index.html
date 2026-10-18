@@ -1525,13 +1525,14 @@ function sample(){
   let sd=1337;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
   // lesson, days spent on it, failed checks, hints; the last one is still in progress
   const PLAN=[['sql1',1,0,0],['py1',1,1,0],['sql2',1,0,0],['sql3',2,2,1],['py2',1,0,0],['sql4',3,3,1],['py3',2,1,0],['sql5',1,0,0],['py4',3,2,1],['sql6',2,1,0],['py5',2,0,0],['sql7',2,1,0]];
-  const REST=new Set([26,22,19,15,12,8,4]),t0=today();
+  const REST=new Set([25,21,18,14,11,7,3]),t0=today(),now=Date.now();
   progress={};events=[];sessions=[];
   let pi=0,dn=0;
-  for(let ago=28;ago>=1&&pi<PLAN.length;ago--){
+  for(let ago=27;ago>=0&&pi<PLAN.length;ago--){
     if(REST.has(ago))continue;
     const[id,days,fails,hint]=PLAN[pi],l=LM[id],last=++dn===days,k=addDays(t0,-ago),d=pd(k),p=pr(id),min=ri(15,45);
-    const at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),rnd()<.35?ri(6,8):ri(18,21),ri(0,59)).getTime();
+    // today's session has already ended
+    let at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),rnd()<.35?ri(6,8):ri(18,21),ri(0,59)).getTime();if(!ago)at=Math.min(at,now-(min+5)*6e4);
     sessions.push({id:uid(),time:new Date(at).toISOString(),min,lessons:[id],tracks:[l.t]});
     let m=ri(5,12);const ev=ok=>{p.att++;events.push({id:uid(),time:new Date(at+m*6e4).toISOString(),lesson:id,kind:'check',ok});m=Math.min(min-1,m+ri(3,9))};
     for(let f=last?fails-p.att:Math.min(fails-p.att,Math.ceil(fails/days));f>0;f--)ev(false);
