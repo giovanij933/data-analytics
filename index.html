@@ -992,44 +992,104 @@ run;`,py:R`(orders.sort_values(["customer_id", "order_date", "id"])
 → keep TRUE`}
 ];
 
-/* ================= sample warehouse ================= */
+/* ================= your data: every app's log as tables =================
+   Lessons run on what the other ISIONXXX apps have logged on this device (one site, one storage). The same tables are
+   a SQLite database in SQL lessons and pandas DataFrames in Python. A table whose app has fewer than 5 records uses a
+   small sample instead, so every lesson can still be done; DATA.src says which. Read once when LEARN opens. */
+const TBL={
+  trades:{app:'JOURNAL',key:'id',c:[['id','INTEGER'],['account','TEXT'],['contract','TEXT'],['side','TEXT'],['qty','INTEGER'],['entry','REAL'],['exit','REAL'],['opened','TEXT'],['closed','TEXT'],['day','TEXT'],['minutes','REAL'],['fees','REAL'],['pnl','REAL']],
+    about:'one row per trade. side Long / Short · opened, closed YYYY-MM-DD HH:MM:SS · day = date closed · minutes held · fees = fee + commission · pnl net of fees, in $'},
+  workouts:{app:'TRAINING',key:'id',c:[['id','INTEGER'],['time','TEXT'],['day','TEXT'],['exercise','TEXT'],['type','TEXT'],['sets','INTEGER'],['reps','INTEGER'],['load','REAL'],['distance','REAL'],['minutes','REAL'],['rpe','REAL']],
+    about:'one row per exercise logged. type Weighted / Bodyweight / Cardio / Stretch · load for Weighted only · distance and minutes for Cardio only (NULL otherwise) · rpe 1–10'},
+  mind:{app:'MIND',key:'id',c:[['id','INTEGER'],['time','TEXT'],['day','TEXT'],['practice','TEXT'],['technique','TEXT'],['minutes','REAL'],['mood_before','REAL'],['mood_after','REAL'],['depth','REAL']],
+    about:'one row per session. practice Meditation / Breathwork / Body Scan / Visualization / Focus / Journaling · moods and depth 1–10, NULL when not rated'},
+  meals:{app:'NUTRITION',key:'id',c:[['id','INTEGER'],['time','TEXT'],['day','TEXT'],['kind','TEXT'],['name','TEXT'],['kcal','REAL'],['protein','REAL'],['carbs','REAL'],['fat','REAL'],['fiber','REAL']],
+    about:'one row per meal. kind bowl / snack · name e.g. "Salmon bowl" · protein, carbs, fat, fiber in grams'},
+  habits:{app:'REWIRE',key:'id',c:[['id','INTEGER'],['time','TEXT'],['day','TEXT'],['event','TEXT'],['habit','TEXT'],['intensity','INTEGER'],['trigger','TEXT']],
+    about:'one row per entry. event resisted / slipped (an urge) or done (a good habit) · habit = the habit\'s name · intensity 1–10 and trigger for urges only'},
+  checkins:{app:'TODAY',key:'day',c:[['day','TEXT'],['sleep','REAL'],['quality','INTEGER'],['energy','INTEGER'],['weight','REAL']],
+    about:'one row per morning check-in. sleep in hours · quality and energy 1–5 · weight as entered (NULL if skipped)'},
+  study:{app:'LEARN',key:'id',c:[['id','INTEGER'],['time','TEXT'],['day','TEXT'],['minutes','REAL'],['track','TEXT'],['lessons','INTEGER']],
+    about:'one row per study session in this app. track SQL / Python / SAS / Tableau · lessons = how many lessons it covered'}};
 const DATA=(()=>{
-  let sd=42;const rnd=()=>(sd=sd*16807%2147483647)/2147483647;
   const p2=n=>String(n).padStart(2,'0'),iso=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
-  const FN=['Ava','Liam','Mia','Noah','Zoe','Eli','Ivy','Leo','Ana','Max','Sofia','Kai','Luna','Omar','Nia','Ray','Elena','Jude','Maya','Theo'];
-  const LN=['Smith','Garcia','Chen','Patel','Brown','Lopez','Kim','Nguyen','Davis','Silva','Moore','Rossi'];
-  const REG=['North','South','East','West'];
-  const C=[];for(let i=1;i<=60;i++){const d=new Date(2024,Math.floor(rnd()*18),1+Math.floor(rnd()*27));C.push([i,`${FN[(i-1)%20]} ${LN[(i-1)%12]}`,REG[Math.floor(rnd()*4)],rnd()<.65?'Consumer':'Business',iso(d)])}
-  const P=[['Laptop Pro','Electronics',1299],['Tablet 10','Electronics',449],['Headphones','Electronics',199],['USB-C Hub','Electronics',49.99],
-    ['Desk Lamp','Home',39.5],['Air Purifier','Home',229],['Coffee Maker','Home',89],['Throw Blanket','Home',34],
-    ['Office Chair','Office',319],['Standing Desk','Office',549],['Notebook Pack','Office',12.75],['Monitor Arm','Office',119],
-    ['Tent 4P','Outdoor',279],['Hiking Pack','Outdoor',149],['Water Bottle','Outdoor',24.99],['Camp Stove','Outdoor',64]].map((p,i)=>[i+1,...p]);
-  const O=[],I=[],end=new Date(2025,8,30);
-  for(let i=1;i<=420;i++){
-    const cid=1+Math.floor(Math.pow(rnd(),1.6)*54),su=new Date(C[cid-1][4]),span=Math.max(1,(end-su)/864e5);
-    const d=new Date(su.getTime()+Math.floor(rnd()*span)*864e5),r=rnd();
-    O.push([i,cid,iso(d),r<.85?'completed':r<.93?'returned':'cancelled']);
-    const n=1+Math.floor(rnd()*3),used=new Set();
-    for(let k=0;k<n;k++){let pid=1+Math.floor(rnd()*16);if(used.has(pid))continue;used.add(pid);
-      const pr=P[pid-1][3],up=rnd()<.2?Math.round(pr*.9*100)/100:pr;I.push([i,pid,1+Math.floor(rnd()*4),up])}
-  }
-  const q=v=>typeof v==='number'?v:`'${String(v).replace(/'/g,"''")}'`;
-  const ins=(t,rows)=>rows.map(r=>`INSERT INTO ${t} VALUES (${r.map(q).join(',')});`).join('\n');
-  const sql=`CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, region TEXT, segment TEXT, signup_date TEXT);
-CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL);
-CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, order_date TEXT, status TEXT);
-CREATE TABLE order_items (order_id INTEGER, product_id INTEGER, qty INTEGER, unit_price REAL);
-${ins('customers',C)}\n${ins('products',P)}\n${ins('orders',O)}\n${ins('order_items',I)}`;
-  const csv=(h,rows)=>[h,...rows.map(r=>r.join(','))].join('\n');
-  const api=O.slice(0,12).map(o=>({order_id:o[0],customer:{id:o[1],region:C[o[1]-1][2]},status:o[3],lines:I.filter(x=>x[0]===o[0]).map(x=>({sku:'P'+p2(x[1]),qty:x[2]}))}));
-  const logs=[];for(let i=0;i<48;i++){const d=new Date(2025,8,1+Math.floor(i/4),8+Math.floor(rnd()*10),Math.floor(rnd()*60),Math.floor(rnd()*60));
-    const stamp=`${iso(d)} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
-    if(rnd()<.12){logs.push(`${stamp} ERROR export timed out after 30s`);continue}
-    logs.push(`${stamp} ${rnd()<.85?'INFO':'WARN'} user=${[7,12,19,23,42][Math.floor(rnd()*5)]} action=${['export','export','view','delete'][Math.floor(rnd()*4)]} rows=${50+Math.floor(rnd()*4000)}`)}
-  return{sql,csv:{c:csv('id,name,region,segment,signup_date',C),p:csv('id,name,category,price',P),o:csv('id,customer_id,order_date,status',O),i:csv('order_id,product_id,qty,unit_price',I)},api:JSON.stringify(api),logs:logs.join('\n')};
+  const stamp=ms=>{const d=new Date(ms);return `${iso(d)} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`};
+  const get=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+  const n2=v=>v==null||v===''||!isFinite(v)?null:Math.round(v*100)/100;
+  // samples: seeded, so a sample table is the same every time; dates run up to today
+  const rng=seed=>{let sd=seed;return()=>(sd=sd*16807%2147483647)/2147483647};
+  const now=new Date(),dayAt=(k,h,m,r)=>{const d=new Date(now);d.setHours(0,0,0,0);d.setDate(d.getDate()-k);d.setHours(h,m,Math.floor(r()*60));return d};
+  const S={
+    trades(){const r=rng(11),C={NQZ6:[20,15,.25,24800],ESZ6:[50,6,.25,6750],GCZ6:[100,3,.1,4150]},px={NQZ6:24800,ESZ6:6750,GCZ6:4150},out=[];
+      for(let k=59;k>=0;k--){const d=dayAt(k,9,30,r);if(d.getDay()===0||d.getDay()===6)continue;let t=d.getTime()+r()*20*6e4;
+        for(let n=2+Math.floor(r()*4);n>0;n--){const x=r(),c=x<.5?'NQZ6':x<.8?'ESZ6':'GCZ6',[mult,stop,tick]=C[c],o=r(),res=o<.36?'W':o<.84?'L':'B',long=r()<.55;
+          px[c]=Math.round((px[c]+(r()-.48)*stop*4)/tick)*tick;const mv=res==='W'?stop*3:res==='L'?-stop:c==='NQZ6'?tick:0,held=(res==='W'?8+r()*35:2+r()*12)*6e4;
+          if(t+held>Date.now())break;out.push({account:'SAMPLE-50K',contract:c,side:long?'Long':'Short',qty:1,entry:px[c],exit:px[c]+(long?mv:-mv),open:t,close:t+held,mult,fee:2.5,comm:2.5});t+=held+(10+r()*40)*6e4}}
+      return out},
+    workouts(){const r=rng(12),out=[],P={1:[['Bench Press','W',3,5,135,5],['Overhead Press','W',3,5,85,2.5],['Triceps Pushdown','W',3,10,40,5]],2:[['Deadlift','W',2,5,225,10],['Barbell Row','W',3,6,115,5],['Pull-up','B',3,6,0,0]],
+        4:[['Back Squat','W',3,5,185,10],['Romanian Deadlift','W',3,8,155,10],['Leg Press','W',3,10,270,10]],3:[['Run','C']],6:[['Row Erg','C'],['Hamstring Stretch','S',2,30,0,0]]};
+      for(let k=55;k>=0;k--){const d=dayAt(k,6,30,r),ex=P[d.getDay()];if(!ex||r()<.1)continue;const wk=Math.floor((55-k)/7);let t=d.getTime();
+        for(const [n,y,sets,reps,lb,up] of ex){if(t>Date.now())break;
+          out.push(y==='C'?{at:t,ex:n,type:'C',sets:0,reps:0,load:0,dist:Math.round((n==='Run'?3:3.1)*(1+wk*.02)*10)/10,mins:Math.round(n==='Run'?28-wk*.3:22),rpe:6+Math.round(r()*2)}
+            :{at:t,ex:n,type:y,sets,reps:y==='B'?reps+Math.floor(wk/2):reps,load:y==='W'?lb+up*wk:0,dist:0,mins:0,rpe:7+Math.round(r()*4)/2});t+=8*6e4}}
+      return out},
+    mind(){const r=rng(13),K={M:['Breath counting','Open awareness'],B:['Box 4-4-4-4','Resonance 5.5','Physiological sigh'],S:['NSDR','Progressive relaxation'],V:['Session rehearsal'],F:['Single-point'],J:['Evening review']},ks=Object.keys(K),out=[];
+      for(let k=50;k>=0;k--){if(r()<.25)continue;for(let n=r()<.3?2:1;n>0;n--){const kind=ks[Math.floor(r()*ks.length)],h=kind==='J'?21:n>1?12:6,at=dayAt(k,h,10+Math.floor(r()*40),r).getTime();if(at>Date.now())continue;
+        const pre=Math.round((4+r()*2.5)*2)/2,rated=r()<.9;out.push({at,kind,tech:K[kind][Math.floor(r()*K[kind].length)],mins:[5,8,10,12,15,20][Math.floor(r()*6)],pre:rated?pre:null,post:rated?Math.min(10,Math.round((pre-.5+r()*2.8)*2)/2):null,depth:kind==='J'?null:3+Math.floor(r()*7)})}}
+      return out},
+    meals(){const r=rng(14),B=[['Eggs',1150,46,120,48,24],['Salmon',1240,68,118,52,26],['Chicken',1180,72,121,38,25],['Steak',1260,70,119,50,25],['Sardines',1190,62,117,50,26],['Turkey',1170,69,120,40,25]],
+        Q=[['Greek yogurt',150,15,8,4,0],['Apple',95,.5,25,.3,4.4],['Protein shake',160,30,5,2,1],['Almonds (1 oz)',164,6,6,14,3.5],['Banana',105,1.3,27,.4,3.1]],out=[];
+      for(let k=45;k>=0;k--){if(k&&r()<.1)continue;const add=(h,m,row,kind)=>{const at=dayAt(k,h,m+Math.floor(r()*40),r).getTime();if(at<=Date.now())out.push({at,kind,name:kind==='bowl'?row[0]+' bowl':row[0],v:row.slice(1)})};
+        add(7,20,B[0],'bowl');add(18,40,B[1+Math.floor(r()*5)],'bowl');for(let n=Math.floor(r()*3),i=0;i<n;i++)add(15+i*3,0,Q[Math.floor(r()*Q.length)],'snack')}
+      return out},
+    habits(){const r=rng(15),T=['Boredom','Late night','Phone in hand','Work break','Tired','Stress'],out=[];
+      for(let k=27;k>=0;k--){for(let i=0,n=k>18?4:k>9?3:2;i<n;i++){const at=dayAt(k,[22,13,8,17][i],Math.floor(r()*59),r).getTime();if(at>Date.now())continue;
+          out.push({at,event:(k===25||k===19)&&!i?'slipped':'resisted',habit:'Doomscrolling',int:Math.max(2,Math.min(9,Math.round(8-(27-k)*.18+(r()-.5)*3))),trig:T[Math.floor(r()*T.length)]})}
+        for(const [g,h] of [['Drink water',7],['Walk 10 min',12],['Read 5 pages',21]])if(r()<.7){const at=dayAt(k,h,15,r).getTime();if(at<=Date.now())out.push({at,event:'done',habit:g,int:null,trig:null})}}
+      return out},
+    checkins(){const r=rng(16),out=[];let w=81.5;for(let k=55;k>=0;k--){if(r()<.12)continue;w+=(r()-.56)*.4;out.push({day:iso(dayAt(k,0,0,r)),sleep:Math.round((5.5+r()*3)*2)/2,q:1+Math.floor(r()*5),energy:1+Math.floor(r()*5),w:r()<.8?Math.round(w*10)/10:null})}return out},
+    study(){const r=rng(17),tr=['SQL','Python','SQL','Python','SAS','Tableau'],out=[];for(let k=40;k>=0;k--){if(r()<.35)continue;const at=dayAt(k,r()<.4?7:19,Math.floor(r()*59),r).getTime();if(at<=Date.now())out.push({at,min:15+Math.floor(r()*35),track:tr[Math.floor(r()*tr.length)],n:1+Math.floor(r()*2)})}return out}};
+  // each app's records, mapped to the table's columns in order (ids are numbered in time order)
+  const FROM={
+    trades:x=>[x.account||'',x.contract,x.side==='Short'?'Short':'Long',x.qty,x.entry,x.exit,stamp(x.open),stamp(x.close),iso(new Date(x.close)),n2((x.close-x.open)/6e4),n2((x.fee||0)+(x.comm||0)),n2((x.exit-x.entry)*(x.side==='Short'?-1:1)*x.qty*x.mult-(x.fee||0)-(x.comm||0))],
+    workouts:x=>{const t={W:'Weighted',B:'Bodyweight',C:'Cardio',S:'Stretch'}[x.type]||x.type,c=x.type==='C';return[stamp(x.at),iso(new Date(x.at)),x.ex,t,c?null:x.sets,c?null:x.reps,x.type==='W'?x.load:null,c?n2(x.dist):null,c?n2(x.mins):null,x.rpe||null]},
+    mind:x=>[stamp(x.at),iso(new Date(x.at)),{M:'Meditation',B:'Breathwork',S:'Body Scan',V:'Visualization',F:'Focus',J:'Journaling'}[x.kind]||x.kind,x.tech||null,x.mins,x.pre??null,x.post??null,x.depth??null],
+    meals:x=>[stamp(x.at),iso(new Date(x.at)),x.kind,x.name,...x.v.map(n2)],
+    habits:x=>[stamp(x.at),iso(new Date(x.at)),x.event,x.habit,x.int??null,x.trig||null],
+    checkins:x=>[x.day,x.sleep??null,x.q??null,x.energy??null,x.w??null],
+    study:x=>[stamp(x.at),iso(new Date(x.at)),x.min,x.track,x.n]};
+  // what each app saved on this device, in the shape the samples use
+  const rw=get('isx.rewire.v1'),bad=Object.fromEntries((rw?.bad||[]).map(b=>[b.id,b.name])),TRN={sql:'SQL',py:'Python',sas:'SAS',tab:'Tableau'};
+  const MINE={
+    trades:get('isx.journal.v1')?.trades,workouts:get('isx.training.v1')?.log,mind:get('isx.mind.v1')?.log,
+    // NUTRITION writes its meals with their nutrients worked out (nj.mealnut.v1); bowls can't be totalled from here
+    meals:(get('nj.mealnut.v1')?.meals||[]).map(([id,time,kind,name,...v])=>({at:Date.parse(time),kind:kind==='bowl'?'bowl':'snack',name,v})),
+    habits:(rw?.log||[]).filter(e=>e.at&&['resist','slip','done'].includes(e.t)).map(e=>({at:e.at,event:{resist:'resisted',slip:'slipped',done:'done'}[e.t],habit:e.t==='done'?e.g:bad[e.b]||'—',int:e.t==='done'?null:e.int??null,trig:e.t==='done'?null:e.trig||null})),
+    checkins:(get('isx.checkin.v1')?.log||[]).filter(e=>e.day),
+    study:(get('xl.sessions.v1')||[]).filter(x=>x.time).map(x=>({at:Date.parse(x.time),min:x.min,track:TRN[(x.tracks||[])[0]]||'',n:(x.lessons||[]).length}))};
+  const tab={},src={},ord=x=>x.at??x.close??Date.parse(x.day);
+  for(const t in TBL){const m=Array.isArray(MINE[t])?MINE[t].filter(x=>isFinite(ord(x))):[],mine=m.length>=5,rows=(mine?m:S[t]()).sort((a,b)=>ord(a)-ord(b));
+    tab[t]=rows.map((x,i)=>TBL[t].key==='id'?[i+1,...FROM[t](x)]:FROM[t](x));src[t]=mine?TBL[t].app:null}
+  const q=v=>v==null?'NULL':typeof v==='number'?v:`'${String(v).replace(/'/g,"''")}'`;
+  const sql=Object.entries(TBL).map(([t,d])=>`CREATE TABLE ${t} (${d.c.map(([n,y])=>`"${n}" ${y}${n===d.key?' PRIMARY KEY':''}`).join(', ')});\n`+tab[t].map(r=>`INSERT INTO ${t} VALUES (${r.map(q).join(',')});`).join('\n')).join('\n');
+  // Python extras: the last 14 days as nested JSON (an export, the way an API returns it) and every event as one log line
+  const col=(t,n)=>TBL[t].c.findIndex(c=>c[0]===n),days=[...new Set(Object.keys(TBL).flatMap(t=>tab[t].map(r=>r[col(t,'day')])))].sort().slice(-14);
+  const pick=(t,cols)=>r=>Object.fromEntries(cols.map(c=>[c,r[col(t,c)]]));
+  const export_=days.map(d=>{const ci=tab.checkins.find(r=>r[0]===d);return{day:d,checkin:ci?pick('checkins',['sleep','energy'])(ci):null,
+    trades:tab.trades.filter(r=>r[col('trades','day')]===d).map(pick('trades',['contract','side','pnl'])),workouts:tab.workouts.filter(r=>r[col('workouts','day')]===d).map(pick('workouts',['exercise','sets','reps','load'])),
+    meals:tab.meals.filter(r=>r[col('meals','day')]===d).map(pick('meals',['name','kcal','protein']))}});
+  const kv=o=>Object.entries(o).filter(([,v])=>v!=null&&v!=='').map(([k,v])=>`${k}=${typeof v==='string'&&/[\s"]/.test(v)?JSON.stringify(v):v}`).join(' ');
+  const L=[];
+  tab.trades.forEach(r=>L.push([r[col('trades','closed')],'JOURNAL','trade',kv({contract:r[2],side:r[3],qty:r[4],pnl:r[12].toFixed(2)})]));
+  tab.workouts.forEach(r=>L.push([r[1],'TRAINING','exercise',kv({name:r[3],sets:r[5],reps:r[6],load:r[7],distance:r[8],rpe:r[10]})]));
+  tab.mind.forEach(r=>L.push([r[1],'MIND','session',kv({practice:r[3],minutes:r[5],before:r[6],after:r[7]})]));
+  tab.meals.forEach(r=>L.push([r[1],'NUTRITION','meal',kv({name:r[4],kcal:Math.round(r[5]),protein:Math.round(r[6])})]));
+  tab.habits.forEach(r=>L.push([r[1],'REWIRE',r[3]==='done'?'habit':'urge',kv({habit:r[4],result:r[3]==='done'?null:r[3],intensity:r[5],trigger:r[6]})]));
+  const logs=L.sort((a,b)=>a[0]<b[0]?-1:1).slice(-400).map(x=>x.join(' '));
+  return{sql,tab,src,json:JSON.stringify(export_),logs:logs.join('\n')};
 })();
-const SCHEMA=[['customers','id INTEGER · name TEXT · region TEXT · segment TEXT · signup_date TEXT (YYYY-MM-DD)'],['products','id INTEGER · name TEXT · category TEXT · price REAL'],
-  ['orders','id INTEGER · customer_id INTEGER · order_date TEXT · status TEXT (completed / returned / cancelled)'],['order_items','order_id INTEGER · product_id INTEGER · qty INTEGER · unit_price REAL']];
+// the Tables panel: each table, where its rows came from, and its columns
+const SCHEMA=Object.entries(TBL).map(([t,d])=>[t,`${DATA.src[t]?`your ${DATA.src[t]} log`:`sample (log 5+ in ${d.app} to use yours)`} · ${DATA.tab[t].length} rows\n${d.c.map(([n,y])=>`${n} ${y}`).join(' · ')}\n${d.about}`]);
 
 /* ================= storage ================= */
 const K={p:'xl.progress.v1',e:'xl.events.v1',s:'xl.sessions.v1',d:'xl.drafts.v1',c:'xl.settings.v1',v:'xl.videos.v1'};
@@ -1097,14 +1157,13 @@ async function runSQL(q){
 }
 const PYSETUP=R`
 import pandas as pd, numpy as np, io, json, sys, traceback
+TABLES = json.loads(TABLES_JSON)
 pd.set_option("display.width", 120)
 def fresh_ns():
     ns = {"pd": pd, "np": np, "json": json}
-    ns["customers"] = pd.read_csv(io.StringIO(CSV_C))
-    ns["products"] = pd.read_csv(io.StringIO(CSV_P))
-    ns["orders"] = pd.read_csv(io.StringIO(CSV_O))
-    ns["items"] = pd.read_csv(io.StringIO(CSV_I))
-    ns["api_payload"] = json.loads(API_JSON)
+    for name, t in TABLES.items():
+        ns[name] = pd.DataFrame(t["rows"], columns=t["cols"])
+    ns["day_export"] = json.loads(EXPORT_JSON)
     ns["logs"] = LOGS.split("\n")
     return ns
 def to_rows(r):
@@ -1146,8 +1205,8 @@ async function ensurePy(onStatus){
     const py=await loadPyodide({indexURL:PYIDX});
     onStatus?.('Loading pandas…');
     await py.loadPackage(['pandas']);
-    py.globals.set('CSV_C',DATA.csv.c);py.globals.set('CSV_P',DATA.csv.p);py.globals.set('CSV_O',DATA.csv.o);py.globals.set('CSV_I',DATA.csv.i);
-    py.globals.set('API_JSON',DATA.api);py.globals.set('LOGS',DATA.logs);
+    py.globals.set('TABLES_JSON',JSON.stringify(Object.fromEntries(Object.entries(TBL).map(([t,d])=>[t,{cols:d.c.map(c=>c[0]),rows:DATA.tab[t]}]))));
+    py.globals.set('EXPORT_JSON',DATA.json);py.globals.set('LOGS',DATA.logs);
     py.runPython(PYSETUP);PY=py;return py;
   })().catch(e=>{PYP=null;throw e});
   return PYP;
@@ -1515,10 +1574,11 @@ function rosetta(){
     <div class="rosetta">${blk('sql',r.sql)}${blk('py',r.py)}${blk('sas',r.sas)}${blk('tab',r.tab)}</div>`,true);
 }
 function schemaModal(){
-  openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">Sample warehouse</h3><button class="btn" data-act="close">Close</button></div>
-    <p class="mu">The same data is a SQLite database in SQL lessons and pandas DataFrames in Python lessons (<b>order_items</b> is called <b>items</b> in Python). Python lessons also get <b>api_payload</b> (nested JSON) and <b>logs</b> (text lines).</p>
+  const mine=Object.keys(TBL).filter(t=>DATA.src[t]);
+  openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">Your data</h3><button class="btn" data-act="close">Close</button></div>
+    <p class="mu">Every lesson runs on the logs your ISIONXXX apps keep on this device${mine.length?` (${mine.length} of ${Object.keys(TBL).length} tables are yours)`:''}: a SQLite database in SQL lessons, pandas DataFrames in Python. Python also gets <b>day_export</b> (the last 14 days as nested JSON) and <b>logs</b> (every event as a text line). A table with fewer than 5 records in its app uses a sample. Reopen LEARN to pick up new entries.</p>
     ${SCHEMA.map(([t,c])=>`<div class="codeh"><b>${t}</b></div><pre style="white-space:pre-wrap">${esc(c)}</pre>`).join('')}
-    <p class="mu" style="margin-top:12px">Relationships: orders.customer_id → customers.id · order_items.order_id → orders.id · order_items.product_id → products.id</p>`);
+    <p class="mu" style="margin-top:12px">Every table has a <b>day</b> column (YYYY-MM-DD): join on it to compare apps, e.g. sleep against P&amp;L.</p>`);
 }
 function dataForm(){
   const row=(b,sm,c)=>`<div><span><b>${b}</b><small>${sm}</small></span>${c}</div>`,btns=h=>`<span class="ui-set-btns">${h}</span>`;
