@@ -1899,7 +1899,7 @@ function heroToday(){
   // a tile is the dashboard's own stats for that range, without the day, track or card filters, so tapping it shows the same minutes below
   const per=r=>{const o={range:S.range,sel:S.sel,track:S.track,x:S.x};Object.assign(S,{range:r,sel:null,track:'all',x:{}});const x=stats(view());Object.assign(S,o);return x};
   const td=per('today'),wk=per('week'),mo=per('month'),min=Math.round(td.tot),pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
-  const tile=(k,label,x,sub,tone='')=>({label,value:fnum(Math.round(x.tot))+'m',tone,sub,attrs:{'data-act':'rng','data-v':k,'aria-label':`${label}: ${fmin(x.tot)} studied. Show ${label.toLowerCase()} below`},on:!S.sel&&S.range===k});
+  const tile=(k,label,x,sub,tone='')=>({label,value:fmin(x.tot),tone,sub,attrs:{'data-act':'rng','data-v':k,'aria-label':`${label}: ${fmin(x.tot)} studied. Show ${label.toLowerCase()} below`},on:!S.sel&&S.range===k});
   return UI.hero({key:'learn',title:'Today',sub:min>=goal?"Today's goal done ✓":`${goal-min} min to today's goal${st?` · ${st}-day streak`:''}`,
     big:{value:`+${xp}`,label:'XP today',tone:xp>0?'pos':''},
     stats:[tile('today','Today',td,td.ses.length||td.done.length?`${pl(td.ses.length,'session')} · ${pl(td.done.length,'lesson')} done`:'not studied yet',min>=goal?'pos':''),
