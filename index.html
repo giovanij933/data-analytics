@@ -1843,6 +1843,7 @@ document.addEventListener('click',async e=>{
       if(k==='track')S.track=S.track===x?'all':x;else if(S.x[k]===x)delete S.x[k];else S.x[k]=x;S.page=1;render()},
     xclr:()=>{if(v==='track')S.track='all';else if(v==='day')S.sel=null;else delete S.x[v];S.page=1;render()},
     xall:()=>{S.track='all';S.sel=null;S.x={};S.page=1;render()},
+    rng:()=>{S.range=S.range===v?'all':v;S.sel=null;S.page=1;render()},   // the Today card's period tiles; tap again for all time
     day:()=>{S.sel=S.sel===v?null:v;if(S.sel){const d=pd(v);S.month=new Date(d.getFullYear(),d.getMonth(),1)}S.page=1;render()},
     pp:()=>{if(S.page>1){S.page--;render()}},pn:()=>{S.page++;render()},   // tableHTML clamps to the last page
     open:()=>{if(!v)return;closeModal();if(CUR&&$('#ed'))drafts[CUR]=$('#ed').value,saveDrafts();openLesson(v)},
@@ -1891,13 +1892,19 @@ addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.isx
 /* ---------- today at a glance (shared hero, timeline and motion from ui.js) ---------- */
 function heroToday(){
   if(!sessions.length&&!events.length)return '';
-  const t=today(),S1=sessions.filter(x=>dayOf(x)===t),min=Math.round(S1.reduce((a,x)=>a+(+x.min||0),0)),goal=settings.goal||30;
+  const t=today(),S1=sessions.filter(x=>dayOf(x)===t),goal=settings.goal||30;
   const doneT=LESSONS.filter(l=>progress[l.id]?.done&&progress[l.id].date===t),xp=doneT.reduce((a,l)=>a+(progress[l.id].xp||0),0),st=streak();
   // each lesson passed today once, at its first pass
   const passed=events.filter(e=>dayOf(e)===t&&e.kind==='check'&&e.ok).sort((a,b)=>Date.parse(a.time)-Date.parse(b.time)).filter((e,i,a)=>a.findIndex(x=>x.lesson===e.lesson)===i);
-  return UI.hero({key:'learn',title:'Today',sub:`${st}-day streak · ${LESSONS.filter(l=>isDone(l.id)).length}/${LESSONS.length} lessons done`,
+  // a tile is the dashboard's own stats for that range, without the day, track or card filters, so tapping it shows the same minutes below
+  const per=r=>{const o={range:S.range,sel:S.sel,track:S.track,x:S.x};Object.assign(S,{range:r,sel:null,track:'all',x:{}});const x=stats(view());Object.assign(S,o);return x};
+  const td=per('today'),wk=per('week'),mo=per('month'),min=Math.round(td.tot),pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+  const tile=(k,label,x,sub,tone='')=>({label,value:fnum(Math.round(x.tot))+'m',tone,sub,attrs:{'data-act':'rng','data-v':k,'aria-label':`${label}: ${fmin(x.tot)} studied. Show ${label.toLowerCase()} below`},on:!S.sel&&S.range===k});
+  return UI.hero({key:'learn',title:'Today',sub:min>=goal?"Today's goal done ✓":`${goal-min} min to today's goal${st?` · ${st}-day streak`:''}`,
     big:{value:`+${xp}`,label:'XP today',tone:xp>0?'pos':''},
-    rings:[{key:'min',label:'Study',value:min,max:goal,display:`${min}/${goal} min`},{key:'lesson',label:'Lesson',value:doneT.length,max:1,display:doneT.length?`${doneT.length} done`:'not yet'},{key:'streak',label:'Streak',value:Math.min(st,7),max:7,display:`${st} day${st===1?'':'s'}`,done:min>0||doneT.length>0||passed.length>0}],
+    stats:[tile('today','Today',td,td.ses.length||td.done.length?`${pl(td.ses.length,'session')} · ${pl(td.done.length,'lesson')} done`:'not studied yet',min>=goal?'pos':''),
+      tile('week','Week',wk,`${pl(wk.days,'day')} studied`),
+      tile('month','Month',mo,`${pl(mo.done.length,'lesson')} done`)],
     action:{label:'▶ Next lesson',act:'startnext'},
     log:[...S1.map(x=>({at:Date.parse(x.time),tag:'Study',text:`${Math.round(+x.min||0)} min${x.lessons?.length?` · ${x.lessons.length} lesson${x.lessons.length>1?'s':''}`:''}`})),
       ...passed.map(e=>({at:Date.parse(e.time),tag:'Passed',text:LM[e.lesson]?.title||'Exercise',tone:'pos'}))]});
