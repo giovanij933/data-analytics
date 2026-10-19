@@ -1176,7 +1176,7 @@ const trackLevel=t=>{let lv=0;for(let v=1;v<=4;v++){const ls=tLessons(t).filter(
 const pill=t=>`<span class="pill" style="color:${TR[t].col};border-color:${TR[t].col}55;background:${TR[t].col}1a">${TR[t].n}</span>`;
 const I={   // the YouTube mark on the WATCH heading; buttons with a text label carry no icon, like the other apps
   yt:`<svg viewBox="0 0 24 24"><path fill="currentColor" d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></svg>`};
-$('#barBtns').innerHTML=`<button class="btn go" data-act="startnext">&#9654; START</button><button class="btn" data-act="catalog">LESSONS</button><button class="btn" data-act="rosetta">ROSETTA</button><button class="btn" data-act="review">REVIEW</button><button class="btn" data-act="data">SETTINGS</button>`;
+$('#barBtns').innerHTML=`<button class="btn go" data-act="startnext">&#9654; START</button><button class="btn" data-act="catalog">LESSONS</button><button class="btn" data-act="review" data-more>REVIEW</button><button class="btn" data-act="rosetta" data-more>ROSETTA</button><button class="btn" data-act="data" data-more>SETTINGS</button>`;
 
 /* ================= runtimes ================= */
 const SQLJS='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/';
