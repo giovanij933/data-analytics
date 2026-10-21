@@ -253,6 +253,25 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .rosetta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
 .rosetta .codeh{margin-top:0}
 
+/* today's session: the plan START shows, the step bar in the lesson view, the review panel */
+.spl{display:grid;gap:6px;margin:12px 0}
+.spi{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:9px 12px;border:1px solid var(--line2);background:var(--bg);border-radius:var(--g-r3,0)}
+.spi>i{font-style:normal;color:var(--mu);font-size:11px}
+.spi b{font-weight:500}.spi small{display:block;color:var(--mu);font-size:11px;margin-top:3px}
+.spi em{font-style:normal;color:var(--mu);font-size:11px;white-space:nowrap}
+.spi .tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-right:6px}
+.spi .pill{margin-right:4px}
+.spi.now{border-color:var(--acc)}.spi.ok{border-color:rgba(51,255,102,.4)}.spi.ok .tag{color:var(--g)}.spi.off{opacity:.6}
+.sdots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:0}
+.sdots i{width:7px;height:7px;border:1px solid var(--mu);border-radius:50%}.sdots i.ok{background:var(--g);border-color:var(--g)}.sdots i.no{border-color:var(--a)}.sdots i.now{background:var(--acc);border-color:var(--acc)}
+.ssn{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rvp{margin-top:0;margin-bottom:14px}
+.rvn{margin:4px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.rvn summary{cursor:pointer;padding:10px 0;font-size:11px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
+.rvn summary:hover{color:var(--acc)}.rvn[open]{padding-bottom:12px}
+.ft .nx{display:block;margin-top:3px}
+.box.ssm .mact{position:sticky;bottom:-20px;z-index:1;margin:14px -20px -20px;padding:12px 20px;background:rgba(16,16,16,.94);border-top:1px solid var(--g-line,var(--line))}
+
 @media(max-width:1000px){.g4{grid-template-columns:1fr 1fr}.gm,.g3{grid-template-columns:1fr}}
 @media(max-width:560px){
   body{padding-left:10px;padding-right:10px}
@@ -261,6 +280,8 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
   .cell{min-height:50px;padding:3px}.cell small{display:none}.cell b{font-size:10px}
   .ed,.fg input,.fg select,.fg textarea,.vpin input,.ui-set input{font-size:16px}
   .lvb h2{font-size:16px}
+  .lvh .ssn{order:9;flex-basis:100%;justify-content:flex-end}.lvh .sdots{display:none}
+  .spi{grid-template-columns:14px minmax(0,1fr);padding:9px 10px}.spi em{grid-column:2}
 }
 h1.brand{margin:0}
 .cell span{color:#a9a498}
@@ -1137,7 +1158,7 @@ let progress=load(K.p,{}),events=load(K.e,[]),sessions=load(K.s,[]),drafts=load(
 if(!Array.isArray(events))events=[];if(!Array.isArray(sessions))sessions=[];
 // a full disk must not abort the click that saved; sync.js says what happened and how to make room
 const keep=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
-const save=()=>{if(![[K.p,progress],[K.e,events],[K.s,sessions],[K.c,settings]].every(([k,v])=>keep(k,v)))toast('Storage write failed — take a backup')};
+const save=()=>{if(![[K.p,progress],[K.e,events],[K.s,sessions],[K.c,settings]].every(([k,v])=>keep(k,v)))toast('Storage write failed — take a backup');UI.replan()};
 const saveDrafts=()=>keep(K.d,drafts);
 const saveVideos=()=>{if(!keep(K.v,videos))toast('Storage write failed — take a backup')};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -1162,6 +1183,8 @@ const fnum=v=>FMT.n1.format(+v);
 const fmin=m=>{m=Math.round(m||0);return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`};
 const mmss=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600);return h?`${h}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`:`${Math.floor(s/60)}:${pad(s%60)}`};
 const pct=(a,b)=>b?Math.round(a/b*100)+'%':'0%';
+const pls=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+const dago=d=>{const n=diffDays(d,today());return n<=0?'today':n===1?'yesterday':n+' days ago'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)};
 const CV={grn:'var(--g)',red:'var(--r)',amb:'var(--a)','':'transparent'};
@@ -1384,22 +1407,77 @@ const xa=x=>x?` role="button" tabindex="0" aria-pressed="${xon(x)}" data-act="xf
 const lr=(col,label,v,p,x)=>`<div class="lr${xc(x)}"${xa(x)}><i class="dot" style="background:${col}"></i><span>${label}</span><b>${v}</b><em>${p??''}</em></div>`;
 const er=(col,label,val,tip='',x)=>`<div class="er${xc(x)}"${xa(x)}><i class="dot" style="background:${col}"></i><span>${label}</span><b>${val}</b><i class="q" title="${esc(tip)}">i</i></div>`;
 const dl=k=>pd(k).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-function recommend(){
-  const last=settings.last&&LM[settings.last]?.t;
-  if(last&&nextIn(last))return nextIn(last);
-  const ord=TK.slice().sort((a,b)=>tLessons(a).filter(l=>isDone(l.id)).length/tLessons(a).length-tLessons(b).filter(l=>isDone(l.id)).length/tLessons(b).length);
-  for(const t of ord){const n=nextIn(t);if(n)return n}
-  return LESSONS[0];
+/* ---------- today's session: the tracks in rotation, spaced reviews, sized to your usual study time ---------- */
+// the track you've studied least recently goes next: never studied first, then the longest ago; ties go to the least
+// complete, then the usual order. Completed tracks drop out. Going back over a lesson completed on an earlier day (a
+// review) doesn't count as studying its track, so reviews don't move a track down the rotation
+function rotation(){
+  const L={},put=(id,at,d)=>{const l=LM[id],p=progress[id];if(l&&at>0&&!(p?.done&&p.date<d)&&!(L[l.t]>=at))L[l.t]=at};
+  events.forEach(e=>put(e.lesson,Date.parse(e.time),dayOf(e)));
+  sessions.forEach(s=>(s.lessons||[]).forEach(id=>put(id,Date.parse(s.time),dayOf(s))));
+  return TK.filter(t=>nextIn(t)).map((t,i)=>{const ls=tLessons(t);return{t,at:L[t]??-Infinity,f:ls.filter(l=>isDone(l.id)).length/ls.length,i}}).sort((a,b)=>a.at-b.at||a.f-b.f||a.i-b.i);
+}
+function recommend(){const r=rotation()[0];return r?nextIn(r.t):LESSONS[0]}
+// reviews: a completed lesson comes back 1, 3, 7 and 21 days after you complete it. One you get moves it to the next
+// step (after the 21-day one it's learned); one you miss starts the steps again from tomorrow; a skipped one comes back
+// tomorrow at the same step. A late review moves the later ones back by as much, so they keep their spacing. They're
+// kept with the lesson's progress (sr: [day, 1 got it · 0 not yet · -1 skipped]), which syncs to your other devices
+const IV=[1,3,7,21];
+function srOf(id){
+  const p=progress[id];if(!p?.done||typeof p.date!=='string')return null;
+  let n=0,last=p.date,sk='';
+  (Array.isArray(p.sr)?p.sr:[]).forEach(r=>{if(!Array.isArray(r)||typeof r[0]!=='string')return;if(r[1]<0)sk=r[0];else{n=r[1]>0?n+1:0;last=r[0];sk=''}});
+  if(n>=IV.length)return{n,done:true,last};
+  let due=addDays(last,IV[n]-(IV[n-1]||0));if(sk>=due)due=addDays(sk,1);
+  return{n,due,last};
+}
+const srOn=(id,d)=>(Array.isArray(progress[id]?.sr)?progress[id].sr:[]).filter(r=>Array.isArray(r)&&r[0]===d).at(-1)?.[1];   // the review result on day d
+// due on day d (late ones too), the longest due first
+const dueList=(d=today())=>LESSONS.map(l=>({l,s:srOf(l.id)})).filter(x=>x.s&&!x.s.done&&x.s.due<=d).sort((a,b)=>a.s.due.localeCompare(b.s.due)||progress[a.l.id].date.localeCompare(progress[b.l.id].date));
+const nextDue=()=>LESSONS.map(l=>srOf(l.id)).filter(s=>s&&!s.done).map(s=>s.due).sort()[0];
+const reviewed=(id,r)=>{const p=pr(id);(p.sr=Array.isArray(p.sr)?p.sr:[]).push([today(),r]);save()};
+// your usual study time: the median of your last 10 timed sessions (20 minutes until you've timed 3)
+function usual(){const m=sessions.filter(s=>+s.min>=1).sort((a,b)=>Date.parse(b.time)-Date.parse(a.time)).slice(0,10).map(s=>+s.min).sort((a,b)=>a-b),n=m.length;
+  return{min:n<3?20:Math.round(n%2?m[n>>1]:(m[n/2-1]+m[n/2])/2),n}}
+// minutes, from the lesson itself: reading (150 words a minute, the example's code at 50) plus the exercise, which grows
+// with the level; a review does the exercise again from memory, in about a third of that
+const wc=s=>String(s||'').replace(/<[^>]+>/g,' ').split(/\s+/).filter(Boolean).length;
+const LMIN={},lmin=l=>LMIN[l.id]??=Math.round((wc(l.learn.join(' '))+wc(l.task||l.quiz?.q)+wc(l.prac?.task))/150+wc(l.ex)/50+(TR[l.t].run?6:4)+2*l.lv);
+const rmin=l=>Math.max(3,Math.round(lmin(l)/3));
+// the session START offers: the next lesson in the rotation (or in track t), and before it, as a warm-up, the due
+// reviews that fit beside it in your usual time, longest due first. The longest due always comes along, so reviews
+// can't pile up behind long lessons
+function planFor(t){
+  const r=t?null:rotation()[0],L=t?nextIn(t):r&&nextIn(r.t),U=usual(),D=dueList(),R=[];let m=L?lmin(L):0;
+  for(const x of D){const k=rmin(x.l);if(R.length&&m+k>U.min)break;R.push({k:'r',id:x.l.id,m:k});m+=k}
+  return{items:L?[...R,{k:'l',id:L.id,m:lmin(L)}]:R,min:m,U,due:D.length};
+}
+// today's session once it has started: kept in settings (synced) with each step's result, so TODAY and your other devices see it
+const tp=()=>{const P=settings.plan;return P&&P.day===today()&&Array.isArray(P.items)&&P.items.length&&P.items.every(x=>x&&LM[x.id])?P:null};
+const nrv=it=>it.filter(x=>x.k==='r').length;
+// TODAY's plan card: today's session as START offers it, or the one under way, or done
+function planRows(){
+  const P=tp(),it=(P||planFor()).items;if(!it.length)return[];
+  const L=it.find(x=>x.k==='l'),l=L&&LM[L.id],n=nrv(it),m=it.reduce((a,x)=>a+(+x.m||0),0),clip=(s,k)=>s.length>k?s.slice(0,k-1).trim()+'…':s,tail=` · ~${m} min`;
+  const sub=P?.done?`Done ✓ · ${[l&&'1 lesson',n&&pls(n,'review')].filter(Boolean).join(' + ')}`:P?.more?`Done ✓ · one more under way: ${P.i} of ${it.length}`:P?`${P.i} of ${it.length} done${tail}`
+    :l?(n?`+ ${pls(n,'review')}`:sessions.length||events.length?LV[l.lv]:'First lesson')+tail:clip(it.map(x=>LM[x.id].title).join(' · '),64-tail.length)+tail;
+  return[{title:clip(l?`${TR[l.t].n} · ${l.title}`:pls(n,'review'),28),sub:clip(sub,64),act:'startnext',done:!!(P?.done||P?.more)}];
 }
 function continueHTML(){
-  const rec=recommend();
+  const P=tp(),Q=P&&!P.done?P:planFor(),L=Q.items.find(x=>x.k==='l'),rec=L?LM[L.id]:recommend(),D=dueList(),nd=nextDue(),n=nrv(Q.items);
   const rows=TK.map(t=>{const ls=tLessons(t),d=ls.filter(l=>isDone(l.id)).length,n=nextIn(t),lv=trackLevel(t);
     return`<div class="tk"><div class="tkh">${pill(t)}<b>${n?esc(n.title):'<span class="grn">Track complete 🎉</span>'}</b><span class="mu" style="font-size:11px">${n?LV[n.lv]:''}</span>
       ${n?`<button class="btn xs ${n.id===rec.id?'go':''}" data-act="open" data-v="${n.id}">${isDone(n.id)?'REVIEW':'&#9654; START'}</button>`:`<button class="btn xs" data-act="catalog" data-v="${t}">REVIEW</button>`}</div>
       <div class="hb"><i style="width:${d/ls.length*100}%;background:${TR[t].col}"></i></div>
       <div class="row mu"><span>${d} / ${ls.length} lessons</span><span>${lv?'Cleared: <span class="grn">'+LV[lv]+'</span>':'Level 1 in progress'}</span></div></div>`}).join('');
+  // today's session, then the reviews waiting
+  const what=P&&P.done?`<span class="grn">Today's session done ✓</span> <span class="mu">· ${[P.items.some(x=>x.k==='l')&&'1 lesson',nrv(P.items)&&pls(nrv(P.items),'review')].filter(Boolean).join(' + ')}</span>`
+    :P?`Today's session: <b>${P.i} of ${P.items.length}</b> done <span class="mu">· next: ${P.items[P.i].k==='r'?'review of ':''}${esc(LM[P.items[P.i].id].title)}</span>`
+    :Q.items.length?`Today: ${L?`${pill(rec.t)} <b>${esc(rec.title)}</b> `:''}<span class="mu">${L&&n?'+ ':''}${n?pls(n,'review')+' · ':L?LV[rec.lv]+' · ':''}~${Q.min} min</span>`
+    :'<span class="grn">Every lesson complete</span>';
+  const due=D.length?`<span class="amb">${pls(D.length,'review')} due</span>`:nd?`No reviews due · next ${dl(nd)}`:'Reviews start the day after you complete a lesson';
   return`<div class="card"><div class="bd" style="padding-bottom:4px"><h3 style="margin-bottom:6px">Continue learning</h3><div class="lbl" style="margin-bottom:8px">Beginner → Intermediate → Advanced → Expert in each track</div>${rows}</div>
-    <div class="ft"><span>Up next: ${pill(rec.t)} <b>${esc(rec.title)}</b> <span class="mu">· ${LV[rec.lv]}</span></span><button class="btn go" data-act="open" data-v="${rec.id}">&#9654; START SESSION</button></div></div>`;
+    <div class="ft"><span>${what}<span class="mu nx">${due}</span></span>${P&&P.done&&!Q.items.length?'':`<button class="btn go" data-act="startnext">&#9654; ${P&&!P.done?'RESUME':'START'} SESSION</button>`}</div></div>`;
 }
 function topCards(st,F){
   // course progress and experience count all time; a card leaves out the filter its rows set
@@ -1557,7 +1635,8 @@ function openLesson(id){
   stStart();ST.lessons.add(id);ST.tracks.add(l.t);
   $('#po').classList.remove('hidden');document.body.style.overflow='hidden';drawLesson();$('#po').scrollTop=0;
 }
-function closeLesson(){stEnd();CUR=null;$('#po').classList.add('hidden');$('#po').innerHTML='';document.body.style.overflow='';render()}
+// closing the lesson view pauses a running session (START resumes it); its study time adds up across the parts
+function closeLesson(){if(SP){const P=tp();if(P){P.sec=Math.round((P.sec||0)+stSec());save()}SP=false}stEnd();CUR=null;$('#po').classList.add('hidden');$('#po').innerHTML='';document.body.style.overflow='';render()}
 function watchHTML(l){
   const v=videos[l.id],q=YTQ[l.id]||`${TR[l.t].n} ${l.title} tutorial`,C=COURSE[l.t],at=C?.at[l.id];
   return`<div class="watch" id="watch">
@@ -1576,21 +1655,24 @@ function watchHTML(l){
 }
 function drawLesson(){
   const l=curLesson(),p=pr(l.id),ls=tLessons(l.t),idx=ls.indexOf(l),prev=ls[idx-1],next=ls[idx+1],run=TR[l.t].run;
-  const code=drafts[l.id]??l.start;
-  $('#po').innerHTML=`<div class="lv"><div class="lvh">${pill(l.t)}<span class="mu" style="font-size:12px">${LV[l.lv]} · ${idx+1}/${ls.length}</span><div class="sp"></div>
-      <span class="stime" id="stime" title="Study session time">${mmss(stSec())}</span>
-      <button class="btn xs" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ Prev</button><button class="btn xs" data-act="open" data-v="${next?.id||''}" ${next?'':'disabled'}>Next ›</button>
-      <button class="btn" data-act="lclose">Done</button></div>
-    <div class="lvb">
-      <h2>${esc(l.title)} ${p.done?`<span class="pill" style="color:var(--g);border-color:#1d6b3f;background:#0f2417;vertical-align:middle">✓ ${p.xp} XP</span>`:`<span class="mu" style="font-size:12px;font-weight:500">· ${XPL[l.lv]} XP (+50% first try)</span>`}</h2>
-      ${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
+  // in a session the lesson view shows the step instead of the track's Prev / Next; a review starts from a blank exercise
+  // with the notes folded away, so you try it from memory first
+  const s=sstep(),P=s&&tp(),rv=s?.k==='r',code=rv?l.start:drafts[l.id]??l.start;edDirty=false;
+  const notes=`${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
       ${watchHTML(l)}
       <div class="codeh"><b>EXAMPLE</b>${run?`<button class="btn xs" data-act="runex">&#9654; RUN EXAMPLE</button>`:''}<button class="btn xs" data-act="copy" data-v="ex">COPY</button></div>
       <pre id="exCode">${esc(l.ex)}</pre>
-      <div id="exOut"></div>
-      ${run?codeExercise(l,code):quizExercise(l)}
-      <div class="lnav"><button class="btn" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ ${prev?esc(prev.title):'Start of track'}</button>
-        <button class="btn ${p.done?'go':''}" data-act="open" data-v="${next?.id||''}" ${next?'':'disabled'}>${next?esc(next.title)+' ›':'Track complete'}</button></div>
+      <div id="exOut"></div>`;
+  $('#po').innerHTML=`<div class="lv"><div class="lvh">${pill(l.t)}<span class="mu" style="font-size:12px">${s?`<b class="amb">${rv?'Review':'Lesson'} ${P.i+1} of ${P.items.length}</b><span class="sdots" aria-hidden="true">${P.items.map((x,i)=>`<i class="${i<P.i?x.res===1?'ok':x.res===0?'no':'':i===P.i?'now':''}"></i>`).join('')}</span>`:`${LV[l.lv]} · ${idx+1}/${ls.length}`}</span><div class="sp"></div>
+      <span class="stime" id="stime" title="Study session time">${mmss(stSec())}</span>
+      ${s?`<div class="ssn">${stepBar()}</div>`:`<button class="btn xs" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ Prev</button><button class="btn xs" data-act="open" data-v="${next?.id||''}" ${next?'':'disabled'}>Next ›</button>`}
+      <button class="btn" data-act="lclose"${s?' title="Close for now: START picks the session up again"':''}>${s?'Close':'Done'}</button></div>
+    <div class="lvb">
+      <h2>${esc(l.title)} ${p.done?`<span class="pill" style="color:var(--g);border-color:#1d6b3f;background:#0f2417;vertical-align:middle">✓ ${p.xp} XP</span>`:`<span class="mu" style="font-size:12px;font-weight:500">· ${XPL[l.lv]} XP (+50% first try)</span>`}</h2>
+      ${rv?`<div class="task rvp" id="rvp">${rvpHTML(s)}</div><details class="rvn"><summary>Lesson notes, example and video</summary>${notes}</details>`:notes}
+      ${run?codeExercise(l,code):quizExercise(l,rv)}
+      <div class="lnav">${s?`<span></span><div class="ssn">${stepBar()}</div>`:`<button class="btn" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ ${prev?esc(prev.title):'Start of track'}</button>
+        <button class="btn ${p.done?'go':''}" data-act="open" data-v="${next?.id||''}" ${next?'':'disabled'}>${next?esc(next.title)+' ›':'Track complete'}</button>`}</div>
     </div></div>`;
 }
 function codeExercise(l,code){
@@ -1601,13 +1683,14 @@ function codeExercise(l,code){
       <button class="btn xs" data-act="hint">Hint</button><button class="btn xs" data-act="sol">Show solution</button><span class="mu" style="font-size:11px">Ctrl/⌘ + Enter to run</span></div>
     <div id="fb"></div><div id="out"></div>`;
 }
-function quizExercise(l){
-  const p=pr(l.id);
+// in a review (rv) the answer stays hidden until you've answered again, and the practice starts blank
+function quizExercise(l,rv){
+  const p=pr(l.id),show=p.done&&!(rv&&sstep()?.res==null);
   return`<div class="task"><b>QUIZ</b><br>${l.quiz.q}</div>
-    <div class="opts">${l.quiz.o.map((o,i)=>`<button class="opt${p.done&&i===l.quiz.a?' right':''}" data-act="ans" data-v="${i}">${String.fromCharCode(65+i)}. ${esc(o)}</button>`).join('')}</div>
-    <div id="fb">${p.done?`<div class="fb ok">✓ ${esc(l.quiz.why)}</div>`:''}</div>
+    <div class="opts">${l.quiz.o.map((o,i)=>`<button class="opt${show&&i===l.quiz.a?' right':''}" data-act="ans" data-v="${i}">${String.fromCharCode(65+i)}. ${esc(o)}</button>`).join('')}</div>
+    <div id="fb">${show?`<div class="fb ok">✓ ${esc(l.quiz.why)}</div>`:''}</div>
     <div class="task" style="margin-top:22px"><b>PRACTICE</b><br>${l.prac.task}<br><span class="mu" style="font-size:11px">Write it below (or in ${l.t==='sas'?'SAS Studio / SAS OnDemand for Academics':'Tableau Public / Desktop'}), then compare.</span></div>
-    <textarea class="ed" id="ed" spellcheck="false" autocapitalize="off" style="min-height:120px" placeholder="Your attempt…">${esc(drafts[l.id]||'')}</textarea>
+    <textarea class="ed" id="ed" spellcheck="false" autocapitalize="off" style="min-height:120px" placeholder="Your attempt…">${esc(rv?'':drafts[l.id]||'')}</textarea>
     <div class="mact"><button class="btn" data-act="reveal">Reveal model answer</button></div>
     <div id="pracSol"></div>`;
 }
@@ -1630,7 +1713,8 @@ async function doRun(check){
       u=r.res}
     if(!check){$('#fb').innerHTML='';return}
     const s=await solResult(l),cmp=compare(u,s,l.ordered),p=pr(l.id);p.att++;logEvent('check',cmp.ok);
-    if(cmp.ok){const first=p.att===1&&!p.hint&&!p.rev;complete(l,first);setFb('ok','✓ '+cmp.msg+(first?' First try!':''));drawLessonKeep()}
+    if(cmp.ok){const first=p.att===1&&!p.hint&&!p.rev,s=sstep(),g=s?.k==='r'&&s.res==null;complete(l,first);if(g)grade(s,1);
+      setFb('ok','✓ '+cmp.msg+(first?' First try!':'')+(g?' Review passed.':''));drawLessonKeep()}
     else setFb('no',cmp.msg+`<br><span class="mu" style="font-size:11px">Expected columns: ${esc(s.cols.join(', '))}</span>`);
   }catch(e){
     const msg=String(e.message||e);out.innerHTML='';
@@ -1638,7 +1722,76 @@ async function doRun(check){
     setFb('no',`<b>Error:</b> ${esc(msg)}`);
   }
 }
-function drawLessonKeep(){const sc=$('#po').scrollTop,fb=$('#fb').innerHTML,out=$('#out')?.innerHTML,ed=$('#ed')?.value;drawLesson();$('#fb').innerHTML=fb;if(out&&$('#out'))$('#out').innerHTML=out;if(ed!=null&&$('#ed'))$('#ed').value=ed;$('#po').scrollTop=sc}
+function drawLessonKeep(){const sc=$('#po').scrollTop,fb=$('#fb').innerHTML,out=$('#out')?.innerHTML,ed=$('#ed')?.value,dt=edDirty;drawLesson();$('#fb').innerHTML=fb;if(out&&$('#out'))$('#out').innerHTML=out;if(ed!=null&&$('#ed'))$('#ed').value=ed;edDirty=dt;$('#po').scrollTop=sc}
+
+/* ================= today's session: START shows the plan, then the lesson view takes you through it step by step ================= */
+let SP=false,SQ=null,SFT=null,edDirty=false;   // SP: a session runs in the lesson view; SQ: the plan on screen; SFT: the track picked for its lesson
+// the step on screen while a session runs
+const sstep=()=>{const P=SP&&tp();return P&&!P.done&&P.items[P.i]?.id===CUR?P.items[P.i]:null};
+// what moves you on: a review is got it, not yet or skipped; a lesson moves on once it's done (or is skipped for now)
+function stepBar(){
+  const P=tp(),s=sstep(),last=P.i===P.items.length-1;
+  if(s.k==='r'&&s.res==null)return`<button class="btn xs" data-act="sstep" data-v="-1" title="Not today: it comes back tomorrow at the same step">Skip</button><button class="btn xs" data-act="sstep" data-v="0" title="It comes back tomorrow, from the 1-day step">Not yet</button><button class="btn xs go" data-act="sstep" data-v="1">Got it ${last?'✓':'›'}</button>`;
+  const ok=s.k==='r'||isDone(s.id);
+  return`<button class="btn xs${ok?' go':''}" data-act="sstep">${last?ok?'Finish ✓':'End session':ok?'Next ›':'Skip ›'}</button>`;
+}
+// the review panel: which step this is, what to do, and what each answer does
+function rvpHTML(s){
+  const l=LM[s.id],q=srOf(l.id);
+  if(s.res===1)return`<b>REVIEWED ✓</b><br>${q?.done?'That was the 21-day step: this lesson is learned.':`Next review ${dl(q.due)}, in ${pls(diffDays(today(),q.due),'day')}.`}`;
+  if(s.res===0)return`<b>REVIEW · NOT YET</b><br>It comes back tomorrow, from the 1-day step. Open the notes below and read it through once more.`;
+  const n=q&&!q.done?q.n:0,gap=IV[n+1]?IV[n+1]-IV[n]:0,late=q&&!q.done?diffDays(q.due,today()):0;
+  return`<b>REVIEW · ${IV[n]}-DAY STEP</b> <span class="mu">(${n+1} of ${IV.length})</span><br>You completed this ${dago(progress[l.id].date)}${late>0?`; the review has waited ${pls(late,'day')}`:''}. ${l.quiz?'Answer the quiz again from memory':'Write the task again from the starter code, then CHECK it'}, or recall the idea and mark it yourself. The notes are folded away below for after you've tried.
+    <br><span class="mu" style="font-size:12px">Got it: ${gap?`the next review is in ${pls(gap,'day')}`:'that was the last step'}. Not yet: back tomorrow, from the 1-day step. Skip: back tomorrow, same step.</span>`;
+}
+const grade=(s,r)=>{s.res=r;reviewed(s.id,r)};
+// records the step (a review's result, or how the lesson stands) and opens the next one; after the last, the session is done
+function stepOn(r){
+  const P=tp(),s=sstep();if(!s)return;
+  if(s.k==='r'&&s.res==null&&r!=null)grade(s,r);
+  if(s.k==='l')s.res=isDone(s.id)?1:-1;
+  if(edDirty&&$('#ed')){clearTimeout(dT);drafts[CUR]=$('#ed').value;saveDrafts()}
+  if(++P.i<P.items.length){save();openLesson(P.items[P.i].id);return}
+  P.done=true;closeLesson();sessionForm();
+}
+// one row of the plan: what it is, why it's there (or how it went), and its minutes
+function spi(x,i,P){
+  const l=LM[x.id],p=progress[l.id]||{},q=srOf(l.id),r=x.res,past=P&&(i<P.i||P.done),cur=P&&!P.done&&i===P.i;
+  const sub=x.k==='r'?past?r===1?'✓ got it':r===0?'not yet · back tomorrow':'skipped · back tomorrow':`${q&&!q.done?IV[q.n]+'-day review · ':''}completed ${dago(p.date)}${q&&!q.done&&q.due<today()?` · waiting ${pls(diffDays(q.due,today()),'day')}`:''}`
+    :past?isDone(l.id)?`✓ completed${p.date===today()?` · +${p.xp} XP`:''}`:'still in progress':`${LV[l.lv]} · ${isDone(l.id)?'completed':p.att||sessions.some(s=>(s.lessons||[]).includes(l.id))?'in progress':'new to you'}`;
+  return`<div class="spi${cur?' now':past?r===1?' ok':' off':''}"><i>${i+1}</i><div><span class="tag">${x.k==='r'?'Review':'Lesson'}</span>${pill(l.t)}<b>${esc(l.title)}</b><small>${sub}${cur?' · <b class="amb">next</b>':''}</small></div><em>~${x.m} min</em></div>`;
+}
+// START: today's session. Under way, it picks up where you left off; done, it says how it went; else it offers a new one
+function sessionForm(fresh){
+  const P=tp(),U=usual(),D=dueList(),nd=nextDue(),hd='<h3>Today\'s session</h3>';
+  const yours=U.n<3?`your usual is <b>20 min</b> until you've timed 3 sessions`:`your usual is <b>${U.min} min</b>, the median of your last ${U.n} sessions`;
+  if(P&&!fresh){
+    const more=planFor().items.length;
+    openModal(`${hd}<p>${P.done?`<span class="grn">Done ✓</span>${P.sec>=60?` · ${fmin(P.sec/60)} studied`:''}`:`Under way · <b>${P.i} of ${P.items.length}</b> done`} <span class="mu">· ${yours}</span></p>
+      <div class="spl">${P.items.map((x,i)=>spi(x,i,P)).join('')}</div>
+      ${P.done?`<p class="mu" style="font-size:12px">${D.length?`${pls(D.length,'review')} still due: another session takes them now, or START does tomorrow.`:nd?`No reviews due. The next is on ${dl(nd)}.`:''}</p>`:''}
+      <div class="mact"><button class="btn" data-act="close">${P.done?'Close':'Later'}</button>${P.done?more?'<button class="btn go" data-act="sagain">&#9654; ANOTHER SESSION</button>':'':'<button class="btn go" data-act="sgo">&#9654; RESUME</button>'}</div>`);
+    $('#mbox').classList.add('ssm');$('#mbox [data-act="sgo"],#mbox [data-act="sagain"]')?.focus();return;
+  }
+  if(SFT&&!nextIn(SFT))SFT=null;
+  const Q=SQ=planFor(SFT),L=Q.items.find(x=>x.k==='l'),R=rotation(),t=L&&LM[L.id].t,n=nrv(Q.items);
+  if(!Q.items.length)return openModal(`${hd}<p>Nothing to study today: every lesson is complete${nd?` and the next review is on <b>${dl(nd)}</b>`:''}.</p><div class="mact"><button class="btn" data-act="catalog">ALL LESSONS</button><button class="btn pri" data-act="close">Close</button></div>`);
+  const ago=r=>r.at===-Infinity?'new':dago(ymd(new Date(r.at)));
+  openModal(`${hd}<p><b>~${Q.min} min</b> <span class="mu">· ${yours}</span></p>
+    ${R.length?`<div class="lbl" style="margin:14px 0 6px">Lesson from</div><div class="chips" role="group" aria-label="Lesson from track">${TK.map(k=>`<button class="chip${k===t?' on':''}" data-act="strk" data-v="${k}" aria-pressed="${k===t}"${nextIn(k)?'':' disabled title="Track complete"'}>${TR[k].n}</button>`).join('')}</div>`:''}
+    <div class="spl">${Q.items.map((x,i)=>spi(x,i)).join('')}</div>
+    <p class="mu" style="font-size:12px;line-height:1.6">${L?`${SFT?`You picked ${TR[t].n}. The rotation`:'The track you\'ve studied least recently goes next'}: ${R.map(r=>`${TR[r.t].n} (${ago(r)})`).join(' → ')}. `:'Every lesson is complete, so this session is reviews only. '}
+      ${n?'The reviews go first, as a warm-up. ':''}Completed lessons come back for review 1, 3, 7 and 21 days later.${Q.due>n?` ${pls(Q.due-n,'more review')} ${Q.due-n===1?'is':'are'} due and ${Q.due-n===1?'waits':'wait'} for the next session.`:''}</p>
+    <div class="mact"><button class="btn" data-act="close">Cancel</button><button class="btn go" data-act="sgo" data-v="new">&#9654; BEGIN</button></div>`);
+  $('#mbox').classList.add('ssm');$('#mbox [data-act="sgo"]').focus();
+}
+// BEGIN fixes the plan for the day; RESUME carries on from the step you were on
+function sessionGo(isNew){
+  // another session after today's is done keeps the day marked done (more)
+  if(isNew&&SQ){const was=tp();settings.plan={day:today(),items:SQ.items.map(({k,id,m})=>({k,id,m})),i:0,done:false,more:!!(was&&(was.done||was.more))}}
+  const P=tp();if(!P||P.done)return;
+  SFT=null;save();closeModal();SP=true;openLesson(P.items[P.i].id);
+}
 
 /* ================= modals ================= */
 const openModal=(h,wide)=>{$('#mbox').className='box'+(wide?' wide':'');$('#mbox').innerHTML=h;$('#modal').classList.remove('hidden')};
@@ -1692,14 +1845,17 @@ function review(day){
   const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,lt=l=>`<b>${esc(l.title)}</b> (${TR[l.t].n}, ${LV[l.lv]})`,list=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a.at(-1);
   const sec=(h,b)=>b?`<section class="rv"><h4>${h}</h4>${b}</section>`:'',ul=a=>a.length?`<ul>${a.map(x=>`<li>${x}</li>`).join('')}</ul>`:'';
   const min=S1.reduce((a,s)=>a+(+s.min||0),0),gr=E1.filter(e=>e.kind!=='self'),ok=gr.filter(e=>e.ok).length;
-  // the lessons touched today, in the order you first touched them
-  const W=[...new Set([...S1.flatMap(s=>s.lessons||[]),...E1.map(e=>e.lesson)])].filter(id=>LM[id]&&tOk(LM[id].t)).map(id=>LM[id]);
+  // the lessons touched today, in the order you first touched them; going back over one completed on an earlier day is a
+  // review (or a reread), told apart below
+  const W=[...new Set([...S1.flatMap(s=>s.lessons||[]),...E1.map(e=>e.lesson)])].filter(id=>LM[id]&&tOk(LM[id].t)&&!(progress[id]?.done&&progress[id].date<day)).map(id=>LM[id]);
+  const RV=LESSONS.filter(l=>tOk(l.t)&&srOn(l.id,day)!=null).map(l=>[l,srOn(l.id,day)]),rd=RV.filter(x=>x[1]>=0),rs=RV.filter(x=>x[1]<0);
   const done=LESSONS.filter(l=>tOk(l.t)&&progress[l.id]?.done&&progress[l.id].date===day),first=done.filter(l=>progress[l.id].first),xp=done.reduce((a,l)=>a+(progress[l.id].xp||0),0);
   const fails=id=>E1.filter(e=>e.lesson===id&&e.kind!=='self'&&!e.ok).length;
   // the day
   let p=`<p>On <b>${pd(day).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</b>${S.track==='all'?'':` (${TR[S.track].n} only)`} `+
     (S1.length?`I studied <b>${mins(min)}</b> in ${S1.length===1?'one session':pl(S1.length,'session')}, ${min>=g?`<b class="grn">meeting my ${g}-minute goal</b>`:`<b class="amb">${mins(g-min)} short</b> of my ${g}-minute goal`}.`:'no study session was timed, but I did work on lessons.')+'</p>';
   if(W.length)p+=`<p>I worked on ${list(W.map(lt))}${done.length?`, and completed ${done.length===W.length?(done.length===1?'it':'all of them'):list(done.map(l=>`<b>${esc(l.title)}</b>`))}`:`, but didn't complete ${W.length===1?'it':'any of them'} yet`}.</p>`;
+  if(RV.length)p+=`<p>${rd.length?`I reviewed ${list(rd.map(([l,r])=>`<b>${esc(l.title)}</b> (${r>0?'got it':'not yet'})`))}`:''}${rs.length?`${rd.length?', and ':'I '}skipped the review of ${list(rs.map(([l])=>`<b>${esc(l.title)}</b>`))}`:''}.</p>`;
   if(gr.length)p+=`<p>I made ${pl(gr.length,'graded attempt')} and ${ok?`${ok} passed (${pct(ok,gr.length)})`:'none passed'}.${done.length===1?` It ${first.length?'went through on the first try':'took more than one try'}.`:done.length?` ${first.length} of the ${done.length} completed lessons went through on the first try (${pct(first.length,done.length)}).`:''}${xp?` I earned <b class="grn">${xp} XP</b>.`:''}</p>`;
   let out=sec('The day',p);
   // in context: the 14 study days before, the streak, the course so far, the week
@@ -1715,6 +1871,7 @@ function review(day){
   const at=(id,es)=>{const l=LM[id],q=pr(id),parts=[];let f=0;
       es.forEach(e=>{if(e.kind==='self'){parts.push(e.ok?'self-check: got it':'self-check: not yet');return}if(!e.ok){f++;return}parts.push(`${f?pl(f,e.kind==='quiz'?'wrong answer':'failed check')+', then ':''}${e.kind==='quiz'?'the right answer':'a pass'} at ${hm(e.time)}`);f=0});
       if(f)parts.push(`${pl(f,es.at(-1).kind==='quiz'?'wrong answer':'failed check')}, not passed yet`);
+      const rr=srOn(id,day);if(rr!=null)parts.unshift(rr>0?'review: got it':rr<0?'review skipped':'review: not yet');
       const hs=[q.hint?pl(q.hint,'hint'):'',q.rev?`the solution ${q.rev===1?'once':q.rev+' times'}`:''].filter(Boolean);
       return `<span class="tr">${esc(l.title)}: ${parts.length?parts.join('; '):'read through, nothing checked'}.${hs.length?` I've viewed ${list(hs)} on this lesson in all.`:''}</span>`};
   const grp=S1.map(()=>[]),loose=[];E1.forEach(e=>{let i=-1;S1.forEach((s,j)=>{if(Date.parse(s.time)<=Date.parse(e.time))i=j});(i<0?loose:grp[i]).push(e)});
@@ -1728,6 +1885,7 @@ function review(day){
   if(first.length)good.push(`${list(first.map(l=>`<b>${esc(l.title)}</b>`))} went through on the first try, with no hint or solution.`);
   if(S1.length&&min>=g)good.push(`I hit my daily goal: ${mins(min)} against ${g}.`);
   if(st>1)good.push(`I kept the streak going (${st} days).`);
+  if(rd.length&&rd.every(x=>x[1]>0))good.push(`${rd.length===1?'My review':`All ${rd.length} reviews`} came back to me.`);
   TK.filter(tOk).forEach(t=>{const wt=W.filter(l=>l.t===t);if(!wt.length)return;
     if(!before.some(e=>LM[e.lesson].t===t))return good.push(`I started the <b>${TR[t].n}</b> track.`);
     const v=Math.max(...wt.map(l=>l.lv));if(v>1&&!before.some(e=>LM[e.lesson].t===t&&LM[e.lesson].lv>=v))good.push(`${list(wt.filter(l=>l.lv===v).map(l=>`<b>${esc(l.title)}</b>`))} was my first ${LV[v]} lesson in ${TR[t].n}.`);
@@ -1738,6 +1896,7 @@ function review(day){
     if(q.rev)look.push(`I opened the solution for <b>${esc(l.title)}</b>${q.rev>1?` ${q.rev} times`:''}. Could I write it from scratch now?`);
     if(!(q.done&&q.date<=day)){const f0=[...evs.filter(e=>e.lesson===l.id).map(dayOf),...ses.filter(s=>(s.lessons||[]).includes(l.id)).map(dayOf)].sort()[0],n=diffDays(f0,day)+1;
       if(n>=3)look.push(`<b>${esc(l.title)}</b> has been in progress for ${n} days (since ${fdate(f0)}).`)}});
+  rd.filter(x=>!x[1]).forEach(([l])=>look.push(`<b>${esc(l.title)}</b> didn't come back in review: read it through before it comes round again tomorrow.`));
   S1.filter(s=>s.min<10).forEach(s=>look.push(`The ${hm(s.time)} session lasted only ${mins(s.min)}.`));
   const T0=new Set([...before.map(e=>LM[e.lesson].t),...ses.filter(s=>dayOf(s)<day).flatMap(s=>s.tracks||[])]);
   TK.filter(t=>tOk(t)&&T0.has(t)&&!W.some(l=>l.t===t)).forEach(t=>{const last=[...before.filter(e=>LM[e.lesson].t===t).map(dayOf),...ses.filter(s=>dayOf(s)<day&&(s.tracks||[]).includes(t)).map(dayOf)].sort().at(-1),n=diffDays(last,day);
@@ -1785,14 +1944,18 @@ function sample(){
   // lesson, days spent on it, failed checks, hints; the last one is still in progress
   const PLAN=[['sql1',1,0,0],['py1',1,1,0],['sql2',1,0,0],['sql3',2,2,1],['py2',1,0,0],['sql4',3,3,1],['py3',2,1,0],['sql5',1,0,0],['py4',3,2,1],['sql6',2,1,0],['py5',2,0,0],['sql7',2,1,0]];
   const REST=new Set([25,21,18,14,11,7,3]),t0=today(),now=Date.now();
-  progress={};events=[];sessions=[];
+  progress={};events=[];sessions=[];settings.plan=null;
+  // before each day's lesson the learner reviews up to two lessons that are due and mostly gets them; today's are left
+  // for you to see. They draw on a second seed, so the rest of the sample stays as it was
+  let s2=4242;const rn2=()=>(s2=s2*16807%2147483647)/2147483647;
   let pi=0,dn=0;
   for(let ago=27;ago>=0&&pi<PLAN.length;ago--){
     if(REST.has(ago))continue;
     const[id,days,fails,hint]=PLAN[pi],l=LM[id],last=++dn===days,k=addDays(t0,-ago),d=pd(k),p=pr(id),min=ri(15,45);
     // today's session has already ended
     let at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),rnd()<.35?ri(6,8):ri(18,21),ri(0,59)).getTime();if(!ago)at=Math.min(at,now-(min+5)*6e4);
-    sessions.push({id:uid(),time:new Date(at).toISOString(),min,lessons:[id],tracks:[l.t]});
+    const rv=ago?dueList(k).slice(0,2).map(x=>x.l):[];rv.forEach(x=>pr(x.id).sr=[...(progress[x.id].sr||[]),[k,rn2()<.85?1:0]]);
+    sessions.push({id:uid(),time:new Date(at).toISOString(),min,lessons:[...rv.map(x=>x.id),id],tracks:[...new Set([...rv.map(x=>x.t),l.t])]});
     let m=ri(5,12);const ev=ok=>{p.att++;events.push({id:uid(),time:new Date(at+m*6e4).toISOString(),lesson:id,kind:'check',ok});m=Math.min(min-1,m+ri(3,9))};
     for(let f=last?fails-p.att:Math.min(fails-p.att,Math.ceil(fails/days));f>0;f--)ev(false);
     if(last){p.hint=hint;if(pi<PLAN.length-1){ev(true);p.done=true;p.first=p.att===1&&!p.hint&&!p.rev;p.xp=Math.round(XPL[l.lv]*(p.first?1.5:1));p.date=k}pi++;dn=0}
@@ -1816,7 +1979,7 @@ $('#fTrack').onchange=e=>{S.track=e.target.value;S.page=1;render()};
 $('#fRange').onchange=e=>{S.range=e.target.value;S.sel=null;S.page=1;render()};
 document.addEventListener('change',e=>{const f=e.target.id==='i_file'&&e.target.files[0];if(f){closeModal();restore(f)}});
 let dT=null;
-document.addEventListener('input',e=>{if(e.target.id==='ed'&&CUR){clearTimeout(dT);const v=e.target.value,id=CUR;dT=setTimeout(()=>{drafts[id]=v;saveDrafts()},400)}});
+document.addEventListener('input',e=>{if(e.target.id==='ed'&&CUR){edDirty=true;clearTimeout(dT);const v=e.target.value,id=CUR;dT=setTimeout(()=>{drafts[id]=v;saveDrafts()},400)}});
 document.addEventListener('keydown',e=>{
   if(e.target.id==='ed'){
     if(e.key==='Tab'){e.preventDefault();const t=e.target,s=t.selectionStart,en=t.selectionEnd;t.value=t.value.slice(0,s)+'  '+t.value.slice(en);t.selectionStart=t.selectionEnd=s+2}
@@ -1847,7 +2010,9 @@ document.addEventListener('click',async e=>{
     day:()=>{S.sel=S.sel===v?null:v;if(S.sel){const d=pd(v);S.month=new Date(d.getFullYear(),d.getMonth(),1)}S.page=1;render()},
     pp:()=>{if(S.page>1){S.page--;render()}},pn:()=>{S.page++;render()},   // tableHTML clamps to the last page
     open:()=>{if(!v)return;closeModal();if(CUR&&$('#ed'))drafts[CUR]=$('#ed').value,saveDrafts();openLesson(v)},
-    startnext:()=>openLesson(recommend().id),lclose:closeLesson,
+    startnext:()=>{SFT=null;sessionForm()},lclose:closeLesson,
+    // today's session: BEGIN or RESUME, another one once it's done, the track for its lesson, and the steps
+    sgo:()=>sessionGo(v==='new'),sagain:()=>sessionForm(true),strk:()=>{const r=rotation()[0];SFT=r&&r.t===v?null:v;sessionForm(true)},sstep:()=>stepOn(v==null?null:+v),
     catalog:()=>catalog(v),rosetta:()=>{RI=0;rosetta()},rtab:()=>{RI=+v;rosetta()},schema:schemaModal,close:closeModal,
     copy:async()=>{try{await navigator.clipboard.writeText(l.ex);toast('Copied')}catch{}},
     copyr:async()=>{try{await navigator.clipboard.writeText(ROSETTA[RI][v]);toast('Copied')}catch{}},
@@ -1863,7 +2028,9 @@ document.addEventListener('click',async e=>{
     usesol:()=>{$('#ed').value=l.sol;drafts[l.id]=l.sol;saveDrafts()},
     reset:()=>{if(confirm('Reset the editor to the starter code?')){$('#ed').value=l.start;drafts[l.id]=l.start;saveDrafts()}},
     ans:()=>{const i=+v,p=pr(l.id),ok=i===l.quiz.a;
-      if(p.done){setFb(ok?'ok':'no',(ok?'✓ ':'Not quite. ')+esc(l.quiz.why));return}
+      // a review takes your first answer: right is got it, wrong is not yet
+      if(p.done){const s=sstep();if(s?.k==='r'&&s.res==null){logEvent('quiz',ok);grade(s,ok?1:0);drawLessonKeep()}
+        setFb(ok?'ok':'no',(ok?'✓ ':'Not quite. ')+esc(l.quiz.why));if(!ok)document.querySelectorAll('.opt')[i]?.classList.add('wrong');return}
       p.att++;logEvent('quiz',ok);
       document.querySelectorAll('.opt').forEach((o,j)=>{o.classList.remove('wrong');if(j===i&&!ok)o.classList.add('wrong')});
       if(ok){b.classList.add('right');complete(l,p.att===1);const fbh=`✓ Correct${p.att===1?' — first try!':''} ${esc(l.quiz.why)}`;drawLesson();setFb('ok',fbh)}
@@ -1875,15 +2042,17 @@ document.addEventListener('click',async e=>{
     rvcopy:()=>{const t=reviewText();(navigator.clipboard?.writeText(t)||Promise.reject()).then(()=>toast('Review copied'),()=>toast('Copy failed — select the text instead'))},
     data:dataForm,sample,restore:()=>$('#i_file').click(),sync:()=>{closeModal();document.getElementById('isx-sync')?.click()},export:exportCSV,backup:()=>download(`isionxxx-extract-backup-${today()}.json`,JSON.stringify({version:2,progress,events,sessions,drafts,videos,settings},null,1),'application/json'),
     savedata:async()=>{settings.goal=Math.max(5,+$('#s_goal').value||30);settings.focus=Math.max(0,+$('#s_focus').value||0);save();closeModal();render()},
-    clear:()=>{if(confirm('Reset ALL progress, attempts, study history and drafts? Pinned videos are kept. Make a backup first if you want to keep the rest.')){progress={};events=[];sessions=[];drafts={};save();saveDrafts();closeModal();render()}}
+    clear:()=>{if(confirm('Reset ALL progress, attempts, study history and drafts? Pinned videos are kept. Make a backup first if you want to keep the rest.')){progress={};events=[];sessions=[];drafts={};settings.plan=null;save();saveDrafts();closeModal();render()}}
   };
   await A[b.dataset.act]?.();
 });
 
 render();
-if(new URLSearchParams(location.search).has('start')){history.replaceState(null,'',location.pathname);openLesson(recommend().id)}
+if(new URLSearchParams(location.search).has('start')){history.replaceState(null,'',location.pathname);sessionForm()}
 // a study session logged from another app (REWIRE) lands in storage while this page is open: pick it up instead of overwriting it
-addEventListener('storage',e=>{if(e.key===K.s){const v=load(K.s,[]);sessions=Array.isArray(v)?v:[];render()}});
+addEventListener('storage',e=>{if(e.key===K.s){const v=load(K.s,[]);sessions=Array.isArray(v)?v:[];render();UI.replan()}});
+// TODAY's plan card: what START would begin now (ui.js keeps it fresh after every save)
+UI.planner('learn',[K.p,K.e,K.s,K.c],planRows);
 // another ISIONXXX app can send you straight to an action here (REWIRE's LOG buttons): #do=<action> or a message
 // 'today' (from TODAY's rings and timeline): drop any card filters and show just today, as a chip you can clear
 function doAct(a){if(!/^\w+$/.test(a||''))return;if(a==='today'){const t=new Date();S.x={};S.sel=today();S.month=new Date(t.getFullYear(),t.getMonth(),1);S.page=1;render();return}const b=document.querySelector(`[data-a="${a}"],[data-act="${a}"]`);if(b)b.click()}
@@ -1905,7 +2074,7 @@ function heroToday(){
     stats:[tile('today','Today',td,td.ses.length||td.done.length?`${pl(td.ses.length,'session')} · ${pl(td.done.length,'lesson')} done`:'not studied yet',min>=goal?'pos':''),
       tile('week','Week',wk,`${pl(wk.days,'day')} studied`),
       tile('month','Month',mo,`${pl(mo.done.length,'lesson')} done`)],
-    action:{label:'▶ Next lesson',act:'startnext'},
+    action:{label:'▶ Start session',act:'startnext'},
     log:[...S1.map(x=>({at:Date.parse(x.time),tag:'Study',text:`${Math.round(+x.min||0)} min${x.lessons?.length?` · ${x.lessons.length} lesson${x.lessons.length>1?'s':''}`:''}`})),
       ...passed.map(e=>({at:Date.parse(e.time),tag:'Passed',text:LM[e.lesson]?.title||'Exercise',tone:'pos'}))]});
 }
