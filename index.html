@@ -237,6 +237,8 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .lvb h2{font-size:18px;font-weight:600;letter-spacing:.02em;margin:6px 0 12px}
 .lvb h2::before{content:'> ';color:var(--acc)}
 .lvb p.learn{font-size:13.5px;line-height:1.65;margin-bottom:10px}
+/* code inside a sentence: the lesson's own font and size (a bare code tag falls back to the browser's smaller monospace) */
+.lvb code{font:inherit;background:#161616;padding:0 .25em;border-radius:3px}
 .task{background:var(--card);border:1px solid var(--line);border-left:2px solid var(--acc);padding:12px 14px;line-height:1.6;margin-top:18px}
 .task b{color:var(--acc)}
 .opts{display:grid;gap:6px;margin-top:10px}
@@ -333,7 +335,16 @@ const YTQ={
   sas7:'SAS macro tutorial %macro %mend',sas8:'SAS SQL pass-through CONNECT TO tutorial',
   tab1:'Tableau live connection vs extract',tab2:'Tableau dimensions vs measures aggregation',tab3:'Tableau relationships vs joins',
   tab4:'Tableau calculated fields tutorial',tab5:'Tableau FIXED LOD expressions tutorial',tab6:'Tableau table calculations running total',
-  tab7:'Tableau order of operations context filters',tab8:'Tableau Hyper API Python tutorial'};
+  tab7:'Tableau order of operations context filters',tab8:'Tableau Hyper API Python tutorial',
+  sql13:'SQL DISTINCT vs COUNT DISTINCT tutorial',sql14:'SQL NULL IS NULL COALESCE COUNT tutorial',sql15:'SQL string functions SUBSTRING LIKE wildcards tutorial',
+  sql16:'SQL IN vs EXISTS subquery semi join duplicate rows after join',sql17:'SQL UNION vs UNION ALL combine rows from multiple tables',sql18:'SQLite julianday date difference days between dates date modifiers',
+  sql19:'SQL self join range condition non-equi join time window',sql20:'SQL percent of total window function SUM OVER',sql21:'SQL LAG LEAD window functions previous row',
+  sql22:'SQL moving average window frame ROWS BETWEEN PRECEDING',sql23:'SQL median without MEDIAN function ROW_NUMBER NTILE percentile',sql24:'SQL gaps and islands consecutive days streak ROW_NUMBER',
+  py12:'pandas create new column vectorized operations assign',py13:'pandas value_counts normalize nunique tutorial',py14:'pandas missing values isna count fillna dropna',
+  py15:'pandas concat stack DataFrames union rows ignore_index',py16:'pandas melt wide to long id_vars value_vars var_name value_name',py17:'pandas str accessor string methods split contains replace',
+  py18:'pandas anti join isin merge indicator left_only',py19:'pandas shift diff groupby previous row lag',py20:'pandas groupby transform percent of group total',
+  py21:'pandas cumsum cummax running total drawdown equity curve',py22:'pandas date_range reindex fill missing dates resample',py23:'pandas rolling window time based 7D vs rolling 7 rows moving average',
+  py24:'pandas consecutive days streak gaps and islands cumsum diff'};
 // a track can follow a YouTube course: its playlist plays in every lesson of the track (a pinned video still wins),
 // starting at the video that covers the lesson where there is one (position in the playlist, counting from 1)
 const COURSE={sql:{list:'PLi01XoE8jYojRqM4qGBF1U90Ee1Ecb5tt',name:'Socratica · SQL',
@@ -394,6 +405,70 @@ FROM trades
 FROM trades
 GROUP BY contract;`,
  hint:'COUNT(*) AS trades, ROUND(SUM(pnl), 2) AS pnl, then GROUP BY contract.'},
+{id:'sql13',t:'sql',lv:1,title:'DISTINCT & COUNT(DISTINCT)',
+ learn:['SELECT DISTINCT drops duplicate rows from a result: SELECT DISTINCT exercise FROM workouts lists each exercise once, however often you logged it. It works on the <b>whole selected row</b>, not the first column, so SELECT DISTINCT day, exercise returns each day + exercise pair once. Nor is DISTINCT a function: SELECT DISTINCT(day), exercise still de-duplicates on both columns.','Inside an aggregate, <b>COUNT(DISTINCT col)</b> counts the <i>different</i> values, so “how many different things” can sit next to “how many rows” in one GROUP BY. Three exercises logged on one morning are 3 rows but 1 day: COUNT(*) and COUNT(day) both say 3, COUNT(DISTINCT day) says 1.','Unique users, active days, products sold: much of everyday analytics is a COUNT(DISTINCT …). SQLite accepts one expression inside it, so COUNT(DISTINCT exercise, day) is an error.'],
+ ex:R`-- each practice + technique pair once (DISTINCT applies to both columns):
+-- SELECT DISTINCT practice, technique FROM mind;
+SELECT practice,
+       COUNT(*) AS sessions,
+       COUNT(DISTINCT technique) AS techniques
+FROM mind
+GROUP BY practice;   -- many sessions, only a few different techniques`,
+ task:'How varied is your training? One row per workout <b>type</b>. Columns: <b>type</b>, <b>entries</b> (rows logged), <b>exercises</b> (number of different exercises) and <b>days</b> (number of different days you logged that type). Plain counts, row order free.',
+ start:R`SELECT type,
+       COUNT(*) AS entries,
+
+FROM workouts
+GROUP BY type;`,
+ sol:R`SELECT type,
+       COUNT(*) AS entries,
+       COUNT(DISTINCT exercise) AS exercises,
+       COUNT(DISTINCT day) AS days
+FROM workouts
+GROUP BY type;`,
+ hint:'COUNT(*) counts rows; COUNT(DISTINCT col) counts each different value once, and you need it for two of the columns.'},
+{id:'sql14',t:'sql',lv:1,title:'NULLs: IS NULL & COALESCE',
+ learn:['NULL means “unknown or missing”: not 0 and not an empty string. In <b>checkins</b>, weight is NULL on mornings you skipped the scale. Any comparison with NULL, even weight = NULL, gives NULL and never matches, so test with <b>IS NULL</b> / <b>IS NOT NULL</b>. In SQLite a test is 1 when true and 0 when false, so SUM(weight IS NULL) counts the gaps.','Aggregates skip NULLs. COUNT(*) counts every row, COUNT(weight) only the rows that have a weight, and AVG(weight) averages the values you actually logged. So COUNT(*) - COUNT(weight) is also the number of gaps (the portable way). Careful: COUNT(weight IS NULL) counts every row, because 0 is not NULL.',"<b>COALESCE(x, fallback)</b> returns its first non-NULL argument: good for display labels (COALESCE(depth, 'not rated')) and for a 0 where missing really means none. Inside an average it is a trap: AVG(COALESCE(weight, 0)) counts each skipped weigh-in as 0 kg and drags your average far down."],
+ ex:R`-- SQLite lets one column mix numbers and text;
+-- Postgres would want CAST(depth AS TEXT) inside the COALESCE
+SELECT day, practice, technique,
+       COALESCE(depth, 'not rated') AS depth
+FROM mind
+WHERE depth IS NULL OR depth >= 8   -- unrated or deep sessions
+ORDER BY day;`,
+ task:'Your weigh-in discipline, in one row from <b>checkins</b>. Columns: <b>days</b> (check-ins), <b>weighed</b> (check-ins with a weight), <b>skipped</b> (check-ins whose weight is missing) and <b>avg_weight</b> (the average of the weights you actually logged, rounded to 2).',
+ start:R`SELECT COUNT(*) AS days,
+
+FROM checkins;`,
+ sol:R`SELECT COUNT(*) AS days,
+       COUNT(weight) AS weighed,
+       SUM(weight IS NULL) AS skipped,   -- portable: COUNT(*) - COUNT(weight)
+       ROUND(AVG(weight), 2) AS avg_weight
+FROM checkins;`,
+ hint:'COUNT(weight) and AVG(weight) already skip NULLs; count the missing weights with an IS NULL test, never = NULL.'},
+{id:'sql15',t:'sql',lv:1,title:'Text functions: SUBSTR & LIKE',
+ learn:["String functions reshape text: <b>SUBSTR(s, start, len)</b> cuts a piece, LENGTH(s) counts characters, UPPER / LOWER change case, TRIM strips spaces, REPLACE(s, a, b) swaps text, and <b>||</b> joins strings (+ does not join text in SQLite). Your dates and times are fixed-format text ('YYYY-MM-DD', 'YYYY-MM-DD HH:MM:SS'), so SUBSTR(day, 1, 7) is the month and SUBSTR(time, 12, 5) the clock time.","<b>LIKE</b> matches a pattern: % is any run of characters (even none) and _ exactly one, so contract LIKE 'ES%' catches every S&amp;P expiry (ESZ6 now, ESH7 after the December roll), while contract = 'ES%' matches nothing: = compares exactly, % and all. In SQLite LIKE ignores case, so '%press%' finds 'Bench Press'; in Postgres LIKE is case-sensitive and ILIKE is the case-blind form.","SUBSTR counts from <b>1</b>, not 0: in '2026-08-24 09:38:56' position 11 is the space, so SUBSTR(opened, 11, 2) returns ' 0', not '09'. And slicing dates as text works only because SQLite stores them as TEXT; with real DATE / TIMESTAMP columns use date functions such as EXTRACT."],
+ ex:R`SELECT day, exercise,
+       SUBSTR(time, 12, 5) AS clock,         -- 'HH:MM' out of 'YYYY-MM-DD HH:MM:SS'
+       UPPER(SUBSTR(exercise, 1, 3)) || '-' || LENGTH(exercise) AS code
+FROM workouts
+WHERE exercise LIKE '%press%'   -- LIKE ignores case: matches 'Bench Press'
+ORDER BY id DESC
+LIMIT 8;`,
+ task:"Your <b>Nasdaq hours</b>: take the trades whose <b>contract</b> starts with 'NQ' (any expiry) and group them by the hour the trade was <b>opened</b>: the two-digit HH of 'YYYY-MM-DD HH:MM:SS', such as '09'. Columns: <b>hour</b>, <b>trades</b> (count), <b>pnl</b> (total, rounded to 2). Row order free.",
+ start:R`SELECT SUBSTR(opened,  ,  ) AS hour,
+       COUNT(*) AS trades,
+       ROUND(SUM(pnl), 2) AS pnl
+FROM trades
+WHERE contract
+GROUP BY hour;`,
+ sol:R`SELECT SUBSTR(opened, 12, 2) AS hour,
+       COUNT(*) AS trades,
+       ROUND(SUM(pnl), 2) AS pnl
+FROM trades
+WHERE contract LIKE 'NQ%'
+GROUP BY hour;`,
+ hint:"Count from 1: 'YYYY-MM-DD ' is 11 characters, so the hour starts at 12 and is 2 long; 'starts with' is LIKE with one % at the end."},
 {id:'sql4',t:'sql',lv:2,title:'JOINs across apps',
  learn:['Your apps each keep their own table, but every table has a <b>day</b> column. JOIN ... ON a.day = b.day lines up what happened in two apps on the same date: sleep next to P&amp;L, workouts next to meals.','Use short aliases (c, t). An INNER JOIN keeps only days that appear in <i>both</i> tables; you’ll meet LEFT JOIN soon.'],
  ex:R`SELECT m.day, m.practice, m.mood_before, m.mood_after
@@ -409,6 +484,25 @@ FROM checkins c
 JOIN trades t ON t.day = c.day
 GROUP BY c.sleep;`,
  hint:'JOIN trades t ON t.day = c.day, then COUNT(*) and ROUND(AVG(t.pnl), 2).'},
+{id:'sql16',t:'sql',lv:2,title:'IN & EXISTS — avoiding fan-out',
+ learn:['A JOIN returns one row per <i>matching pair</i>. Join <b>trades</b> to <b>workouts</b> on day and every trade comes back once for each exercise you logged that day: three exercises, three copies of the same trade. This is <b>fan-out</b>. COUNT and SUM quietly double or triple, and nothing warns you.',"When the other table only decides <i>which rows to keep</i>, filter instead of joining (a <b>semi-join</b>). IN, which you met with a list like ('Breathwork', 'Meditation'), also takes a <b>subquery</b>, a SELECT in brackets that produces the list: WHERE day IN (SELECT day FROM workouts). EXISTS asks “is there at least one match?”: in WHERE EXISTS (SELECT 1 FROM workouts w WHERE w.day = t.day) the inner query reads the outer trade’s t.day, so it is asked again for every trade. Either way each trade is kept once, however many matches it has.",'Gotchas: COUNT(DISTINCT t.id) after a fan-out repairs the count but not the SUM, and SUM(DISTINCT pnl) adds up distinct <i>amounts</i>, not trades; joining to a de-duplicated side, JOIN (SELECT DISTINCT day FROM workouts), is a safe fix. NOT IN (subquery) returns no rows at all when the subquery holds a NULL (x NOT IN (2, NULL) is never true), so for “no match” questions (the anti-join lesson) NOT EXISTS is the safer form.'],
+ ex:R`SELECT kind, COUNT(*) AS meals, ROUND(AVG(kcal), 2) AS avg_kcal
+FROM meals m
+WHERE EXISTS (SELECT 1 FROM habits h
+              WHERE h.day = m.day AND h.event IN ('resisted', 'slipped'))
+GROUP BY kind;   -- what you eat on days you had an urge, each meal counted once`,
+ task:'Do you trade better on days you trained? Take the <b>trades</b> whose <b>day</b> has at least one row in <b>workouts</b>, each trade counted once. One row with: <b>trades</b> (count), <b>pnl</b> (their total, rounded to 2), <b>avg_pnl</b> (average pnl per trade, rounded to 2).',
+ start:R`SELECT COUNT(*) AS trades,
+       ROUND(SUM(t.pnl), 2) AS pnl,
+       ROUND(AVG(t.pnl), 2) AS avg_pnl
+FROM trades t
+JOIN workouts w ON w.day = t.day;   -- run it: each trade repeats once per exercise that day`,
+ sol:R`SELECT COUNT(*) AS trades,
+       ROUND(SUM(pnl), 2) AS pnl,
+       ROUND(AVG(pnl), 2) AS avg_pnl
+FROM trades
+WHERE day IN (SELECT day FROM workouts);`,
+ hint:'Drop the JOIN and keep FROM trades: let workouts only filter, with WHERE day IN (SELECT day FROM workouts) or WHERE EXISTS (...).'},
 {id:'sql5',t:'sql',lv:2,title:'HAVING — filtering groups',
  learn:['WHERE filters rows <i>before</i> grouping; HAVING filters groups <i>after</i> aggregation. You can’t use an aggregate like SUM(pnl) in WHERE.','Logical order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT.'],
  ex:R`SELECT practice, COUNT(*) AS sessions, ROUND(AVG(minutes), 2) AS avg_min
@@ -443,6 +537,52 @@ GROUP BY side;`,
 FROM trades
 GROUP BY side;`,
  hint:'SUM(CASE WHEN pnl > 0 THEN 1 ELSE 0 END)'},
+{id:'sql17',t:'sql',lv:2,title:'UNION ALL — stacking apps',
+ learn:['JOIN puts tables <i>side by side</i> (more columns). <b>UNION ALL</b> stacks results <i>on top of each other</i> (more rows): one SELECT per source, glued together. Three apps log session minutes, each in its own table (<b>mind</b>, <b>study</b> and Cardio <b>workouts</b>), and stacking turns them into one feed.',"Each SELECT must return the same number of columns, matched by <i>position</i>, not by name; the names come from the first SELECT. Add a literal such as 'MIND' AS app so every row says where it came from. ORDER BY and LIMIT are written once, after the last SELECT, and apply to the whole stack.","Gotcha: plain <b>UNION</b> removes duplicate rows across the whole stack. Stack two 10-minute sessions as ('MIND', 10) and one of them silently disappears. It also has to sort or hash every row to find duplicates, so it is slower. Use UNION ALL unless you actually want de-duplication."],
+ ex:R`SELECT time, 'MIND' AS app, practice AS what FROM mind
+UNION ALL
+SELECT time, 'REWIRE', habit FROM habits
+UNION ALL
+SELECT time, 'NUTRITION', name FROM meals
+ORDER BY time DESC
+LIMIT 8;   -- your latest 8 entries from three apps, in one feed`,
+ task:"Where do your minutes go across apps? Stack one row per app: <b>app</b> = 'MIND' (every session in <b>mind</b>), 'LEARN' (every session in <b>study</b>) and 'TRAINING' (only <b>workouts</b> with type 'Cardio', the only ones with minutes). Columns: <b>app</b> (those exact labels), <b>sessions</b> (rows), <b>minutes</b> (total minutes, not rounded). Row order free.",
+ start:R`SELECT 'MIND' AS app, COUNT(*) AS sessions, SUM(minutes) AS minutes
+FROM mind
+-- stack LEARN (study) and TRAINING (Cardio workouts) below
+`,
+ sol:R`SELECT 'MIND' AS app, COUNT(*) AS sessions, SUM(minutes) AS minutes
+FROM mind
+UNION ALL
+SELECT 'LEARN', COUNT(*), SUM(minutes)
+FROM study
+UNION ALL
+SELECT 'TRAINING', COUNT(*), SUM(minutes)
+FROM workouts
+WHERE type = 'Cardio';`,
+ hint:"Three SELECTs with the same three columns in the same order, joined by UNION ALL; the third one needs WHERE type = 'Cardio'."},
+{id:'sql18',t:'sql',lv:2,title:'Date math with julianday',
+ learn:['Your dates are TEXT, so to subtract them turn them into numbers first: julianday(b) - julianday(a) is the gap in days, with a fraction when there are times. Multiply by 24 for hours or by 1440 for minutes: (julianday(closed) - julianday(opened)) * 1440 is how long a trade was held.',"To move a date, add modifiers: date(day, '+7 days'), date(day, '-1 month'), datetime(closed, '+20 minutes'). They apply left to right: date(day, '-6 days', 'weekday 1') is the Monday of that week. Other databases spell these DATEDIFF, DATE_ADD or + INTERVAL.","Gotchas: subtracting the strings themselves ('2026-10-22' - '2026-10-15') silently gives 0, because SQLite reads each one as the number 2026. A gap is not an inclusive count: the 15th to the 22nd is 7 days apart but covers 8 calendar days, and n dates have n − 1 gaps between them. Dividing by zero returns NULL in SQLite, not an error, so a group with a single date quietly shows a NULL average gap."],
+ ex:R`SELECT id, opened, closed, minutes,
+       ROUND((julianday(closed) - julianday(opened)) * 1440, 1) AS held_min,
+       date(day, '-6 days', 'weekday 1') AS week_start
+FROM trades
+ORDER BY id DESC
+LIMIT 5;   -- your last 5 trades: held_min matches minutes; the Monday of their week`,
+ task:'How regular is each technique? For every <b>technique</b> in <b>mind</b> that you used on at least 2 different days: <b>technique</b>, <b>days</b> (number of different days you used it; two sessions on one day count once), <b>span_days</b> (julianday of its last day − julianday of its first day, not rounded), <b>every_days</b> (span_days / (days − 1), the average gap in days between those days, rounded to 1). Row order free.',
+ start:R`SELECT technique,
+       MIN(day) AS first_day,
+       MAX(day) AS last_day
+FROM mind
+GROUP BY technique;`,
+ sol:R`SELECT technique,
+       COUNT(DISTINCT day) AS days,
+       julianday(MAX(day)) - julianday(MIN(day)) AS span_days,
+       ROUND((julianday(MAX(day)) - julianday(MIN(day))) / (COUNT(DISTINCT day) - 1), 1) AS every_days
+FROM mind
+GROUP BY technique
+HAVING COUNT(DISTINCT day) >= 2;`,
+ hint:'Span = julianday(MAX(day)) - julianday(MIN(day)). n different days have n - 1 gaps, and HAVING drops the techniques used on a single day.'},
 {id:'sql7',t:'sql',lv:3,title:'CTEs & subqueries',
  learn:['A CTE (WITH name AS (...)) names an in-between result so you can build a query in readable steps. A subquery does the same inline.','Here: first add up each day’s P&amp;L, then compare every day to the average of those daily totals. That is a two-step question a single GROUP BY can’t answer.'],
  ex:R`WITH d AS (
@@ -486,6 +626,32 @@ FROM workouts w
 LEFT JOIN checkins c ON c.day = w.day
 WHERE c.day IS NULL;`,
  hint:'Join on c.day = w.day and keep rows WHERE c.day IS NULL.'},
+{id:'sql19',t:'sql',lv:3,title:'Self-joins & range conditions',
+ learn:['A <b>self-join</b> joins a table to itself under two aliases, so rows of the same table can be compared: in FROM trades a JOIN trades b, <b>a</b> is one trade and <b>b</b> another. The ON clause doesn’t have to be an equality. A <b>range condition</b> pairs each row with <i>every</i> row inside a window, so one loss can match two re-entries, or none: something “the next trade” can’t show.',"Build the window with datetime() from the julianday lesson: b.time BETWEEN a.time AND datetime(a.time, '+4 hours') keeps every b in the 4 hours after a, both ends included (BETWEEN means lo &lt;= v AND v &lt;= hi). Text timestamps compare correctly only because they are all 'YYYY-MM-DD HH:MM:SS', as datetime() returns them. Never write a.closed + 60: SQLite reads just the year (2026 + 60 = 2086), compares that as text, and every later trade matches.",'Keep the condition tight: a self-join with a loose ON returns up to n × n rows (150 trades → 22,500 pairs). And make sure a row can’t pair with itself: the BETWEEN above matches b = a too, which is why the example starts at b.time &gt; a.time. A close-to-open window is safe, since a trade opens before it closes. For pairs on the same day, a.id &lt; b.id also stops each pair appearing twice (a,b and b,a).'],
+ ex:R`SELECT a.time AS urge, b.time AS came_back, b.event
+FROM habits a
+JOIN habits b
+  ON b.time > a.time
+ AND b.time <= datetime(a.time, '+4 hours')
+WHERE a.event IN ('resisted', 'slipped')
+  AND b.event IN ('resisted', 'slipped');   -- urges that came back within 4 hours`,
+ task:'Revenge-trade check: pair every <b>losing</b> trade (pnl &lt; 0) with <i>every</i> trade you opened in the hour after it closed: opened at or after the loss’s <b>closed</b> time, up to and including 60 minutes later. Columns: <b>loss_id</b> (the loss’s id), <b>next_id</b> (the later trade’s id), <b>gap_min</b> = (julianday(later trade’s opened) − julianday(loss’s closed)) × 1440, rounded to 2, and <b>next_pnl</b> (the later trade’s pnl). One row per pair; a loss with no trade in that hour doesn’t appear. Row order free.',
+ start:R`SELECT a.id AS loss_id,
+       b.id AS next_id,
+
+FROM trades a
+JOIN trades b
+  ON
+WHERE `,
+ sol:R`SELECT a.id AS loss_id,
+       b.id AS next_id,
+       ROUND((julianday(b.opened) - julianday(a.closed)) * 1440, 2) AS gap_min,
+       b.pnl AS next_pnl
+FROM trades a
+JOIN trades b
+  ON b.opened BETWEEN a.closed AND datetime(a.closed, '+60 minutes')
+WHERE a.pnl < 0;`,
+ hint:"Two aliases of trades, joined ON b.opened BETWEEN a.closed AND datetime(a.closed, '+60 minutes'); keep a.pnl < 0."},
 {id:'sql9',t:'sql',lv:3,title:'Window functions: RANK',
  learn:['Window functions calculate across related rows <i>without collapsing them</i>. OVER (PARTITION BY ... ORDER BY ...) defines the window.','ROW_NUMBER gives 1,2,3…; RANK gives tied rows the same number and leaves a gap after them; DENSE_RANK doesn’t leave gaps. These power top-N-per-group and dedup queries.'],
  ex:R`SELECT day, name, protein,
@@ -499,6 +665,63 @@ FROM trades;`,
   RANK() OVER (PARTITION BY contract ORDER BY pnl DESC) AS rnk
 FROM trades;`,
  hint:'OVER (PARTITION BY contract ORDER BY pnl DESC)'},
+{id:'sql20',t:'sql',lv:3,title:'Window totals: % of total',
+ learn:['An aggregate with an empty window, SUM(kcal) OVER (), puts the total of the whole result on every row without collapsing the rows; OVER (PARTITION BY day) puts each group’s own total there instead. Divide a row by it and you have its <b>share of total</b>: the number behind every mix, contribution and Pareto report.','With a GROUP BY, the window runs <i>after</i> the grouping, on the grouped rows, so you aggregate the aggregate: per meal <b>kind</b>, SUM(kcal) * 100.0 / SUM(SUM(kcal)) OVER () is each kind’s share of all your calories, and SUM(COUNT(*)) OVER () is the total number of meals. Plain COUNT(*) OVER () there counts the <i>groups</i> (2 kinds), not your meals.','Gotchas: COUNT(*) is an integer, so COUNT(*) * 100 / … truncates (7 × 100 / 48 = 14, not 14.6); write 100.0. ORDER BY inside OVER turns the total into a running total (a later lesson), so leave it out. And WHERE runs first: a filter shrinks the denominator, so the shares then add up to 100% of the filtered rows only.'],
+ ex:R`SELECT day, name, kcal,
+       SUM(kcal) OVER (PARTITION BY day) AS day_kcal,
+       ROUND(kcal * 100.0 / SUM(kcal) OVER (PARTITION BY day), 1) AS pct_of_day
+FROM meals
+ORDER BY day, id;   -- each meal's share of that day's calories`,
+ task:'Where does your mind time go? Per <b>practice</b> in <b>mind</b>: <b>sessions</b> (count), <b>minutes</b> (total, not rounded), <b>pct_sessions</b> (that practice’s share of all your mind sessions × 100) and <b>pct_minutes</b> (its share of all your mind minutes × 100), both shares rounded to 1. Columns in this order: practice, sessions, minutes, pct_sessions, pct_minutes. Row order free.',
+ start:R`SELECT practice,
+       COUNT(*) AS sessions,
+       SUM(minutes) AS minutes,
+
+FROM mind
+GROUP BY practice;`,
+ sol:R`SELECT practice,
+       COUNT(*) AS sessions,
+       SUM(minutes) AS minutes,
+       ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 1) AS pct_sessions,
+       ROUND(SUM(minutes) * 100.0 / SUM(SUM(minutes)) OVER (), 1) AS pct_minutes
+FROM mind
+GROUP BY practice;`,
+ hint:'Nest the aggregate inside the window: COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), and the same move for SUM(minutes).'},
+{id:'sql21',t:'sql',lv:3,title:'LAG & LEAD — the previous row',
+ learn:['LAG(pnl) OVER (ORDER BY id) returns pnl from the <i>previous</i> row in that order; LEAD returns the next one. LAG(pnl, 2, 0) looks two rows back and gives 0 instead of NULL when there is no such row. That’s how you get change vs the previous period, time since the last event, or what happened right after X.','Add <b>PARTITION BY</b> so the sequence restarts per group: without PARTITION BY day, yesterday’s last trade becomes the “previous” of today’s first. The first row of each partition has nothing before it and gets NULL; NULL &gt; 0 isn’t true, so a CASE quietly sends that row to its ELSE. Filter it out first. A window function can’t go in the WHERE of its own SELECT: compute it in a CTE, then filter outside.','LAG sees exactly one neighbour, unlike the range self-join, which finds every row in a window. And “previous row” isn’t “previous calendar day”: if you didn’t trade on Tuesday, the row before Wednesday’s is Monday’s.'],
+ ex:R`SELECT track, day, minutes,
+       LAG(minutes) OVER (PARTITION BY track ORDER BY time) AS prev_minutes,
+       minutes - LAG(minutes) OVER (PARTITION BY track ORDER BY time) AS change,
+       LEAD(day) OVER (PARTITION BY track ORDER BY time) AS next_day
+FROM study
+ORDER BY track, time;   -- each study session vs your last one on that track`,
+ task:'Does a loss tilt you? For every trade <b>except the first of its day</b>, look at the previous trade <b>on the same day</b> (by id) and label the trade <b>after win</b> (previous pnl &gt; 0), <b>after loss</b> (previous pnl &lt; 0) or <b>after flat</b> (previous pnl = 0). Per label: <b>after</b> (the label, written exactly as above), <b>trades</b> (count), <b>wins</b> (trades with pnl &gt; 0) and <b>avg_pnl</b> (average pnl, rounded to 2). Row order free.',
+ start:R`WITH t AS (
+  SELECT id, day, pnl,
+         LAG(pnl) OVER (                ) AS prev_pnl
+  FROM trades
+)
+SELECT CASE WHEN     THEN 'after win'
+            WHEN     THEN 'after loss'
+            ELSE 'after flat' END AS after,
+
+FROM t
+GROUP BY after;`,
+ sol:R`WITH t AS (
+  SELECT id, day, pnl,
+         LAG(pnl) OVER (PARTITION BY day ORDER BY id) AS prev_pnl
+  FROM trades
+)
+SELECT CASE WHEN prev_pnl > 0 THEN 'after win'
+            WHEN prev_pnl < 0 THEN 'after loss'
+            ELSE 'after flat' END AS after,
+       COUNT(*) AS trades,
+       SUM(CASE WHEN pnl > 0 THEN 1 ELSE 0 END) AS wins,
+       ROUND(AVG(pnl), 2) AS avg_pnl
+FROM t
+WHERE prev_pnl IS NOT NULL
+GROUP BY after;`,
+ hint:'In the CTE: LAG(pnl) OVER (PARTITION BY day ORDER BY id). Outside: drop the rows where it is NULL, then group by the CASE label.'},
 {id:'sql10',t:'sql',lv:4,title:'Running totals by week',ordered:true,
  learn:['Bucket dates with strftime in SQLite: strftime(\'%Y-%m\', day) gives the month, strftime(\'%Y-%W\', day) the week number (weeks start on Monday). Postgres/Snowflake use DATE_TRUNC, SQL Server FORMAT. Then SUM(...) OVER (ORDER BY bucket) produces a running total.','A month is coarse when you only have a few weeks of logs, so here you’ll bucket by week. A CTE for the rollup plus a window over it is the pattern behind every equity curve and trend report.'],
  ex:R`SELECT strftime('%Y-%m', day) AS month,
@@ -528,6 +751,36 @@ SELECT week, ROUND(pnl, 2) AS pnl,
 FROM w
 ORDER BY week;`,
  hint:'SUM(pnl) OVER (ORDER BY week)'},
+{id:'sql22',t:'sql',lv:4,title:'Moving averages: window frames',ordered:true,
+ learn:['A <b>window frame</b> says which rows around the current one an aggregate sees. AVG(x) OVER (ORDER BY day <b>ROWS BETWEEN 6 PRECEDING AND CURRENT ROW</b>) averages this row and the 6 before it: a 7-row moving average. The first rows simply see fewer rows (1, 2, … 6), so they average what exists so far. Count the current row: 6 PRECEDING plus the current row is 7 rows, not 6.','Gotcha: with ORDER BY and <i>no</i> frame, the default is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW: the running figure from the running-totals lesson, not a moving one. And aggregate to one row per day in a CTE first; a frame over raw <b>meals</b> counts meals, not days.',"<b>ROWS</b> counts rows, not dates: a day you logged nothing isn’t a 0, it simply isn’t there. For a calendar window, order by a number and use <b>RANGE</b>: ORDER BY julianday(day) RANGE BETWEEN 6 PRECEDING AND CURRENT ROW covers the last 7 calendar days, however many rows fall in them. (Postgres: ORDER BY day RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW.)"],
+ ex:R`SELECT day, minutes,
+       ROUND(AVG(minutes) OVER (ORDER BY time
+             ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 1) AS avg_last_3_sessions,
+       SUM(minutes) OVER (ORDER BY julianday(day)
+             RANGE BETWEEN 6 PRECEDING AND CURRENT ROW) AS min_last_7_days
+FROM study
+ORDER BY time;   -- 3 sessions vs 7 calendar days: compare them after a gap`,
+ task:'Smooth out your calorie log: a <b>5-day moving average</b> of your daily <b>kcal</b> from <b>meals</b>, over the days you logged at least one meal. Columns: <b>day</b>, <b>kcal</b> (that day’s total) and <b>ma5</b> (the average of that day’s total and the totals of the 4 logged days before it; your first 4 days average only the days that exist so far), both rounded to 2, ordered by day.',
+ start:R`WITH d AS (
+  SELECT day, SUM(kcal) AS kcal
+  FROM meals
+  GROUP BY day
+)
+SELECT day, ROUND(kcal, 2) AS kcal,
+       ROUND(AVG(kcal) OVER (ORDER BY day                ), 2) AS ma5
+FROM d
+ORDER BY day;`,
+ sol:R`WITH d AS (
+  SELECT day, SUM(kcal) AS kcal
+  FROM meals
+  GROUP BY day
+)
+SELECT day, ROUND(kcal, 2) AS kcal,
+       ROUND(AVG(kcal) OVER (ORDER BY day
+             ROWS BETWEEN 4 PRECEDING AND CURRENT ROW), 2) AS ma5
+FROM d
+ORDER BY day;`,
+ hint:'Put a frame after ORDER BY day inside OVER: ROWS BETWEEN n PRECEDING AND CURRENT ROW, and remember the current day is one of the 5.'},
 {id:'sql11',t:'sql',lv:4,title:'Latest record per key',
  learn:['A top data-engineering pattern: keep only the newest row per thing (last session, current weight, latest status). Number the rows per key newest-first with ROW_NUMBER and keep row 1.','Always add a tie-breaker to ORDER BY (e.g. id DESC) so the result is the same every time two rows share a timestamp.'],
  ex:R`SELECT practice, day, minutes FROM (
@@ -550,6 +803,39 @@ FROM (
 )
 WHERE rn = 1;`,
  hint:'PARTITION BY exercise ORDER BY time DESC, id DESC'},
+{id:'sql23',t:'sql',lv:4,title:'Median & percentiles',
+ learn:['The <b>median</b> is the middle value once the values are sorted, or the average of the two middle values when the count is even. A few very long holds pull the mean up but barely move the median, so it describes skewed data honestly. Postgres and Snowflake have PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY x), Snowflake and Oracle also MEDIAN(x); standard SQLite has neither.','Build it from window functions. In a CTE, number the rows with ROW_NUMBER() OVER (PARTITION BY g ORDER BY x) AS rn and count them with COUNT(*) OVER (PARTITION BY g) AS n. Then average x where <b>rn IN ((n + 1) / 2, (n + 2) / 2)</b>: integer division picks the one middle row when n is odd and the two middle rows when n is even. (MySQL and Snowflake divide to decimals: wrap each in FLOOR there.)','Gotchas: rn = (n + 1) / 2 alone gives the lower middle for even counts, so test both. A WHERE on rn drops all the other rows, so a COUNT(*) or AVG(x) in that query sees only the middle ones: compute those first, or use AVG(CASE WHEN … THEN x END). NTILE(4) OVER (ORDER BY x) cuts the sorted rows into 4 near-equal groups (quartiles); equal values can straddle two. sql.js adds a non-standard median(): don’t count on it elsewhere.'],
+ ex:R`SELECT quartile, COUNT(*) AS sessions,
+       MIN(minutes) AS from_min, MAX(minutes) AS to_min
+FROM (
+  SELECT minutes, NTILE(4) OVER (ORDER BY minutes, id) AS quartile
+  FROM mind
+)
+GROUP BY quartile
+ORDER BY quartile;   -- how long your mind sessions run, in quarters`,
+ task:'How long do you really hold a trade? Per <b>contract</b>: <b>trades</b> (count), <b>avg_min</b> (mean of <b>minutes</b>, rounded to 2) and <b>median_min</b> (median of minutes, rounded to 2: the middle value once that contract’s trades are sorted by minutes, or the average of the two middle values when the count is even). Row order free.',
+ start:R`WITH r AS (
+  SELECT contract, minutes,
+         ROW_NUMBER() OVER (                ) AS rn,
+         COUNT(*) OVER (PARTITION BY contract) AS n
+  FROM trades
+)
+SELECT contract,
+FROM r
+GROUP BY contract;`,
+ sol:R`WITH r AS (
+  SELECT contract, minutes,
+         ROW_NUMBER() OVER (PARTITION BY contract ORDER BY minutes) AS rn,
+         COUNT(*) OVER (PARTITION BY contract) AS n
+  FROM trades
+)
+SELECT contract,
+       COUNT(*) AS trades,
+       ROUND(AVG(minutes), 2) AS avg_min,
+       ROUND(AVG(CASE WHEN rn IN ((n + 1) / 2, (n + 2) / 2) THEN minutes END), 2) AS median_min
+FROM r
+GROUP BY contract;`,
+ hint:'Partition both windows by contract and number by minutes; AVG(CASE WHEN rn IN ((n + 1) / 2, (n + 2) / 2) THEN minutes END) then sits next to a plain AVG(minutes).'},
 {id:'sql12',t:'sql',lv:4,title:'Cohort conversion by week',
  learn:['Cohort analysis groups things by when they started and measures how many “converted”. Treat each week’s urges in REWIRE as a cohort: how many of them did you turn into a win (<b>resisted</b>) rather than a <b>slipped</b>? It combines date bucketing, conditional counts and a ratio.','Multiply by 100.0 (not 100) to force decimal division; integer division silently truncates in many databases.'],
  ex:R`SELECT strftime('%Y-%W', c.day) AS week,
@@ -574,6 +860,43 @@ FROM habits
 WHERE event IN ('resisted', 'slipped')
 GROUP BY week;`,
  hint:"Count resisted urges with SUM(CASE WHEN event = 'resisted' THEN 1 ELSE 0 END), then divide by COUNT(*) using 100.0."},
+{id:'sql24',t:'sql',lv:4,title:'Gaps & islands: streaks',
+ learn:['A streak is an <b>island</b> of consecutive days; the missing days between streaks are <b>gaps</b>. The trick: number the days in order and subtract. <b>julianday(day) - ROW_NUMBER() OVER (ORDER BY day)</b> stays the same while the days are consecutive (both go up by 1) and jumps after every gap. GROUP BY that key and take MIN(day), MAX(day) and COUNT(*) per streak.',"Gotchas: it needs exactly one row per day. With two sessions on one day the numbering runs ahead of the calendar and the keys go wrong (streaks split and merge), so GROUP BY day in a CTE first, or use DENSE_RANK, which gives same-day rows the same number. Subtract from julianday(day): '2026-09-03' - 1 is 2025, because SQLite reads the text as the number 2026.",'Another way: flag a day whose gap to the previous one (LAG) is more than 1 day, and a running SUM of the flags numbers the streaks. For runs of rows rather than days (winning trades in a row), subtract two ROW_NUMBERs: one over all rows, one per state.'],
+ ex:R`SELECT MIN(day) AS first_day, MAX(day) AS last_day, COUNT(*) AS days
+FROM (
+  SELECT day, julianday(day) - ROW_NUMBER() OVER (ORDER BY day) AS grp
+  FROM checkins            -- one row per day already
+)
+GROUP BY grp
+ORDER BY first_day;   -- your check-in streaks`,
+ task:'Your <b>MIND streaks</b>: every run of consecutive calendar days with at least one session in <b>mind</b> (a day without a session ends the streak; a single day counts as a streak of 1). One row per streak: <b>start_day</b>, <b>end_day</b>, <b>days</b> (calendar days in the streak) and <b>sessions</b> (mind sessions logged in it). Some days have more than one session. Row order free.',
+ start:R`WITH d AS (            -- one row per day, with its session count
+  SELECT
+  FROM mind
+),
+g AS (                 -- the same key for consecutive days
+  SELECT day, sessions,
+                       AS grp
+  FROM d
+)
+SELECT
+FROM g
+GROUP BY grp;`,
+ sol:R`WITH d AS (
+  SELECT day, COUNT(*) AS sessions
+  FROM mind
+  GROUP BY day
+),
+g AS (
+  SELECT day, sessions,
+         julianday(day) - ROW_NUMBER() OVER (ORDER BY day) AS grp
+  FROM d
+)
+SELECT MIN(day) AS start_day, MAX(day) AS end_day,
+       COUNT(*) AS days, SUM(sessions) AS sessions
+FROM g
+GROUP BY grp;`,
+ hint:'On one row per day, julianday(day) - ROW_NUMBER() OVER (ORDER BY day) is the same for every day of a streak: GROUP BY it.'},
 /* ---------- Python ---------- */
 {id:'py1',t:'py',lv:1,title:'Filtering a DataFrame',
  learn:['pandas holds tables as DataFrames. Every app log is preloaded: <b>trades</b>, <b>workouts</b>, <b>mind</b>, <b>meals</b>, <b>habits</b>, <b>checkins</b>, <b>study</b>, with pd and np imported.','Filter rows with a boolean mask: df[df["col"] == value]. Combine masks with &amp; (and) or | (or), each in brackets. Select columns with a list: df[["a","b"]]. Assign your answer to <b>result</b>.'],
@@ -590,6 +913,19 @@ print(cardio[["day", "exercise", "minutes"]])`,
  start:R`result = trades.sort_values(`,
  sol:R`result = trades.sort_values(["minutes", "id"], ascending=[False, True]).head(5)[["id", "contract", "side", "minutes", "pnl"]]`,
  hint:'sort_values(["minutes", "id"], ascending=[False, True]).head(5)'},
+{id:'py12',t:'py',lv:1,title:'New columns: vectorized math',
+ learn:['df["new"] = expression builds a whole column in one go: trades["gross"] = trades["pnl"] + trades["fees"] adds the fees back on every row, with no loop. That is <b>vectorized</b> math, and + - * / work the same way between two columns or with a number. df.assign(gross=...) builds the same column but returns a new frame and leaves df untouched, so it fits in a chain.','A comparison is a vectorized column too: trades["pnl"] &gt; 0 is True or False for every row. Use it as a filter mask, df[mask], or summarise it: .sum() counts the Trues and .mean() gives the rate. Keep True/False columns as helpers; the answers you hand in are numbers or text.','Gotchas: NaN spreads. Arithmetic with NaN gives NaN, and a comparison with NaN is False (only != is True), so a <b>mind</b> session with a missing mood gets a NaN difference and silently drops out of any &gt;= filter on it. And before adding a column to a filtered slice (w = workouts[...]), take .copy(): otherwise pandas warns (SettingWithCopyWarning) and you can&rsquo;t be sure which frame you changed.'],
+ ex:R`w = workouts.copy()
+w["volume"] = w["sets"] * w["reps"] * w["load"]   # NaN where there is no load
+print(w[["exercise", "type", "volume"]].head(7))
+win = trades["pnl"] > 0                            # True/False for every trade
+print("wins:", win.sum(), "of", len(win), "| win rate:", round(win.mean(), 3))`,
+ task:'Which sessions give your mood a real lift? Add a column <b>lift</b> = <b>mood_after</b> minus <b>mood_before</b> to <b>mind</b>, then return the sessions with a <b>lift</b> of 2 or more (2 included). Columns: <b>day</b>, <b>practice</b>, <b>technique</b>, <b>lift</b> (not rounded). A session with a missing mood has no lift, so it drops out.',
+ start:R`mind["lift"] =
+result = `,
+ sol:R`mind["lift"] = mind["mood_after"] - mind["mood_before"]
+result = mind[mind["lift"] >= 2][["day", "practice", "technique", "lift"]]`,
+ hint:'Subtract mood_before from mood_after into mind["lift"], then keep the rows where mind["lift"] >= 2 and pick the four columns.'},
 {id:'py3',t:'py',lv:1,title:'groupby basics',
  learn:['df.groupby("col") splits rows into groups; .size() counts rows; .agg(...) applies aggregates. as_index=False (or reset_index()) keeps the group key as a column.','Named aggregation gives tidy columns: df.groupby("side", as_index=False).agg(n=("id", "size"), pnl=("pnl", "sum")) is SELECT side, COUNT(*), SUM(pnl) … GROUP BY side.'],
  ex:R`print(mind.groupby("practice", as_index=False).agg(sessions=("id", "size"), avg_min=("minutes", "mean")).round(2))`,
@@ -597,6 +933,41 @@ print(cardio[["day", "exercise", "minutes"]])`,
  start:R`result = trades.groupby("side", as_index=False)`,
  sol:R`result = trades.groupby("side", as_index=False).agg(n=("id", "size"), pnl=("pnl", "sum")).round(2)`,
  hint:'.agg(n=("id", "size"), pnl=("pnl", "sum")).round(2)'},
+{id:'py13',t:'py',lv:1,title:'value_counts & nunique',
+ learn:['s.value_counts() counts how often each distinct value occurs, most frequent first: meals["kind"].value_counts() is bowls vs snacks. value_counts(normalize=True) gives shares from 0 to 1 instead (multiply by 100 for %). s.nunique() counts the distinct values, like COUNT(DISTINCT ...) in SQL: workouts["day"].nunique() is how many days you trained.','nunique works per group as well: workouts.groupby("exercise")["day"].nunique() is the number of different days you did each exercise, and ("day", "nunique") does the same inside named aggregation. size counts rows, nunique counts different values: two shakes on one day are 2 rows but 1 day.','Gotchas: the result is a <b>Series</b> indexed by the values and named <i>count</i> (or <i>proportion</i> with normalize=True). reset_index(name="n") turns it into two columns, the value and n; add rename_axis("new_name") first if the index has no name. Missing values are left out unless you pass dropna=False, so the shares are shares of the non-missing rows.'],
+ ex:R`print(workouts["type"].value_counts())                         # rows per type, most frequent first
+print(workouts["type"].value_counts(normalize=True).round(3))  # shares from 0 to 1
+print("training days:", workouts["day"].nunique())
+days = workouts.groupby("exercise")["day"].nunique()           # distinct days per exercise
+print(days.reset_index(name="days").head())`,
+ task:'Your go-to foods. For each meal <b>name</b> in <b>meals</b>: <b>n</b> = how many times you logged it, and <b>pct</b> = its share of all meals logged, in % (0 to 100), rounded to 1. Columns: <b>name</b>, <b>n</b>, <b>pct</b>.',
+ start:R`counts = meals["name"].value_counts()
+result = `,
+ sol:R`counts = meals["name"].value_counts().reset_index(name="n")
+counts["pct"] = (counts["n"] * 100 / counts["n"].sum()).round(1)
+result = counts`,
+ hint:'reset_index(name="n") turns value_counts() into columns; pct is n * 100 divided by the total of n, rounded to 1.'},
+{id:'py14',t:'py',lv:1,title:'Missing values: isna & count',
+ learn:['NaN marks a value that was never recorded: an unrated session has no <b>depth</b>, a skipped weigh-in has no <b>weight</b>. s.isna() (or notna()) is True/False per row, so s.isna().sum() counts the gaps and df.isna().sum() counts them for every column. NaN == NaN is False, so never test with == np.nan or == None: that finds nothing.','Aggregates treat NaN differently: <b>size</b> counts rows, <b>count</b> counts non-missing values, and sum and mean skip NaN, so a mean is the average of the values that exist. A group with no values at all gets mean NaN, which is honest: there is nothing to average. Its sum, though, is 0.','Handle gaps on purpose: dropna(subset=["depth"]) drops those rows and fillna(value) fills them. Filling with 0 before a mean is the classic bug: every missing value counts as a 0 and drags the average down. And value_counts skips NaN unless you pass dropna=False.'],
+ ex:R`print(checkins.isna().sum())                        # gaps per column
+w = checkins["weight"]
+print("days:", w.size, "| weigh-ins:", w.count(), "| skipped:", w.isna().sum())
+print("found with == np.nan:", (w == np.nan).sum())  # always 0
+print("mean:", round(w.mean(), 2), "| after fillna(0):", round(w.fillna(0).mean(), 2))
+print(workouts.groupby("type").agg(rows=("id", "size"), timed=("minutes", "count"), avg_min=("minutes", "mean")).round(1))`,
+ task:'A missing-data audit of your <b>mind</b> log, per <b>practice</b>: <b>sessions</b> (all rows), <b>rated</b> (sessions that have a <b>depth</b>), <b>avg_depth</b> (mean depth of the rated sessions, rounded to 2; a practice you never rated keeps NaN here, not 0) and <b>no_mood</b> (sessions whose <b>mood_after</b> is missing). Columns: <b>practice</b>, <b>sessions</b>, <b>rated</b>, <b>avg_depth</b>, <b>no_mood</b>.',
+ start:R`m = mind.copy()
+m["no_mood"] =
+result = m.groupby("practice", as_index=False).agg(`,
+ sol:R`m = mind.copy()
+m["no_mood"] = m["mood_after"].isna()
+result = m.groupby("practice", as_index=False).agg(
+    sessions=("id", "size"),
+    rated=("depth", "count"),
+    avg_depth=("depth", "mean"),
+    no_mood=("no_mood", "sum"),
+).round(2)`,
+ hint:'size counts rows and count skips NaN; flag the gaps with m["mood_after"].isna() and sum that column in the agg.'},
 {id:'py4',t:'py',lv:2,title:'merge: joining two apps on day',
  learn:['df.merge(other, on="day") is a SQL join (how="inner" by default; also "left", "right", "outer"). Every app log has a <b>day</b> column, so day is how you line up two apps.','Aggregate first when one side has many rows per day (trades, meals), so you join one row per day to one row per day.'],
  ex:R`protein = meals.groupby("day", as_index=False)["protein"].sum()
@@ -609,6 +980,25 @@ result = `,
 m = checkins.merge(daily, on="day")
 result = m[["day", "sleep", "energy", "pnl"]].round(2)`,
  hint:'checkins.merge(daily, on="day"), then select [["day", "sleep", "energy", "pnl"]].'},
+{id:'py15',t:'py',lv:2,title:'concat: stacking tables',
+ learn:["<code>pd.concat([a, b], ignore_index=True)</code> stacks tables one under the other: SQL's UNION ALL. merge, from the lesson on joining two apps, puts two tables <i>side by side</i> on a key; concat puts them <i>on top of each other</i> and lines the columns up by <b>name</b>. Use it when two logs record the same kind of thing, like the minutes in <b>mind</b> and the minutes in <b>study</b>.",'Once stacked, the rows look alike, so label each input <i>before</i> stacking: <code>mind[["day", "minutes"]].assign(app="MIND")</code>. The label is then an ordinary column you can filter, count or <code>nunique</code> per group. concat keeps duplicates (UNION ALL, not UNION), and without <code>ignore_index=True</code> the old index numbers repeat (0, 1, 2 ... then 0, 1, 2 again).',"Columns are matched by name, not position. A column that only one input has is filled with NaN on the other input's rows, and the same column spelled two ways becomes two half-empty columns. So select (and rename) the same columns on every input first, then stack."],
+ ex:R`logged = pd.concat([
+    trades[["day"]].assign(app="JOURNAL"),
+    workouts[["day"]].assign(app="TRAINING"),
+    meals[["day"]].assign(app="NUTRITION"),
+], ignore_index=True)
+print(logged.tail(3))
+print(logged.groupby("app").agg(entries=("day", "size"), first=("day", "min"), last=("day", "max")))`,
+ task:'Your daily focus time across <b>MIND</b> and <b>LEARN</b>. Stack the <b>mind</b> and <b>study</b> sessions (<b>day</b>, <b>minutes</b> and an <b>app</b> label, MIND or LEARN, saying where each row came from) into one table. Then, for every day with at least one session in either app: <b>apps</b> (how many of the two apps you used that day: 1 or 2), <b>sessions</b> (number of sessions across both apps) and <b>minutes</b> (total minutes across both). Columns: <b>day</b>, <b>apps</b>, <b>sessions</b>, <b>minutes</b>.',
+ start:R`m = mind[["day", "minutes"]].assign(app="MIND")
+s =
+both = pd.concat(
+result = `,
+ sol:R`m = mind[["day", "minutes"]].assign(app="MIND")
+s = study[["day", "minutes"]].assign(app="LEARN")
+both = pd.concat([m, s], ignore_index=True)
+result = both.groupby("day", as_index=False).agg(apps=("app", "nunique"), sessions=("app", "size"), minutes=("minutes", "sum"))`,
+ hint:'Tag each side with .assign(app=...) before pd.concat; then, per day, apps is the nunique of app and sessions the row count (size).'},
 {id:'py5',t:'py',lv:2,title:'pivot_table',
  learn:['pivot_table reshapes long data into a matrix: index = rows, columns = new column headers, values + aggfunc = what fills the cells. fill_value=0 replaces missing combinations.','pd.to_datetime(...) turns the <b>day</b> text into real dates; .dt.day_name(), .dt.month, .dt.year extract parts. pandas sorts the new columns alphabetically.'],
  ex:R`print(trades.pivot_table(index="contract", columns="side", values="pnl", aggfunc="sum", fill_value=0))`,
@@ -620,6 +1010,18 @@ result = `,
 m["weekday"] = pd.to_datetime(m["day"]).dt.day_name()
 result = m.pivot_table(index="practice", columns="weekday", values="minutes", aggfunc="sum", fill_value=0)`,
  hint:'pivot_table(index="practice", columns="weekday", values="minutes", aggfunc="sum", fill_value=0)'},
+{id:'py16',t:'py',lv:2,title:'melt: wide to long',
+ learn:['Data often arrives <b>wide</b>: one column per moment, metric or month, like <b>mood_before</b> and <b>mood_after</b> in <b>mind</b>. <code>melt</code> makes it <b>long</b>: <code>meals.melt(id_vars=["day", "name"], value_vars=["protein", "carbs", "fat"], var_name="macro", value_name="grams")</code> gives one row per meal and melted column, with the old column name in <b>macro</b> and its value in <b>grams</b>. It is the reverse of pivot_table: melt goes wide to long, pivot_table long to wide.','Long data is what groupby wants: once mood_before and mood_after are rows, "per practice and moment" is a plain <code>groupby(["practice", "moment"])</code>, and a third moment would only be one more name in value_vars. Only melt columns that measure the same thing on the same scale: two 1-10 moods or three macros in grams, yes; a mood and minutes, no.','Columns in neither id_vars nor value_vars are dropped. Leave value_vars out and pandas melts <i>every</i> other column (id, time, minutes ...) into one mixed column. A missing value stays as a row with NaN: <code>mean</code> and <code>count</code> skip it, but <code>size</code> counts it, as in the missing-values lesson.'],
+ ex:R`long = checkins.melt(id_vars="day", value_vars=["quality", "energy"], var_name="metric", value_name="score")
+print(len(checkins), "wide rows ->", len(long), "long rows")
+print(long.head(3))
+print(long.value_counts(["metric", "score"]).sort_index())`,
+ task:"Mood before vs after, per practice, as a long table. Melt <b>mind</b>'s <b>mood_before</b> and <b>mood_after</b> into rows, then per <b>practice</b> and <b>moment</b>: <b>n</b> (how many of those moods were recorded; a missing mood doesn't count) and <b>mood</b> (their mean, rounded to 2). Keep every practice and moment, even one with no recorded mood at all (n is then 0 and mood NaN). Columns: <b>practice</b>, <b>moment</b> (the original column name: mood_before or mood_after), <b>n</b>, <b>mood</b>.",
+ start:R`long = mind.melt(id_vars=
+result = `,
+ sol:R`long = mind.melt(id_vars="practice", value_vars=["mood_before", "mood_after"], var_name="moment", value_name="mood")
+result = long.groupby(["practice", "moment"], as_index=False).agg(n=("mood", "count"), mood=("mood", "mean")).round(2)`,
+ hint:'Melt with id_vars="practice" and value_vars=["mood_before", "mood_after"], then group by practice and moment: count skips the NaN moods, size does not.'},
 {id:'py6',t:'py',lv:2,title:'np.where: derived categories',
  learn:['np.where(condition, if_true, if_false) is pandas&rsquo; vectorized CASE WHEN. Nest it for 3 buckets, or use np.select / pd.cut for many.'],
  ex:R`c = checkins.copy()
@@ -633,6 +1035,23 @@ result = `,
 t["result"] = np.where(t["pnl"] > 0, "green", np.where(t["pnl"] < 0, "red", "flat"))
 result = t.groupby("result", as_index=False).agg(n=("id", "size"), pnl=("pnl", "sum")).round(2)`,
  hint:'Inner np.where(t["pnl"] < 0, "red", "flat"), then groupby("result").agg(n=..., pnl=...).'},
+{id:'py17',t:'py',lv:2,title:'String methods with .str',
+ learn:['The <b>.str</b> accessor runs a string operation on every value of a text column, no loop: <code>trades["contract"].str[:2]</code> (first two characters: NQZ6 becomes NQ), <code>.str.len()</code>, <code>.str.lower()</code>, <code>.str.strip()</code>, <code>.str.startswith("Bench")</code>, <code>.str.contains("Press")</code>, <code>.str.replace(old, new)</code>. Each gives a new column you can filter or group by.','<code>.str.split(" ")</code> gives a <i>list</i> per row, so pick a piece with another <code>.str[n]</code>: <code>meals["name"].str.split(" ").str[0]</code> turns "Salmon bowl" into "Salmon", and <code>.str[-1]</code> takes the last piece. Parsing a text key into a coarser one changes what you can group by: several names can fall into one group.','It only works on text: a number column raises an AttributeError (<code>.astype(str)</code> first). A missing value stays missing, so a <code>contains</code> filter needs <code>na=False</code>. <code>contains</code> reads its pattern as a <b>regex</b> by default, so "Almonds (1 oz)" doesn\'t match itself: the parentheses are regex syntax. Pass <code>regex=False</code> for plain text. <code>replace</code> is plain text by default in pandas 2; real regex comes later, in Regex extraction from logs.'],
+ ex:R`t = trades.copy()
+t["root"] = t["contract"].str[:2]      # NQZ6 -> NQ (the market)
+t["expiry"] = t["contract"].str[-2:]   # Z6 -> December 2026
+print(t[["contract", "root", "expiry"]].drop_duplicates())
+bowls = meals[meals["name"].str.endswith(" bowl")]
+print(bowls["name"].str.split(" ").str[0].value_counts())
+print(meals["name"].str.contains("(1 oz)", regex=False).sum(), "meals measured in oz")`,
+ task:'Your lifting by movement family. Take the <b>Weighted</b> workouts only and give each one a <b>family</b>: the last word of its exercise name, words being separated by spaces (Bench Press, Leg Press and Overhead Press are all <b>Press</b>; Deadlift stays <b>Deadlift</b>). Per family: <b>exercises</b> (how many distinct exercise names it groups) and <b>sets</b> (total sets). Columns: <b>family</b>, <b>exercises</b>, <b>sets</b>.',
+ start:R`w = workouts[workouts["type"] == "Weighted"].copy()
+w["family"] =
+result = `,
+ sol:R`w = workouts[workouts["type"] == "Weighted"].copy()
+w["family"] = w["exercise"].str.split(" ").str[-1]
+result = w.groupby("family", as_index=False).agg(exercises=("exercise", "nunique"), sets=("sets", "sum"))`,
+ hint:'The last word is .str.split(" ").str[-1]; then, per family, the nunique of exercise and the sum of sets.'},
 {id:'py7',t:'py',lv:3,title:'Dates & weekly buckets',ordered:true,
  learn:['Time buckets turn a log into a trend. dt.strftime("%Y-%m") gives a month key; dt.to_period("W").dt.start_time gives the Monday each week starts on.','Format the bucket as YYYY-MM-DD text: ISO-style strings sort correctly as text, so sort_values on the key puts weeks in order.'],
  ex:R`s = study.copy()
@@ -646,6 +1065,25 @@ result = `,
 t["week"] = pd.to_datetime(t["day"]).dt.to_period("W").dt.start_time.dt.strftime("%Y-%m-%d")
 result = t.groupby("week", as_index=False).agg(trades=("id", "size"), pnl=("pnl", "sum")).round(2).sort_values("week")`,
  hint:'pd.to_datetime(t["day"]).dt.to_period("W").dt.start_time.dt.strftime("%Y-%m-%d")'},
+{id:'py18',t:'py',lv:3,title:'Anti-joins: rows with no match',
+ learn:['An <b>anti-join</b> keeps the rows that have <i>no</i> match in another table: trading days with no check-in, customers who never ordered. An inner merge silently drops exactly these rows, so you have to ask for them. For one key, <code>isin</code> marks the values that appear in the other column (SQL IN) and <code>~</code> flips the mask: <code>df[~df["day"].isin(checkins["day"])]</code> is SQL\'s NOT IN, or LEFT JOIN ... WHERE right.day IS NULL.','For several key columns, or to see both sides at once, merge with <code>how="left", indicator=True</code>: pandas adds a <b>_merge</b> column that says <b>both</b> or <b>left_only</b>, and you keep <code>_merge == "left_only"</code>. Merge on the right side\'s keys only, deduplicated (<code>other[["day"]].drop_duplicates()</code>), or a key that appears twice there doubles the matched rows.','Test isin or the indicator, never a column from the other table: after a left merge, <b>weight</b> is NaN on days with no check-in <i>and</i> on check-ins where you skipped the scale. ~ binds tighter than &amp;: <code>~a &amp; b</code> negates only a, <code>~(a &amp; b)</code> the whole mask. And decide which rows could have matched at all: days before you started an app aren\'t "skipped".'],
+ ex:R`meal_days = meals[["day"]].drop_duplicates()
+# one key: a negated isin
+no_checkin = meal_days[~meal_days["day"].isin(checkins["day"])]
+print(no_checkin["day"].tolist())
+# same question with the indicator (works for multi-column keys too)
+m = meal_days.merge(checkins[["day"]].drop_duplicates(), on="day", how="left", indicator=True)
+print(m["_merge"].value_counts())
+print(m[m["_merge"] == "left_only"]["day"].tolist())`,
+ task:"Trading days when you skipped the morning check-in. For every trading day (a <b>day</b> in <b>trades</b>) that has no row in <b>checkins</b>, counting only days on or after the earliest day in <b>checkins</b> (before it you weren't using TODAY yet): <b>day</b>, <b>trades</b> (how many trades that day), <b>pnl</b> (that day's total, rounded to 2). Columns: <b>day</b>, <b>trades</b>, <b>pnl</b>.",
+ start:R`daily = trades.groupby("day", as_index=False).agg(trades=("id", "size"), pnl=("pnl", "sum"))
+first = checkins["day"].min()
+result = daily[`,
+ sol:R`daily = trades.groupby("day", as_index=False).agg(trades=("id", "size"), pnl=("pnl", "sum"))
+first = checkins["day"].min()
+skipped = ~daily["day"].isin(checkins["day"]) & (daily["day"] >= first)
+result = daily[skipped].round(2)`,
+ hint:'Mask with ~daily["day"].isin(checkins["day"]), add the bound against first with & (in brackets), then round(2).'},
 {id:'py8',t:'py',lv:3,title:'Top-N per group',
  learn:['Sort first, then groupby(...).head(n) keeps the first n rows of each group: the pandas twin of ROW_NUMBER() OVER (PARTITION BY ...) &lt;= n.','Mind the ties: if two rows share the value you rank on, add a tie-breaker column to the sort so the same rows always win. groupby(...)["col"].rank(method="first") is the other way to do it.'],
  ex:R`top2 = mind.sort_values(["practice", "minutes", "id"], ascending=[True, False, False]).groupby("practice").head(2)
@@ -658,6 +1096,45 @@ result = `,
 w = w.sort_values(["exercise", "load", "id"], ascending=[True, False, False])
 result = w.groupby("exercise").head(3)[["exercise", "day", "load"]]`,
  hint:'sort_values(["exercise", "load", "id"], ascending=[True, False, False]).groupby("exercise").head(3)'},
+{id:'py19',t:'py',lv:3,title:'shift & diff: the previous row',
+ learn:['<code>shift()</code> moves a column down one row, so each row can see the previous row\'s value: the pandas form of SQL\'s LAG (<code>shift(-1)</code> looks ahead, like LEAD). <code>diff()</code> is the shortcut for <code>x - x.shift()</code>, the change since the previous row. "Previous" just means the row above, so sort first (by id or time).','To restart for every day, practice or contract, shift within groups, the same sort-then-groupby move as Top-N per group: <code>t.groupby("day")["pnl"].shift()</code>. Each group\'s first row gets NaN. A plain <code>t["pnl"].shift()</code> hands the previous day\'s last trade to the next day\'s first one, the most common bug here.','That NaN means "there is no previous row". Drop it (<code>dropna(subset=[...])</code>) before you label or count; a filler like fillna(0), or a label built on NaN, quietly turns "no previous trade" into "previous trade was flat". For dates, convert with pd.to_datetime first: the diff is a Timedelta, and <code>.dt.days</code> makes it a number.'],
+ ex:R`m = mind.sort_values("id").copy()
+m["date"] = pd.to_datetime(m["day"])
+m["prev_min"] = m.groupby("practice")["minutes"].shift()
+m["gap_days"] = m.groupby("practice")["date"].diff().dt.days
+print(m[["practice", "day", "minutes", "prev_min", "gap_days"]].head(8))
+# average days between two sessions of the same practice
+print(m.groupby("practice")["gap_days"].mean().round(1))`,
+ task:'Do you trade worse after a loss? Take <b>trades</b> in <b>id</b> order. For every trade that isn\'t the first of its <b>day</b>, look at the previous trade on that same day and label the trade <b>"after win"</b> (previous pnl &gt; 0), <b>"after loss"</b> (previous pnl &lt; 0) or <b>"after flat"</b> (previous pnl = 0). Leave out each day\'s first trade. Per label: <b>after</b>, <b>trades</b> (count), <b>avg_pnl</b> (mean pnl of the labelled trades themselves, rounded to 2). Columns: <b>after</b>, <b>trades</b>, <b>avg_pnl</b>.',
+ start:R`t = trades.sort_values("id").copy()
+t["prev"] =
+result = `,
+ sol:R`t = trades.sort_values("id").copy()
+t["prev"] = t.groupby("day")["pnl"].shift()
+t = t.dropna(subset=["prev"])
+t["after"] = np.where(t["prev"] > 0, "after win", np.where(t["prev"] < 0, "after loss", "after flat"))
+result = t.groupby("after", as_index=False).agg(trades=("id", "size"), avg_pnl=("pnl", "mean")).round(2)`,
+ hint:'t.groupby("day")["pnl"].shift() gives each trade the previous pnl of its day (NaN for the first); drop those rows, then label with np.where.'},
+{id:'py20',t:'py',lv:3,title:'transform: group totals on each row',
+ learn:['<code>groupby(key)[col].transform("sum")</code> computes each group\'s total but hands it back on <i>every original row</i>, with the same length and index as the frame. agg collapses a group to one row; transform keeps the rows and adds context. So <code>m["day_kcal"] = m.groupby("day")["kcal"].transform("sum")</code> puts the day\'s total next to each meal, ready for a share.','It also keeps or drops rows by a group property without collapsing anything: <code>trades[trades.groupby("day")["id"].transform("size") &gt;= 3]</code> keeps every trade of the days with at least 3 trades (HAVING, but you keep the rows). Compare a row with <code>transform("max")</code> to keep the group\'s top rows, or subtract <code>transform("mean")</code> to see how far it is from average.','transform lines up on the original index, so assign it straight back as a column; no merge needed. Assigning an agg result instead (<code>m.groupby("day")["kcal"].sum()</code>) aligns day labels against row numbers and fills the column with NaN. Give transform one function, usually by name ("sum", "mean", "max", "size"; named aggregation doesn\'t apply), and use agg when you want one row per group.'],
+ ex:R`m = mind.copy()
+m["avg_min"] = m.groupby("practice")["minutes"].transform("mean")
+m["vs_avg"] = m["minutes"] - m["avg_min"]
+print(m[["practice", "day", "minutes", "avg_min", "vs_avg"]].head(6).round(1))
+# every session that ties its practice's longest one (all ties stay)
+longest = m[m["minutes"] == m.groupby("practice")["minutes"].transform("max")]
+print(longest[["practice", "day", "minutes"]])`,
+ task:"Meals that were more than half of the day's calories. Only look at days with at least 2 meals logged (2 or more rows in <b>meals</b>; snacks count). For each meal on those days: <b>day</b>, <b>name</b>, <b>kcal</b> (as logged), <b>pct</b> = the meal's kcal * 100 / that day's total kcal (all of that day's rows), rounded to 1. Keep the meals whose pct <i>before rounding</i> is above 50. Columns: <b>day</b>, <b>name</b>, <b>kcal</b>, <b>pct</b>.",
+ start:R`m = meals.copy()
+m["day_kcal"] =
+result = `,
+ sol:R`m = meals.copy()
+m["day_kcal"] = m.groupby("day")["kcal"].transform("sum")
+m["meals"] = m.groupby("day")["kcal"].transform("size")
+m["pct"] = m["kcal"] * 100 / m["day_kcal"]
+big = m[(m["meals"] >= 2) & (m["pct"] > 50)]
+result = big[["day", "name", "kcal", "pct"]].round({"pct": 1})`,
+ hint:'m.groupby("day")["kcal"].transform("sum") for the day total and transform("size") for meals per day, then filter on both.'},
 {id:'py9',t:'py',lv:3,title:'Flattening JSON',
  learn:['Exports and APIs return nested JSON. pd.json_normalize flattens it: record_path turns a nested list into rows, meta carries parent fields along (nested keys become "checkin.sleep").','A preloaded list <b>day_export</b> holds your last 14 days: each day has a <b>checkin</b> object (or None) and lists of <b>trades</b>, <b>workouts</b> and <b>meals</b>.'],
  ex:R`print(day_export[0]["day"], day_export[0]["checkin"])
@@ -703,6 +1180,83 @@ result = `,
 m = m.drop_duplicates("practice", keep="last")
 result = m[["practice", "day", "technique", "minutes"]]`,
  hint:'drop_duplicates("practice", keep="last"), then select the four columns.'},
+{id:'py21',t:'py',lv:4,title:'Running totals & drawdown',ordered:true,
+ learn:['<code>cumsum()</code> turns a column into a running total: each row holds itself plus every row above it, the pandas form of SQL’s SUM(...) OVER (ORDER BY ...). <code>cummax()</code> and <code>cummin()</code> keep the highest and lowest value so far, and <code>groupby("track")["minutes"].cumsum()</code> restarts the total for each group.','For a trader they build the two curves that matter. Total pnl per day, then <code>equity = pnl.cumsum()</code> is the equity curve and <code>equity.cummax()</code> the peak so far. <b>drawdown = equity - peak</b> is 0 on a new high and negative below it; its minimum is the max drawdown, the deepest drop from a peak.','Gotchas: cumulative functions follow row order, so sort by time first (a groupby on <b>day</b> already returns days in order). Aggregate to one row per day before building a daily curve; a per-trade curve has one row per trade. <code>cummax()</code> starts at the first value, not at 0, so a curve that opens with a loss shows no drawdown on day one. If your starting balance should count as the first peak, clip the peak, not the equity: <code>equity.cummax().clip(lower=0)</code>.'],
+ ex:R`s = study.sort_values("time").copy()
+s["total"] = s["minutes"].cumsum()                          # all tracks so far
+s["track_total"] = s.groupby("track")["minutes"].cumsum()   # restarts for each track
+s["longest"] = s["minutes"].cummax()                        # longest session so far
+print(s[["day", "track", "minutes", "total", "track_total", "longest"]])`,
+ task:'Your <b>equity curve</b> by trading day, ordered by <b>day</b> (oldest first). Columns: <b>day</b>; <b>pnl</b> (that day’s total pnl); <b>equity</b> (running total of the daily pnl); <b>drawdown</b> (equity minus the highest equity so far, that day included: 0 on a new high, negative below it; the peak starts at your first day’s equity, not at 0). Every number rounded to 2.',
+ start:R`daily = trades.groupby("day", as_index=False)["pnl"].sum()
+daily["equity"] =
+daily["drawdown"] =
+result = `,
+ sol:R`daily = trades.groupby("day", as_index=False)["pnl"].sum()   # one row per day, in date order
+daily["equity"] = daily["pnl"].cumsum()
+daily["drawdown"] = daily["equity"] - daily["equity"].cummax()
+result = daily.round(2)`,
+ hint:'Total pnl per day first, then equity = pnl.cumsum() and drawdown = equity - equity.cummax().'},
+{id:'py22',t:'py',lv:4,title:'Filling calendar gaps',
+ learn:['A log only has rows for days when something happened. <code>groupby("day")</code> never produces the days you skipped, so per-day counts lose their zeros and per-day averages come out too high. The fix is a <b>calendar spine</b>: <code>pd.date_range(start, end)</code> lists every day in a range, and you check or fill each one against the log.','Two ways to use it. <code>spine.isin(log_days)</code> (as in the anti-join lesson) marks the days that appear in the log, and <code>per_day.reindex(spine, fill_value=0)</code> puts a per-day Series onto every calendar day. Or put the dates on a DatetimeIndex: <code>resample("D").size()</code> or <code>.sum()</code> emits every day from the first to the last row, empty days as 0.','Gotchas: both sides must be real datetimes (<code>pd.to_datetime</code>): a per-day Series indexed by \'YYYY-MM-DD\' text, reindexed onto a date_range, matches nothing and comes back all zeros. Pick the range on purpose (first to last log day is not full weeks). For weekly buckets keep <code>to_period("W").dt.start_time</code> from Dates &amp; weekly buckets: <code>resample("W")</code> labels each week by the Sunday it ends on.'],
+ ex:R`m = mind.assign(date=pd.to_datetime(mind["day"])).set_index("date")
+per_day = m.resample("D").size()          # every calendar day, 0 when you didn't practise
+print(per_day.head(8))
+print("days in range:", len(per_day), "| days without a session:", (per_day == 0).sum())
+print("sessions per day: logged days only", round(mind.groupby("day").size().mean(), 2),
+      "| every day", round(per_day.mean(), 2))`,
+ task:'Rest days per week. Take every calendar day from your first to your last <b>workouts</b> day (both included). A day with at least one workouts row is a training day; any other day is a rest day. Per week (the Monday it starts, as YYYY-MM-DD text): how many training days and rest days. The first and last weeks count only the days inside that range, so they can have fewer than 7; a week inside the range with no workouts at all still gets a row (train_days 0). Columns: <b>week</b>, <b>train_days</b>, <b>rest_days</b>.',
+ start:R`days = pd.to_datetime(workouts["day"]).drop_duplicates()
+cal = pd.DataFrame({"date": pd.date_range(          )})
+cal["train"] =
+cal["week"] =
+result = `,
+ sol:R`days = pd.to_datetime(workouts["day"]).drop_duplicates()
+cal = pd.DataFrame({"date": pd.date_range(days.min(), days.max())})
+cal["train"] = cal["date"].isin(days).astype(int)
+cal["rest"] = 1 - cal["train"]
+cal["week"] = cal["date"].dt.to_period("W").dt.start_time.dt.strftime("%Y-%m-%d")
+result = cal.groupby("week", as_index=False).agg(train_days=("train", "sum"), rest_days=("rest", "sum"))`,
+ hint:'pd.date_range(first day, last day) gives every day; isin(training days) marks the training days; then group by the Monday week key and sum.'},
+{id:'py23',t:'py',lv:4,title:'Rolling windows over time',
+ learn:['A rolling window aggregates each row together with the rows just before it, a moving sum or average that smooths a noisy daily series. <code>s.rolling(7).sum()</code> uses the last 7 <i>rows</i>. <code>df.rolling("7D", on="date")["minutes"].sum()</code> uses the last 7 <i>calendar days</i>: the row’s own day and the 6 days before it.','The two only agree when there is a row for every day. Seven rows of a log with days off can stretch over two weeks, while a time window counts by the calendar, so an empty day simply adds nothing. A time window needs a datetime column, sorted ascending (or a DatetimeIndex); text dates raise a confusing <i>window must be an integer</i> error.','Gotchas: aggregate to one row per day first, or a day with two sessions gives two rows and the first one misses the second’s minutes. Time windows default to <code>min_periods=1</code>, so the first days get a partial window, while <code>rolling(7)</code> stays NaN until 7 rows exist. <code>"7D"</code> on a timestamp like <b>time</b> means 168 hours back from that moment, not 7 calendar days, so roll on the date.'],
+ ex:R`c = checkins.assign(date=pd.to_datetime(checkins["day"])).sort_values("date")
+c["avg_7_rows"] = c["energy"].rolling(7).mean()                # your last 7 check-ins
+c["avg_7_days"] = c.rolling("7D", on="date")["energy"].mean()  # check-ins in the last 7 calendar days
+print(c[["day", "energy", "avg_7_rows", "avg_7_days"]].round(2).tail(10))`,
+ task:'Your rolling mindfulness load. Total the <b>mind</b> minutes per <b>day</b>; then, for each day you practised: <b>day</b>, <b>minutes</b> (that day’s total) and <b>last_7d</b> (total minutes over the 7 calendar days ending that day: the day itself and the 6 before it; days without a session add nothing, and near your first day the window just covers fewer days). Calendar days come from <b>day</b>, not <b>time</b>. Not rounded (whole minutes). Columns: <b>day</b>, <b>minutes</b>, <b>last_7d</b>.',
+ start:R`d = mind.groupby("day", as_index=False)["minutes"].sum()
+d["date"] = pd.to_datetime(d["day"])
+d["last_7d"] =
+result = `,
+ sol:R`d = mind.groupby("day", as_index=False)["minutes"].sum()   # one row per day, in date order
+d["date"] = pd.to_datetime(d["day"])
+d["last_7d"] = d.rolling("7D", on="date")["minutes"].sum()
+result = d[["day", "minutes", "last_7d"]]`,
+ hint:'Use a time window, not a row count: rolling("7D", on="date") over the per-day totals, then sum the minutes.'},
+{id:'py24',t:'py',lv:4,title:'Streaks: runs of consecutive days',
+ learn:['Streaks are a gaps-and-islands problem. Sort the distinct dates and flag each one whose gap to the previous date isn’t exactly 1 day: <code>diff().dt.days.ne(1)</code> (from shift &amp; diff). The <code>cumsum()</code> of those True/False flags (from running totals) counts the run starts so far, so every row of one run shares the same number: a <b>run id</b>. Group by it for the start (min), end (max) and length (size).','The same flag-and-cumsum trick labels runs of anything: <code>s.ne(s.shift()).cumsum()</code> gives a new id each time a value changes, which finds runs of winning trades, losing days or high-energy mornings.','Gotchas: deduplicate days first; two logs on one day give a gap of 0, which breaks the run. Take the gap within each key, <code>groupby("habit")["date"].diff()</code>, so one habit’s run can’t continue into another’s. The first row of each group has a NaN gap; <code>ne(1)</code> is True for NaN, so it correctly starts a run. A run’s length is end - start + 1 days, not end - start.'],
+ ex:R`t = trades.sort_values("id").copy()
+t["result"] = np.where(t["pnl"] > 0, "win", "no win")
+t["run"] = t["result"].ne(t["result"].shift()).cumsum()   # new id whenever the label changes
+runs = t.groupby("run").agg(result=("result", "first"), trades=("id", "size"),
+                            first_day=("day", "min"), pnl=("pnl", "sum"))
+longest = runs.sort_values(["trades", "first_day"], ascending=[False, True]).drop_duplicates("result")
+print(longest)   # your longest run of each kind`,
+ task:'Your good-habit streaks. From the <b>habits</b> rows with event <b>done</b>, find every run of consecutive calendar days on which you did each habit: several logs of one habit on one day count as one day, and a day without it ends the run. One row per run. Columns: <b>habit</b>, <b>start</b> and <b>end</b> (the run’s first and last day, as YYYY-MM-DD text), <b>days</b> (its length in days; a single day is a streak of 1).',
+ start:R`d = habits[habits["event"] == "done"][["habit", "day"]].drop_duplicates().copy()
+d["date"] = pd.to_datetime(d["day"])
+d = d.sort_values(["habit", "date"])
+d["run"] =
+result = `,
+ sol:R`d = habits[habits["event"] == "done"][["habit", "day"]].drop_duplicates().copy()
+d["date"] = pd.to_datetime(d["day"])
+d = d.sort_values(["habit", "date"])
+gap = d.groupby("habit")["date"].diff().dt.days
+d["run"] = gap.ne(1).cumsum()          # a new id at each habit's first day and after every gap
+result = d.groupby(["habit", "run"], as_index=False).agg(start=("day", "min"), end=("day", "max"), days=("day", "size"))
+result = result[["habit", "start", "end", "days"]]`,
+ hint:'Within each habit, a gap that isn’t 1 day starts a new run: gap.ne(1).cumsum() is the run id; then group by habit and run id.'},
 /* ---------- SAS ---------- */
 {id:'sas1',t:'sas',lv:1,title:'The DATA step',
  learn:['SAS works through data one row at a time in a DATA step. DATA names the output, SET reads the input, the statements in between change each row, and RUN executes it.','WHERE filters rows as they are read. KEEP and DROP choose which columns are written. Your app logs are in <b>work.trades</b>, <b>work.workouts</b>, <b>work.mind</b>, <b>work.meals</b>, <b>work.habits</b>, <b>work.checkins</b> and <b>work.study</b>.'],
@@ -1620,7 +2174,7 @@ function render(){
   $('#fTrack').value=S.track;$('#fRange').value=S.range;xfBar();
   const st=stats(),F='';   // the date range is shown once, under the filters, like the other apps
   $('#ctx').textContent=`Statistics for ${S.track==='all'?'All Tracks':TR[S.track].n} — ${S.sel?fdate(S.sel):RL[S.range]} · ${fdate(st.from)} → ${fdate(st.to)}`;
-  const ban=events.length||sessions.length?'':`<div class="card ban"><div><h2 style="margin:0 0 4px;font-size:1.17em">Welcome to LEARN</h2><div class="mu" style="font-size:12px">39 lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
+  const ban=events.length||sessions.length?'':`<div class="card ban"><div><h2 style="margin:0 0 4px;font-size:1.17em">Welcome to LEARN</h2><div class="mu" style="font-size:12px">${LESSONS.length} lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">&#9654; START WITH SQL</button><button class="btn" data-act="open" data-v="py1">&#9654; START WITH PYTHON</button><button class="btn" data-act="catalog">ALL LESSONS</button><button class="btn" data-act="sample">LOAD SAMPLE</button></div></div>`;
   // today and what to learn next don't depend on the filters, so they sit above them (today's numbers are in the hero)
   $('#top').innerHTML=ban+heroToday()+continueHTML();
