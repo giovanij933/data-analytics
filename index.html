@@ -344,7 +344,19 @@ const YTQ={
   py15:'pandas concat stack DataFrames union rows ignore_index',py16:'pandas melt wide to long id_vars value_vars var_name value_name',py17:'pandas str accessor string methods split contains replace',
   py18:'pandas anti join isin merge indicator left_only',py19:'pandas shift diff groupby previous row lag',py20:'pandas groupby transform percent of group total',
   py21:'pandas cumsum cummax running total drawdown equity curve',py22:'pandas date_range reindex fill missing dates resample',py23:'pandas rolling window time based 7D vs rolling 7 rows moving average',
-  py24:'pandas consecutive days streak gaps and islands cumsum diff'};
+  py24:'pandas consecutive days streak gaps and islands cumsum diff',
+  sas9:'SAS LIBNAME statement WORK library permanent data set PROC CONTENTS',sas10:'SAS PROC IMPORT CSV Excel GUESSINGROWS PROC EXPORT',sas11:'SAS DATA step IF THEN ELSE new variable LENGTH statement truncation',
+  sas12:'SAS PROC FREQ one-way frequency table crosstab TABLES statement',sas13:'SAS subsetting IF vs WHERE statement difference DATA step',sas14:'SAS missing values numeric character MISSING function NMISS',
+  sas15:'SAS character functions SUBSTR SCAN CATX tutorial',sas16:'SAS dates INPUT PUT informat format YYMMDD10 DATE9 tutorial',sas17:'SAS RETAIN statement sum statement running total PDV',
+  sas18:'SAS PROC FORMAT VALUE statement ranges user defined formats',sas19:'SAS LAG DIF function previous observation BY group',sas20:'SAS INTNX INTCK functions date intervals week month',
+  sas21:'SAS PROC TRANSPOSE long to wide BY ID VAR',sas22:'SAS arrays DO loop DIM _TEMPORARY_ tutorial',sas23:'SAS PROC SQL INTO macro variable SEPARATED BY CALL SYMPUTX',
+  sas24:'SAS ODS EXCEL multiple sheets sheet_name embedded_titles',
+  tab9:'Tableau discrete vs continuous blue green pills dates',tab10:'Tableau Marks card detail color size level of detail scatter plot',tab11:'Tableau dimension filter vs measure filter all values sum',
+  tab12:'Tableau Measure Names Measure Values tutorial',tab13:'Tableau aggregate vs row level calculated field cannot mix aggregate and non-aggregate arguments',tab14:'Tableau dual axis combo chart bar and line synchronize axis',
+  tab15:'Tableau analytics pane reference line average line trend line describe trend line',tab16:'Tableau dashboard filter action clearing the selection exclude all values highlight action',tab17:'Tableau parameters dynamic measure switcher reference line',
+  tab18:'Tableau data blending primary secondary data source linking fields',tab19:'Tableau LOD expressions INCLUDE EXCLUDE explained',tab20:'Tableau groups vs sets Top N set parameter combined sets',
+  tab21:'Tableau table calculation filter LAST LOOKUP hide marks keep running total',tab22:'Tableau parameter actions set actions dashboard tutorial',tab23:'Tableau performance recording optimize slow dashboard',
+  tab24:'Tableau row level security USERNAME entitlement table data source filter'};
 // a track can follow a YouTube course: its playlist plays in every lesson of the track (a pinned video still wins),
 // starting at the video that covers the lesson where there is one (position in the playlist, counting from 1)
 const COURSE={sql:{list:'PLi01XoE8jYojRqM4qGBF1U90Ee1Ecb5tt',name:'Socratica · SQL',
@@ -1265,12 +1277,98 @@ result = result[["habit", "start", "end", "days"]]`,
   where side = 'Short';
   keep day contract qty pnl;
 run;`,
- quiz:{q:'Which statement controls which <b>columns</b> are written to the output data set?',o:['WHERE','KEEP','SET','RUN'],a:1,why:'KEEP (or DROP) selects variables. WHERE filters rows, SET names the input, RUN executes the step.'},
+ quiz:{q:'Which statement controls which <b>columns</b> are written to the output data set?',o:['KEEP','WHERE','SET','RUN'],a:0,why:'KEEP (or DROP) selects variables. WHERE filters rows, SET names the input, RUN executes the step.'},
  prac:{task:'Write a DATA step that creates <b>slips</b> from work.habits. Keep only the urges you gave in to (event = <b>slipped</b>) and only the columns day, habit, intensity and trigger.',sol:R`data slips;
   set work.habits;
   where event = 'slipped';
   keep day habit intensity trigger;
 run;`}},
+{id:'sas9',t:'sas',lv:1,title:'Libraries: WORK vs permanent',
+ learn:['A <b>libref</b> is a short nickname (up to 8 characters) for a folder of SAS data sets: <code>libname isx "~/isionlogs";</code>. Every data set has a two-level name, <i>library.member</i>, so <b>isx.trades</b> is the file trades.sas7bdat in that folder. A one-level name means WORK: <code>data wins;</code> writes <b>work.wins</b>, and your app logs sit in WORK too (work.trades, work.checkins, …).','WORK is scratch space: SAS deletes it when the session ends, and in SAS Studio that means every sign-out, timeout or <i>Reset SAS Session</i>. Anything you want next week goes to a permanent library: write it there (<code>data isx.wins;</code>) or copy it with a <b>procedure</b> (PROC), one of SAS&rsquo;s built-in tools, run as a PROC step that ends with RUN like a DATA step: <code>proc copy in=work out=isx; select workouts mind; run;</code>. The libref itself only lasts for the session, so the LIBNAME has to run again each time: put it in your autoexec file.','<b>PROC CONTENTS</b> shows what you have: <code>data=isx._all_ nods</code> lists a library&rsquo;s members, and <code>data=isx.trades</code> lists every column with its type (Num or Char), length and format. Run it on any table before you trust a column: in these lessons <b>day</b> and <b>time</b> are Char (10 and 19 long), not SAS dates. Gotcha: LIBNAME does not create the folder. Make it in the Files pane first, or run <code>options dlcreatedir;</code> before the LIBNAME.'],
+ ex:R`/* a permanent library: the folder must already exist */
+libname isx "~/isionlogs";
+
+/* two-level name: saved in ~/isionlogs, still there next session */
+data isx.meals;
+  set work.meals;
+run;
+
+/* one-level name = work.bowls: deleted when you sign out */
+data bowls;
+  set isx.meals;
+  where kind = 'bowl';
+run;
+
+/* the columns of isx.meals, in table order */
+proc contents data=isx.meals varnum;
+run;`,
+ quiz:{q:'You run <code>data wins; set work.trades; where pnl &gt; 0; run;</code> and sign out of SAS Studio. Where is <b>wins</b> when you sign back in?',o:['In your home folder, as wins.sas7bdat','In SASUSER, which keeps your data between sessions','Gone: it was WORK.wins, and WORK is deleted at sign-out','Still in WORK, until you delete it with PROC DATASETS'],a:2,why:'wins has no libref, so SAS writes it to WORK, the scratch library it deletes at the end of every session (sign-out, timeout or Reset SAS Session). Nothing goes to your home folder or to SASUSER unless you name a library that points there. To keep it, assign a permanent libref and write data isx.wins; instead.'},
+ prac:{task:'Make your logs permanent. Assign the libref <b>isx</b> to the folder <b>~/isionlogs</b>, in a way that works even if the folder does not exist yet, and copy <b>work.trades</b> and <b>work.checkins</b> into it. Then run PROC CONTENTS twice: once to list only the library&rsquo;s members (no column details per table), once on <b>isx.trades</b> to read the type and length of <b>day</b> and <b>pnl</b>. Next session, which statement must run again before isx.trades works?',sol:R`options dlcreatedir;          /* lets LIBNAME create ~/isionlogs if it is missing */
+libname isx "~/isionlogs";
+
+proc copy in=work out=isx;
+  select trades checkins;
+run;
+
+/* the members of the library */
+proc contents data=isx._all_ nods;
+run;
+
+/* the columns of isx.trades: day is Char 10, pnl is Num 8 */
+proc contents data=isx.trades;
+run;
+
+/* the same copy with DATA steps:
+   data isx.trades;   set work.trades;   run;
+   data isx.checkins; set work.checkins; run;
+
+   Next session: the LIBNAME. The libref ends with the session,
+   the files in ~/isionlogs do not. */`}},
+{id:'sas10',t:'sas',lv:1,title:'PROC IMPORT: reading CSV & Excel',
+ learn:['<b>PROC IMPORT</b> turns a CSV or Excel file into a SAS data set: <code>proc import datafile="~/isionlogs/meals.csv" out=work.meals_csv dbms=csv replace; getnames=yes; run;</code>. DBMS= names the file type (CSV, TAB or XLSX; a workbook also takes <code>sheet=\'name\';</code>) and GETNAMES=YES takes the column names from the first row. REPLACE overwrites the data set if it exists; without it the log says the import was cancelled and you keep working on the old table.','The gotcha: for a CSV, PROC IMPORT guesses each column&rsquo;s type and length from the first rows only (20 by default in SAS 9.4) and never looks again. A longer text value further down is silently cut short, and a column that looked numeric turns later text into missing values. Add <code>guessingrows=max;</code> to scan the whole file. Dates get a guess too: YYYY-MM-DD text becomes a numeric SAS date with format YYMMDD10. (the dates lesson explains), so check the result with PROC CONTENTS.','<b>PROC EXPORT</b> is the mirror image: <code>proc export data=work.meals outfile="~/isionlogs/meals.csv" dbms=csv replace; run;</code> writes a data set out as CSV (or XLSX), column names in the first row. For a CSV, PROC IMPORT writes a DATA step for you and shows it in the log. When you need full control of types and lengths, copy that step or write your own with <code>infile ... dsd firstobs=2;</code> and INPUT.'],
+ ex:R`/* a workbook: one sheet into one data set */
+proc import datafile="~/isionlogs/study.xlsx"
+            out=work.study_xl
+            dbms=xlsx
+            replace;
+  sheet="study";
+  getnames=yes;
+run;
+
+data sas_only;
+  set work.study_xl;
+  where track = 'SAS';
+run;
+
+/* and back out as a CSV */
+proc export data=sas_only
+            outfile="~/isionlogs/sas_study.csv"
+            dbms=csv
+            replace;
+run;`,
+ quiz:{q:'You import habits.csv with <code>dbms=csv replace; getnames=yes;</code> and no other options. Months later you log a new trigger, <b>Argument with partner</b>, and run the import again. Far down the file, it arrives in SAS as <b>Argument with</b>. Why?',o:["Its length was set from the first 20 rows, whose longest trigger is 'Phone in hand' (13 characters); add GUESSINGROWS=MAX","REPLACE keeps the old table's column lengths, so the new value is cut to fit; delete the table before importing",'The value contains spaces, so it has to be quoted in the CSV, or SAS stops reading at a blank','CSV text columns have a fixed maximum length; save the log as .xlsx and use DBMS=XLSX'],a:0,why:"PROC IMPORT guesses each column's type and length from the rows it scans (20 by default in SAS 9.4) and never looks again. The longest trigger there was 'Phone in hand', so trigger became Char 13 and any longer value is cut to 13 characters with no error. GUESSINGROWS=MAX scans the whole file. REPLACE rewrites the whole table, lengths included; a CSV field ends at a comma, not a blank; and CSV text has no fixed cap."},
+ prac:{task:'Round-trip your REWIRE log. First write <b>work.habits</b> out as <b>~/isionlogs/habits.csv</b> with PROC EXPORT (the folder from the libraries lesson). Then import that file into <b>work.habits_csv</b>: column names from the first row, types and lengths guessed from every row, and overwrite the table if it already exists. Run PROC CONTENTS on it and note the type and length of <b>trigger</b> and the type and format of <b>day</b>. Why is day no longer the Char 10 column it is in work.habits?',sol:R`/* the file: work.habits written out as CSV, names in row 1 */
+proc export data=work.habits
+            outfile="~/isionlogs/habits.csv"
+            dbms=csv
+            replace;
+run;
+
+proc import datafile="~/isionlogs/habits.csv"
+            out=work.habits_csv
+            dbms=csv
+            replace;
+  getnames=yes;
+  guessingrows=max;     /* scan every row, not just the first 20 */
+run;
+
+proc contents data=work.habits_csv varnum;
+run;
+
+/* trigger: Char 13 ('Phone in hand' is the longest trigger)
+   day:     Num 8, format YYMMDD10. The CSV holds day as text like
+            2026-10-01; PROC IMPORT recognised the YYYY-MM-DD pattern
+            and stored a SAS date, which is a number. */`}},
 {id:'sas2',t:'sas',lv:1,title:'PROC SORT & PROC PRINT',
  learn:['Procedures (PROCs) are SAS’s built-in tools. PROC SORT puts rows in order, and many later steps (MERGE, BY-group logic) need sorted input.','OUT= writes a sorted copy and leaves the original alone. NODUPKEY drops rows with a repeated BY value. PROC PRINT with (obs=5) shows the first 5 rows.'],
  ex:R`/* your 5 best trades */
@@ -1284,6 +1382,82 @@ run;`,
  quiz:{q:'What does <b>OUT=</b> do in PROC SORT?',o:['Exports the data to a CSV file','Writes the sorted result to a new data set, leaving the input unchanged','Removes duplicate rows','Prints the output'],a:1,why:'Without OUT=, PROC SORT replaces the input data set with its sorted version.'},
  prac:{task:'Sort work.workouts by exercise, then by day, into <b>wk_sorted</b>, so each exercise’s history reads in date order.',sol:R`proc sort data=work.workouts out=wk_sorted;
   by exercise day;
+run;`}},
+{id:'sas11',t:'sas',lv:1,title:'New columns with IF-THEN/ELSE',
+ learn:['An assignment statement makes a new column, computed row by row: <code>hours = minutes / 60;</code>. <b>IF-THEN / ELSE IF / ELSE</b> picks one value per row, and <code>then do; ... end;</code> runs several statements under one condition. SAS tests the conditions top to bottom and stops at the first true one, so the order matters: after <code>if sleep &lt; 7 then ...</code>, a later <code>else if sleep &lt; 6</code> can never fire.',"The gotcha: SAS sets a new character column&rsquo;s length once, when it compiles the step, from the first place the column appears in your code. If that is <code>result = 'win';</code>, result is 3 characters long, so 'loss' is stored as 'los' and 'flat' as 'fla', with no error or warning. Declare it before the IFs: <code>length result $ 4;</code> (the $ means text, and 4 fits the longest label).","<code>round(x, 0.01)</code> rounds to 2 decimals: the second argument is the unit to round to, so <code>round(x, 2)</code> gives the nearest multiple of 2, not 2 decimals. Text comparisons are case-sensitive (<code>side = 'long'</code> matches nothing). Conditions combine with AND and OR, and IN tests a list: <code>if contract in ('NQZ6', 'ESZ6') then ...</code>."],
+ ex:R`/* label each night by how long you slept */
+data nights;
+  set work.checkins;
+  length night $ 6;               /* longest label: 'rested' */
+  if sleep < 6 then do;           /* two statements, one condition */
+    night = 'short';
+    debt = 7.5 - sleep;           /* hours under a 7.5-hour night (missing on other nights) */
+  end;
+  else if sleep < 7.5 then night = 'ok';
+  else night = 'rested';
+  sleep_min = sleep * 60;
+  keep day sleep energy night debt sleep_min;
+run;`,
+ quiz:{q:"<code>if pnl &gt; 0 then result = 'win'; else if pnl &lt; 0 then result = 'loss'; else result = 'flat';</code> runs on work.trades with no LENGTH statement. What is stored in <b>result</b> for a losing trade?",o:["'loss'",'A blank (missing) value',"Nothing: the step stops with an error because 'loss' does not fit","'los'"],a:3,why:"SAS fixes a new character column's length at compile time, from the first place it appears: result = 'win' gives length 3. Every later value is cut to 3 characters with no error or warning, so losses read 'los' and break-evens 'fla'. length result $ 4; before the IFs fixes it."},
+ prac:{task:"Label every trade. Create <b>trade_labels</b> from work.trades with <b>result</b> = 'win' when pnl &gt; 0, 'loss' when pnl &lt; 0 and 'flat' otherwise (stored in full, not cut short), and <b>hours</b> = minutes / 60, stored rounded to 2 decimals with ROUND (not just displayed with a format). Keep id, day, contract, side, pnl, result and hours, in any order. Then print the first 10 rows to check that the losses read 'loss'.",sol:R`data trade_labels;
+  set work.trades;
+  length result $ 4;              /* before the IFs, or 'loss' is cut to 'los' */
+  if pnl > 0 then result = 'win';
+  else if pnl < 0 then result = 'loss';
+  else result = 'flat';           /* pnl = 0: break-even */
+  hours = round(minutes / 60, 0.01);
+  keep id day contract side pnl result hours;
+run;
+
+proc print data=trade_labels(obs=10);
+run;`}},
+{id:'sas12',t:'sas',lv:1,title:'PROC FREQ: counts & crosstabs',
+ learn:['<b>PROC FREQ</b> counts rows per value. <code>tables trigger;</code> prints a one-way table: Frequency, Percent, Cumulative Frequency and Cumulative Percent for each trigger, sorted by value. <code>order=freq</code> on the PROC statement lists the most frequent values first. A WHERE statement filters the rows before they are counted, for every table in the step, and <code>/ out=name</code> on the TABLES statement saves the counts as a data set (the value, COUNT and PERCENT).','An asterisk makes a crosstab: <code>tables habit*event;</code> puts habit down the side and event across the top, and each cell shows its count plus the percent of all rows, the row percent and the column percent. <code>/ norow nocol nopercent</code> leaves just the counts. Gotcha: <code>tables habit event;</code> with a space is not a crosstab: it asks for two separate one-way tables.','Missing values are left out. The <i>done</i> rows in <b>work.habits</b> have no trigger, so <code>tables trigger;</code> counts only your urges, its percents are shares of the urges, and the done rows appear as one line under the table: Frequency Missing (the missing-values lesson shows how to count them). Run PROC FREQ first on any new table: typos, odd codes and gaps show up at once.'],
+ ex:R`/* losing trades: which contracts, and Long vs Short within each */
+proc freq data=work.trades order=freq;
+  where pnl < 0;
+  tables contract / out=loser_counts;       /* one-way, counts saved */
+  tables contract*side / nocol nopercent;   /* crosstab: count + row % */
+run;`,
+ quiz:{q:'What does <code>proc freq data=work.habits; tables habit event; run;</code> produce?',o:['A crosstab of habit by event','One table that lists each habit-event pair with its count','Two separate one-way tables: one for habit, one for event','An error: two variables need an asterisk between them'],a:2,why:'A space separates two requests, so you get a one-way table of habit and another one of event. habit*event makes the crosstab, and habit*event / list prints the pairs as rows. Listing several variables is valid, so there is no error.'},
+ prac:{task:'Practice on <b>work.habits</b>. (1) Check how the log is coded: a crosstab of <b>habit</b> by <b>event</b> over all rows, showing counts only. Each urge habit should only get resisted or slipped, and each good habit only done. (2) Which triggers bring your strongest urges? A one-way table of <b>trigger</b> for the urges (event resisted or slipped) with <b>intensity</b> 7 or more, most frequent first, with the counts saved to <b>strong_triggers</b>.',sol:R`/* (1) every row: habit down the side, event across, counts only */
+proc freq data=work.habits;
+  tables habit*event / norow nocol nopercent;
+run;
+
+/* (2) strong urges only, most frequent trigger first, counts saved.
+   A separate step: a WHERE applies to every table in its step */
+proc freq data=work.habits order=freq;
+  where event in ('resisted', 'slipped') and intensity >= 7;
+  tables trigger / out=strong_triggers;   /* trigger, COUNT, PERCENT */
+run;`}},
+{id:'sas13',t:'sas',lv:2,title:'Subsetting IF vs WHERE',
+ learn:["A DATA step can drop rows in two ways. <b>WHERE</b> filters rows <i>as they are read</i>: a row of <b>work.trades</b> that fails never enters the step, which is why it is fast on big tables, and it works in PROC steps too (<code>proc print; where side = 'Short';</code>). A <b>subsetting IF</b> is an IF with no THEN, such as <code>if hours &gt; 0.5;</code>. When it is false, SAS stops working on that row and goes back to the top of the step, so the row is not written.",'The catch: WHERE only sees columns already in the input data set. A column computed in the step (<code>hours = minutes / 60;</code>) does not exist yet when WHERE runs, so <code>where hours &gt; 0.5;</code> stops the step with <i>ERROR: Variable hours is not on file WORK.TRADES.</i> An expression on input columns is fine (<code>where minutes / 60 &gt; 0.5;</code>). Anything made inside the step needs IF: computed columns, the IN= flags of a MERGE (end of this level) and FIRST./LAST. (next level).',"Rule of thumb: WHERE for input columns (early and cheap), IF for anything computed. It is the same idea as WHERE vs HAVING in SQL: the difference is <i>when</i> the filter runs. Gotchas: a subsetting IF only sees what was computed <i>above</i> it, so put it after the assignment (above it, hours is still missing and every row is dropped). A subsetting IF is not allowed in a PROC step. WHERE has operators IF lacks: <code>between 10 and 30</code>, <code>like 'NQ%'</code>, <code>is missing</code>."],
+ ex:R`/* your big-volume sets: WHERE on an input column, IF on a computed one */
+data big_sets;
+  set work.workouts;
+  where type = 'Weighted';        /* input column: filtered as rows are read */
+  volume = sets * reps * load;
+  if volume >= 3000;              /* computed in the step: only IF can see it */
+  keep day exercise sets reps load volume;
+run;
+
+/* WHERE also works in a PROC step; a subsetting IF does not */
+proc print data=work.workouts;
+  where type = 'Cardio';
+  var day exercise distance minutes;
+run;`,
+ quiz:{q:'In a DATA step on <b>work.trades</b> you compute <code>hours = minutes / 60;</code> and then write <code>where hours &gt; 0.5;</code>. What happens?',o:['It keeps the trades held over 30 minutes, just like if hours > 0.5;','The WHERE is skipped with a WARNING, and every row is written','No rows are written, because hours is still missing when WHERE tests it','The step stops with ERROR: Variable hours is not on file WORK.TRADES.'],a:3,why:'WHERE filters rows as they are read from WORK.TRADES, before any statement in the step runs, so it can only name columns that data set already has. hours is created inside the step, so SAS stops with that error and writes nothing. Use a subsetting IF after the assignment (if hours > 0.5;) or test the input column (where minutes > 30;).'},
+ prac:{task:'Your patient winners. Create <b>long_wins</b> from work.trades with the winning trades (<b>pnl &gt; 0</b>, filtered with WHERE) that you held for more than half an hour: compute <b>hours = minutes / 60</b> (not rounded) in the step and filter it with a subsetting IF. Keep day, contract, side, hours and pnl. Then list only the Short ones from long_wins with PROC PRINT.',sol:R`data long_wins;
+  set work.trades;
+  where pnl > 0;            /* input column: filtered as rows are read */
+  hours = minutes / 60;
+  if hours > 0.5;           /* computed column: subsetting IF, after the assignment */
+  keep day contract side hours pnl;
+run;
+
+proc print data=long_wins;
+  where side = 'Short';     /* in a PROC step only WHERE works */
 run;`}},
 {id:'sas3',t:'sas',lv:2,title:'PROC SQL',
  learn:['PROC SQL lets you write (mostly ANSI) SQL inside SAS, so the GROUP BY and joins from the SQL track carry over. CREATE TABLE ... AS saves the result as a data set.','You can add SAS formats inline (format=dollar12.2). PROC SQL runs each statement right away and ends with QUIT, not RUN.'],
@@ -1306,6 +1480,109 @@ quit;`,
   from work.mind
   group by practice;
 quit;`}},
+{id:'sas14',t:'sas',lv:2,title:'Missing values in SAS',
+ learn:['A missing number is a period (<b>.</b>) and a missing character value is a blank. In <b>work.habits</b> the <i>done</i> rows have no intensity and no trigger. The rule to remember: SAS treats a missing number as <b>smaller than any number</b>. It sorts first, and <code>intensity &lt; 5</code> is <i>true</i> when intensity is missing, so <code>where intensity &lt; 5;</code> quietly keeps every done row as well.','PROC SQL in SAS compares missing values the same way: it does not use the NULL logic of the SQL track. Guard the filter: <code>where intensity is not missing and intensity &lt; 5;</code>, or in an IF, <code>if . &lt; intensity &lt; 5;</code>. MISSING(x) works for numbers and text. PROC FREQ leaves missing values out of the table and the percents (it prints Frequency Missing under it) unless you add <code>/ missing</code> to the TABLES statement.','Arithmetic spreads missing: <code>mood_after - mood_before</code> is . when either is missing, and the log says <i>NOTE: Missing values were generated as a result of performing an operation on missing values.</i> Functions skip it: SUM() and MEAN() use only the values present (if all are missing the result is .), N() counts the values present and NMISS() the missing ones. In PROC SQL, AVG and COUNT(col) skip missing values; COUNT(*) counts every row.'],
+ ex:R`/* did each session lift your mood? (moods are missing when you skipped rating) */
+data mood_lift;
+  set work.mind;
+  lift     = mood_after - mood_before;           /* . if either is missing: NOTE in the log */
+  avg_mood = mean(mood_before, mood_after);      /* averages whichever were rated */
+  skipped  = nmiss(mood_before, mood_after, depth);   /* 0 to 3 scores left blank */
+  dipped   = (. < lift < 0);   /* 1 if the mood dropped; lift < 0 alone would flag missing lifts */
+  keep day practice mood_before mood_after depth lift avg_mood skipped dipped;
+run;
+
+proc sql;
+  select practice,
+         count(*)    as sessions,
+         count(lift) as with_lift,              /* missing lifts are not counted... */
+         avg(lift)   as avg_lift format=5.2     /* ...and not averaged as 0 */
+  from mood_lift
+  group by practice;
+quit;`,
+ quiz:{q:'In <b>work.habits</b> the done rows have no intensity. Which is true of <code>where intensity &lt; 5;</code>?',o:['It keeps the urges rated under 5 and every done row, in a DATA step and in PROC SQL alike','It keeps only the urges rated under 5, because a comparison with a missing value is never true','A DATA step keeps the done rows, but PROC SQL drops them, as standard SQL does with NULL','It stops with an error, because some rows have no intensity'],a:0,why:'SAS treats a missing number as smaller than any number, so . < 5 is true and every done row passes the filter. PROC SQL in SAS follows the same rule, not ANSI NULL logic. Guard it: where intensity is not missing and intensity < 5; (or if . < intensity < 5;).'},
+ prac:{task:'Your mild urges. (1) Run <code>data test; set work.habits; where intensity &lt; 5; run;</code> and note in the log how many rows it wrote. (2) Create <b>mild_urges</b> from work.habits with the rows whose intensity is under 5, written so that the done rows (intensity is .) cannot get in. Keep day, habit, event, intensity and trigger, and compare its row count with (1). (3) Run PROC FREQ on work.habits for intensity so the done rows show up as their own level, counted in the percents.',sol:R`/* (1) the trap: done rows (intensity = .) count as "under 5" */
+data test;
+  set work.habits;
+  where intensity < 5;
+run;
+
+/* (2) rated rows only */
+data mild_urges;
+  set work.habits;
+  where intensity is not missing and intensity < 5;   /* or: if . < intensity < 5; */
+  keep day habit event intensity trigger;
+run;
+
+/* (3) missing as its own level */
+proc freq data=work.habits;
+  tables intensity / missing;
+run;`}},
+{id:'sas15',t:'sas',lv:2,title:'Character functions: SUBSTR, SCAN, CATX',
+ learn:["Codes often pack several facts into one string. Your contracts are root + month code + year digit: <b>NQZ6</b> is NQ, Z (December), 6 (2026). <code>substr(s, start, len)</code> cuts by position, <code>scan(s, n, ' ')</code> takes the nth word (a negative n counts from the right) and <code>length(s)</code> gives the length without trailing blanks. So <code>substr(contract, 1, length(contract) - 2)</code> is the root for NQZ6 and for a 3-letter root like MNQZ6.","To build text, <code>catx('-', root, side)</code> strips the blanks around each piece and joins them with the separator: 'NQ-Long'. STRIP removes leading and trailing blanks, UPCASE, LOWCASE and PROPCASE change case, and <code>find(s, 'x')</code> returns the position where the text starts (0 if it is not there).","Gotchas: without a third argument SCAN splits at a whole set of default delimiters, not just blanks (the period, hyphen, slash and comma among them), so <code>scan('Box 4-4-4-4', 2)</code> is '4'. Pass ' ' to split on blanks only. SAS text columns are fixed-length and padded with blanks: a new column from SUBSTR gets the full length of contract, so <code>root || '-' || side</code> can come out as 'NQ&nbsp;&nbsp;-Long'. CATX (or STRIP) avoids that, and LENGTH sets the size (as in the IF-THEN lesson)."],
+ ex:R`/* name your mind techniques by their first word */
+data techniques;
+  set work.mind;
+  length first_word last_word $ 20 tag $ 40;
+  first_word = scan(technique, 1, ' ');    /* Box, Resonance, Single-point */
+  last_word  = scan(technique, -1, ' ');   /* 4-4-4-4, 5.5, sigh */
+  tag = catx(' / ', upcase(practice), first_word);   /* BREATHWORK / Box */
+  keep practice technique first_word last_word tag;
+run;
+
+proc freq data=techniques order=freq;
+  tables tag;
+run;`,
+ quiz:{q:"What does <code>scan('Resonance 5.5', 2)</code> return?",o:["'5.5', the second blank-separated word","'esonance 5.5', everything from position 2 on",'A blank, because without a delimiter argument SCAN splits only at commas',"'5', because the period is a delimiter too"],a:3,why:"With no third argument SCAN uses a set of default delimiters that includes the blank, the period, the hyphen, the comma and the slash, so the words of 'Resonance 5.5' are 'Resonance', '5' and '5'. scan(technique, 2, ' ') splits at blanks only and returns '5.5'. Counting characters from a position is what SUBSTR does."},
+ prac:{task:'Which setups do you trade most? From work.trades create <b>contracts</b> with <b>root</b> (the contract without its last 2 characters, e.g. NQ), <b>month_code</b> (the second-to-last character, e.g. Z) and <b>setup</b> (root and side joined by a hyphen with no blanks, e.g. NQ-Long). Cut with the LENGTH function, so a 3-letter root such as MNQ would work too, and declare the three new columns with a LENGTH statement, long enough for a 4-letter root. Keep id, day, contract, side, pnl and the three new columns. Then run PROC FREQ on setup, most frequent first.',sol:R`data contracts;
+  set work.trades;
+  length root $ 4 month_code $ 1 setup $ 12;   /* any lengths that fit: setup needs root + 1 + 5 */
+  root       = substr(contract, 1, length(contract) - 2);   /* NQZ6 -> NQ */
+  month_code = substr(contract, length(contract) - 1, 1);   /* NQZ6 -> Z (December) */
+  setup      = catx('-', root, side);                       /* NQ-Long, no padding */
+  keep id day contract side pnl root month_code setup;
+run;
+
+proc freq data=contracts order=freq;
+  tables setup;
+run;`}},
+{id:'sas16',t:'sas',lv:2,title:'SAS dates: INPUT and formats',
+ learn:['A SAS date is a <b>number</b>: the days since 1 January 1960, so 1 Oct 2026 is 24380. A <b>format</b> only changes how that number is shown (DATE9. shows 01OCT2026, YYMMDD10. shows 2026-10-01 and WEEKDATE. shows Thursday, October 1, 2026), never the value. Because it is a number, dates sort and compare correctly, and <code>d2 - d1</code> is the number of days between them.',"In these lessons <b>day</b> is text, Char 10 in 'YYYY-MM-DD' form (PROC CONTENTS shows it; a PROC IMPORT would already have made it a date). Convert it with an <b>informat</b>, <code>d = input(day, yymmdd10.);</code>, and give it a format, <code>format d date9.;</code>. Then the date functions work: YEAR(d), MONTH(d), WEEKDAY(d) (1 = Sunday … 7 = Saturday), and a date literal such as <code>'01OCT2026'd</code> for comparisons.","Gotchas: <b>INPUT</b> reads text into a number with an informat, and <b>PUT</b> writes a value out as text with a format (<code>put(d, downame.)</code> gives the day name, padded, so wrap it in STRIP). Mixing them up is the classic interview question. Without a FORMAT a date prints as 24380. And text cannot be compared with a date: <code>where day &gt;= '01OCT2026'd;</code> stops with <i>ERROR: WHERE clause operator requires compatible variables.</i>"],
+ ex:R`/* your nights since 1 September, averaged by month */
+data nights;
+  set work.checkins;
+  d = input(day, yymmdd10.);     /* text 'YYYY-MM-DD' -> days since 1 Jan 1960 */
+  format d date9.;               /* display only: 14SEP2026 */
+  if d >= '01SEP2026'd;          /* d is computed in the step, so IF, not WHERE */
+  month = month(d);              /* 9, 10 */
+  mon   = put(d, monyy7.);       /* PUT: number -> text, SEP2026 */
+run;
+
+proc sql;
+  select month, mon, count(*) as nights, avg(sleep) as avg_sleep format=4.1
+  from nights
+  group by month, mon
+  order by month;
+quit;`,
+ quiz:{q:"<code>d = input('2026-10-01', yymmdd10.);</code> with no FORMAT statement. What is stored in d, and what does PROC PRINT show?",o:['The number 24380, shown as 2026-10-01 because the informat also sets the display','The number 24380, shown as 24380','The text 2026-10-01, because INPUT reads text and keeps it as text','The number 24380, shown as 01OCT2026, the default look of a date'],a:1,why:'INPUT with the YYMMDD10. informat turns the text into a SAS date: the number of days since 1 January 1960, which is 24380 for 1 Oct 2026. An informat only controls how text is read and attaches no format, so PROC PRINT shows the plain number until you add format d date9.; (or yymmdd10.).'},
+ prac:{task:"Which weekday makes you money? Create <b>trade_days</b> from work.trades with <b>d</b> (day, the text 'YYYY-MM-DD', as a SAS date with format DATE9.), <b>dow</b> (its WEEKDAY number, 1 = Sunday) and <b>dayname</b> (the day&rsquo;s name as text without padding, e.g. Monday); keep id, day, d, dow, dayname, contract and pnl. Then with PROC SQL create <b>weekday_pnl</b>: per dow and dayname, <b>trades</b> (count) and <b>net</b> (sum of pnl), ordered by dow so Monday comes before Tuesday (sorting by name would put Friday first).",sol:R`data trade_days;
+  set work.trades;
+  d = input(day, yymmdd10.);           /* text -> SAS date */
+  format d date9.;
+  dow = weekday(d);                    /* 1 = Sunday ... 7 = Saturday */
+  dayname = strip(put(d, downame.));   /* number -> text, padding removed */
+  keep id day d dow dayname contract pnl;
+run;
+
+proc sql;
+  create table weekday_pnl as
+  select dow, dayname,
+         count(*) as trades,
+         sum(pnl) as net format=dollar12.2
+  from trade_days
+  group by dow, dayname
+  order by dow;
+quit;`}},
 {id:'sas4',t:'sas',lv:2,title:'MERGE with BY and IN=',
  learn:['A DATA-step MERGE joins data sets on a shared BY variable. Your logs share <b>day</b>, so day is the key. IN= makes temporary flags that tell you which input gave each row.','if a and not b; keeps rows only in a (an anti-join). if a and b; is an inner join. With no condition you get a full outer join. Many trades can merge onto one check-in per day: that is a one-to-many merge.'],
  ex:R`/* days you checked in but did not train */
@@ -1317,11 +1594,52 @@ data rest_days;
   by day;
   if in_c and not in_w;
 run;`,
- quiz:{q:'Before a DATA-step MERGE with BY, both inputs must be…',o:['Indexed or sorted by the BY variable','Exported to CSV','The same number of rows','Created with PROC SQL'],a:0,why:'MERGE walks both tables in BY order, so they must be sorted (or indexed) by the BY variable. Otherwise SAS stops with an error.'},
+ quiz:{q:'Before a DATA-step MERGE with BY, both inputs must be…',o:['Created with PROC SQL','Exported to CSV','The same number of rows','Indexed or sorted by the BY variable'],a:3,why:'MERGE walks both tables in BY order, so they must be sorted (or indexed) by the BY variable. Otherwise SAS stops with an error.'},
  prac:{task:'Data sets <b>t</b> (work.trades sorted by day) and <b>c</b> (work.checkins sorted by day) exist. Merge them by day into <b>trades_sleep</b>, keeping only trades that have a check-in that day, so each trade carries that morning’s sleep and energy.',sol:R`data trades_sleep;
   merge t(in=in_t) c(in=in_c);
   by day;
   if in_t and in_c;
+run;`}},
+{id:'sas17',t:'sas',lv:3,title:'RETAIN and the sum statement',
+ learn:['A DATA step runs its statements once per row, building each row in the <b>program data vector</b> (PDV). At the top of every iteration SAS sets each column you compute back to missing. So a counter written <code>n = n + 1;</code> is missing on every row: n starts at ., and missing plus anything is missing (the missing-values lesson). <b>RETAIN</b> stops that reset: <code>retain peak 0;</code> keeps peak from one row to the next and starts it at 0. Without a starting value it starts missing.','The <b>sum statement</b>, <code>equity + pnl;</code> with no equals sign, is the shortcut for a running total: equity is retained automatically, starts at 0, and a missing pnl adds 0 instead of wiping the total. <code>n + 1;</code> is the counter that works (the FIRST./LAST. lesson later in this level uses it). Columns read by SET are retained too, but the next row read overwrites them, so RETAIN on an input column changes nothing. To carry a value past the rows where it is missing, copy it into a new retained column.',"Gotchas: a running total follows the row order, so sort first (<b>closed</b> is 'YYYY-MM-DD HH:MM:SS' text, which sorts in time order). <code>retain total 0; total = total + pnl;</code> works until one pnl is missing; from then on every total is missing. The sum statement, or <code>total = sum(total, pnl);</code>, carries on. A running maximum is RETAIN plus MAX, which skips missing values: <code>peak = max(peak, equity);</code>."],
+ ex:R`/* carry your last weigh-in forward over the mornings you skipped the scale */
+proc sort data=work.checkins out=c;
+  by day;
+run;
+
+data weigh;
+  set c;
+  retain last_weight;            /* not reset to . at the top of each row; starts missing */
+  if not missing(weight) then do;
+    last_weight = weight;        /* only updated on mornings you weighed in */
+    weigh_ins + 1;               /* sum statement: a counter that starts at 0 */
+  end;
+  keep day weight last_weight weigh_ins;
+run;
+
+/* without the RETAIN, last_weight would be . on every skipped morning */
+proc print data=weigh(obs=10);
+run;`,
+ quiz:{q:'<b>t</b> is work.trades sorted by closed; it has no column called total. <code>data eq; set t; total = total + pnl; run;</code> has no RETAIN. What ends up in <b>total</b>?',o:['A running total of pnl, row by row','Missing on every row','The same value as pnl, because the missing total counts as 0','Nothing: the step stops with an error because total is used before it has a value'],a:1,why:'total is created by an assignment, so SAS sets it back to missing at the top of every iteration. Missing plus pnl is missing (the log says Missing values were generated), so every row gets a missing total. SAS does not stop over a variable without a value; it uses missing. retain total 0; with total = sum(total, pnl); or the sum statement total + pnl; gives the running total.'},
+ prac:{task:'Your equity curve and drawdowns. Sort work.trades by <b>closed</b> and <b>id</b>, then create the data set <b>equity</b> with three new columns: <b>equity</b> (the running total of pnl, with a sum statement), <b>peak</b> (the highest equity so far, this row included, starting at 0, with RETAIN and MAX) and <b>drawdown</b> (equity - peak: 0 at a new high, negative below it). Keep id, day, contract, pnl, equity, peak and drawdown. Then print the one trade where your worst drawdown was first reached: the lowest drawdown and, on a tie, the lowest id (ids follow time order).',sol:R`proc sort data=work.trades out=t;
+  by closed id;                 /* the running total follows this order */
+run;
+
+data equity;
+  set t;
+  equity + pnl;                 /* sum statement: retained, starts at 0 */
+  retain peak 0;                /* starts at 0, your starting balance */
+  peak = max(peak, equity);     /* highest equity so far */
+  drawdown = equity - peak;     /* 0 at a new high, negative below it */
+  keep id day contract pnl equity peak drawdown;
+run;
+
+/* worst drawdown first; on a tie, the earliest trade */
+proc sort data=equity out=dd;
+  by drawdown id;
+run;
+
+proc print data=dd(obs=1);
 run;`}},
 {id:'sas5',t:'sas',lv:3,title:'PROC MEANS / SUMMARY',
  learn:['PROC MEANS computes statistics by group. CLASS sets the groups (no sorting needed), VAR the measures, and OUTPUT OUT= writes the results to a data set.','NWAY keeps only the full CLASS combination and drops the overall-total row SAS adds by default (_TYPE_=0). NOPRINT turns off the printed report.'],
@@ -1332,13 +1650,67 @@ proc means data=work.trades noprint nway;
   output out=side_stats(drop=_type_ _freq_)
          sum=net mean=avg_pnl n=trades;
 run;`,
- quiz:{q:'What does <b>NWAY</b> do in PROC MEANS?',o:['Uses n-way parallel processing','Keeps only the highest-level combination of CLASS variables in the output','Removes missing values','Sorts the output'],a:1,why:'Without NWAY, OUTPUT includes every subtotal level, including a grand total row (_TYPE_=0).'},
+ quiz:{q:'What does <b>NWAY</b> do in PROC MEANS?',o:['Keeps only the highest-level combination of CLASS variables in the output','Uses n-way parallel processing','Removes missing values','Sorts the output'],a:0,why:'Without NWAY, OUTPUT includes every subtotal level, including a grand total row (_TYPE_=0).'},
  prac:{task:'Get the min, max and mean kcal for each meal kind (bowl / snack) from work.meals into <b>kcal_stats</b>.',sol:R`proc means data=work.meals noprint nway;
   class kind;
   var kcal;
   output out=kcal_stats(drop=_type_ _freq_)
          min=min_kcal max=max_kcal mean=avg_kcal;
 run;`}},
+{id:'sas18',t:'sas',lv:3,title:'PROC FORMAT: your own buckets',
+ learn:["PROC FORMAT&rsquo;s <b>VALUE</b> statement defines your own format: a label for each value or range. <code>value holdf low-&lt;10 = 'under 10m' 10-&lt;30 = '10-30m' 30-high = '30m+';</code> buckets minutes held. The &lt; leaves that end out of the range, LOW and HIGH are the open ends, and OTHER catches anything not listed. A character format&rsquo;s name starts with $ and its values are quoted. Apply it like a built-in one, name plus period: <code>format minutes holdf.;</code>.",'A format changes only how a value <b>looks</b>: a trade held 12.35 minutes shows as 10-30m but still stores 12.35. The payoff is that <b>PROC FREQ</b> and the <b>CLASS</b> statement of PROC MEANS group rows by the formatted value, so <code>tables minutes; format minutes holdf.;</code> counts three buckets without creating a column. A FORMAT statement in a PROC lasts for that step; in a DATA step it is saved with the column, so every later PROC shows the labels.',"Gotchas: filters still test the raw value, so it is <code>where minutes &lt; 10;</code>, never 'under 10m'. PROC SQL&rsquo;s GROUP BY uses raw values too (there a format only changes the display), so group by <code>put(minutes, holdf.)</code>. Ranges that overlap, like <code>10-30</code> and <code>30-high</code> (both hold 30), stop PROC FORMAT with an error: that is what the &lt; is for. A format name cannot end in a digit, and formats are stored in WORK, so rerun PROC FORMAT each session."],
+ ex:R`/* urges by strength, and urges vs good habits, without a new column */
+proc format;
+  value intf  low-<4 = 'mild'
+              4-<7   = 'medium'
+              7-high = 'strong';
+  value $evf  'resisted', 'slipped' = 'urge'
+              'done'                = 'good habit';
+run;
+
+proc freq data=work.habits;
+  tables event intensity;          /* grouped by the labels */
+  format event $evf. intensity intf.;
+run;
+
+/* the filter tests the raw number; the format only changes the display */
+proc print data=work.habits(obs=10);
+  where intensity >= 7;
+  var day habit intensity trigger;
+  format intensity intf.;
+run;`,
+ quiz:{q:'With holdf. defined as above, a trade was held 7.61 minutes. After <code>data t2; set work.trades; format minutes holdf.; run;</code>, what does t2 store in <b>minutes</b> for it?',o:["The text 'under 10m'; minutes becomes a character column",'1, the number of the range it falls in','No t2 is created: a FORMAT statement only works in PROC steps','7.61; only its display becomes under 10m'],a:3,why:'A format never changes the stored value; it only controls how the value is shown. t2 keeps the number 7.61, and because the FORMAT statement ran in a DATA step, holdf. is saved with the column, so PROC PRINT shows under 10m. A WHERE on t2 still tests the number (where minutes < 10). FORMAT statements work in DATA and PROC steps alike.'},
+ prac:{task:'Do quick scalps or longer holds pay? Define a format <b>heldf.</b> for minutes held with four labels: <b>under 5m</b>, <b>5-15m</b> (5 to under 15), <b>15-30m</b> (15 to under 30) and <b>30m+</b> (30 or more). (1) Count your trades per bucket with PROC FREQ, without creating a new column. (2) With PROC MEANS create <b>hold_pnl</b>, one row per bucket: minutes (the bucket), <b>trades</b> (N), <b>net</b> (sum of pnl) and <b>avg_pnl</b> (mean pnl), without _TYPE_ and _FREQ_. (3) With PROC SQL, print <b>hold</b> (the label), trades, net and avg_pnl: 4 rows, not one per distinct minutes value.',sol:R`proc format;
+  value heldf low-<5  = 'under 5m'
+              5-<15   = '5-15m'
+              15-<30  = '15-30m'
+              30-high = '30m+';
+run;
+
+/* (1) PROC FREQ groups by the formatted value */
+proc freq data=work.trades;
+  tables minutes;
+  format minutes heldf.;
+run;
+
+/* (2) so does CLASS in PROC MEANS */
+proc means data=work.trades noprint nway;
+  class minutes;
+  format minutes heldf.;
+  var pnl;
+  output out=hold_pnl(drop=_type_ _freq_)
+         n=trades sum=net mean=avg_pnl;
+run;
+
+/* (3) PROC SQL groups raw values, so group by the label itself */
+proc sql;
+  select put(minutes, heldf.) as hold,
+         count(*) as trades,
+         sum(pnl) as net,
+         avg(pnl) as avg_pnl format=8.2
+  from work.trades
+  group by put(minutes, heldf.);
+quit;`}},
 {id:'sas6',t:'sas',lv:3,title:'FIRST. and LAST.: BY-group logic',
  learn:['With BY in a DATA step, SAS creates FIRST.var and LAST.var flags (1 or 0) that mark the first and last row of each group.','They drive dedup (“keep the latest per key”), running counts per group and group-level resets: jobs SQL does with window functions.'],
  ex:R`/* the latest set you logged for each exercise */
@@ -1360,6 +1732,146 @@ run;`,
   if last.habit;
   keep habit n;
 run;`}},
+{id:'sas19',t:'sas',lv:3,title:'LAG and DIF: the previous row',
+ learn:['<code>lag(x)</code> returns the value x had the <b>previous time that LAG call ran</b>. On a plain SET that is the row read before, so <code>prev_load = lag(load);</code> puts the previous row&rsquo;s load beside this one (missing on the first row). <code>dif(x)</code> is <code>x - lag(x)</code>, the change since then, and <code>lag2(x)</code> looks two calls back. "Previous" only means the row read before, so sort first.',"LAG is a <b>queue</b>, not a pointer to the row above: each time the call runs, it hands back the value it stored last time and stores the current one. Inside IF-THEN it only runs when the condition is true, so <code>if side = 'Long' then prev = lag(pnl);</code> returns the pnl of the last Long trade, however far back, not of the trade before. Never put LAG (or DIF) under a condition: compute it on every row, then use the result in conditions.",'BY groups do not reset the queue either. On trades sorted by contract and closed, with <code>by contract;</code>, the first trade of a contract gets the last pnl of the contract before. Reset it after the lag: <code>prev_pnl = lag(pnl); if first.contract then prev_pnl = .;</code>. Writing <code>if not first.contract then prev_pnl = lag(pnl);</code> is the conditional trap again: on a contract&rsquo;s second trade the queue still holds the last pnl it saw, from the contract before.'],
+ ex:R`/* how did your energy change from one check-in to the next? */
+proc sort data=work.checkins out=c;
+  by day;
+run;
+
+data energy_change;
+  set c;
+  prev_energy = lag(energy);       /* the check-in before; . on the first row */
+  change      = dif(energy);       /* energy - lag(energy) */
+  two_back    = lag2(energy);      /* two check-ins back */
+  dropped     = (. < change < 0);  /* use the lag in a condition, never the reverse */
+  keep day energy prev_energy change two_back dropped;
+run;
+
+/* the trap: if energy >= 4 then prev_hi = lag(energy);
+   gives the energy of the last check-in that also had 4 or more,
+   not of the check-in before */`,
+ quiz:{q:"On work.workouts sorted by time, you write <code>if type = 'Weighted' then prev = lag(load);</code>. What is <b>prev</b> on a Weighted row?",o:['The load of the row directly above it, whatever its type','Missing on every row, because LAG cannot be used inside IF-THEN','The load of the most recent earlier Weighted row, however far back',"The load of the same exercise's previous session"],a:2,why:'LAG returns the value from the previous time that LAG call ran, and inside IF-THEN it only runs on Weighted rows. So prev is the load of the last Weighted row before this one (missing for the first), even if Cardio or Stretch rows sit in between. LAG knows nothing about exercises either. Compute lag(load) on every row, then use it in conditions.'},
+ prac:{task:'Progressive overload: is the bar getting heavier? From the <b>Weighted</b> rows of work.workouts, sorted by exercise, time and id, create <b>load_change</b> with <b>prev_load</b> (the load of the same exercise&rsquo;s previous session, missing on each exercise&rsquo;s first session; each row is one exercise in one session) and <b>change</b> = load - prev_load. Keep exercise, day, load, prev_load and change. Check it: the first row of every exercise must show a missing prev_load, not the previous exercise&rsquo;s last load.',sol:R`proc sort data=work.workouts out=w;
+  where type = 'Weighted';
+  by exercise time id;
+run;
+
+data load_change;
+  set w;
+  by exercise;
+  prev_load = lag(load);                 /* on every row, never inside an IF */
+  if first.exercise then prev_load = .;  /* then drop the previous exercise's value */
+  change = load - prev_load;             /* . on each first session (a NOTE in the log) */
+  keep exercise day load prev_load change;
+run;`}},
+{id:'sas20',t:'sas',lv:3,title:'Date intervals: INTNX and INTCK',
+ learn:["<code>intnx(interval, d, n)</code> moves date d by n intervals and, by default, snaps the result to the <b>start</b> of that interval: <code>intnx('month', d, 0)</code> is the first of d&rsquo;s month, <code>intnx('month', d, 1)</code> the first of the next. A fourth argument sets the alignment: 'b' (beginning, the default), 'm' (middle), 'e' (end), 's' (same day). Every date in a period maps to one date, which makes INTNX the way to bucket rows by week, month or quarter.","Weeks start on <b>Sunday</b>: <code>intnx('week', d, 0)</code> is the Sunday on or before d. For Monday weeks write <code>'week.2'</code> (the shift .2 starts each week on the 2nd day, Monday). <code>intck(interval, start, end)</code> counts the interval <b>boundaries</b> between two dates, not whole periods: <code>intck('year', '31DEC2025'd, '01JAN2026'd)</code> is 1 although one day passed. A fourth argument 'c' (continuous) counts complete intervals only, and that gives 0.","Gotchas: both functions need numeric SAS dates, so convert the text day first with <code>input(day, yymmdd10.)</code>, as in the dates lesson. The result is a plain number until you format it: <code>intnx('week.2', '01OCT2026'd, 0)</code> prints as 24377 until a format such as YYMMDD10. shows it as 2026-09-28. INTCK counts boundaries, so the months from your first to your last entry, both included, are <code>intck('month', first, last) + 1</code>. For days, <code>d2 - d1</code> already does it."],
+ ex:R`/* habits: month buckets, month ends, time since your last slip */
+data h;
+  set work.habits;
+  d       = input(day, yymmdd10.);
+  month   = intnx('month', d, 0);        /* 1st of that month */
+  month_e = intnx('month', d, 0, 'e');   /* last day of that month */
+  format d month month_e date9.;
+run;
+
+proc freq data=h;
+  tables month;                          /* entries per month */
+run;
+
+proc sql;
+  select habit,
+         max(d) as last_slip format=date9.,
+         intck('day', max(d), today()) as days_clean,          /* same as today() - max(d) */
+         intck('month', max(d), today(), 'c') as full_months   /* complete months only */
+  from h
+  where event = 'slipped'
+  group by habit;
+quit;`,
+ quiz:{q:"What does <code>intck('month', '31JAN2026'd, '01FEB2026'd)</code> return?",o:['0, because less than a whole month has passed','1, because one month boundary is crossed','0.03, the fraction of a month between the two dates','2, one for January and one for February'],a:1,why:"By default INTCK counts how many interval boundaries (here, the first of a month) it crosses going from the start date to the end date, not how many whole months passed. 1 February is a month start, so the answer is 1 although the dates are a day apart. Adding the continuous method, intck(..., 'c'), counts complete months only and returns 0. INTCK always returns a whole number."},
+ prac:{task:'Your weekly MIND sessions, with weeks that start on Monday. (1) Create <b>m</b> from work.mind with <b>week</b>: the Monday that starts the week of the session&rsquo;s day, with format YYMMDD10. (2) With PROC MEANS create <b>weekly_mind</b>: one row per week in date order with week, <b>sessions</b> (N) and <b>minutes</b> (sum of minutes), without _TYPE_ and _FREQ_. (3) With PROC SQL on weekly_mind, print one row: <b>first_week</b> and <b>last_week</b> (formatted YYMMDD10.), <b>weeks</b> (how many Monday weeks that span covers, counting both ends) and <b>active</b> (how many of them have sessions), so you can see whether you skipped a whole week.',sol:R`data m;
+  set work.mind;
+  week = intnx('week.2', input(day, yymmdd10.), 0);   /* Monday of that week */
+  format week yymmdd10.;
+run;
+
+proc means data=m noprint nway;
+  class week;                    /* one row per week, in date order */
+  var minutes;
+  output out=weekly_mind(drop=_type_ _freq_) n=sessions sum=minutes;
+run;
+
+proc sql;
+  select min(week) as first_week format=yymmdd10.,
+         max(week) as last_week  format=yymmdd10.,
+         intck('week.2', min(week), max(week)) + 1 as weeks,   /* boundaries + 1 */
+         count(*) as active
+  from weekly_mind;
+quit;`}},
+{id:'sas21',t:'sas',lv:4,title:'PROC TRANSPOSE: long to wide',
+ learn:['Your logs are <b>long</b>: <b>work.meals</b> has one row per meal, so most days appear two to four times. Reports and many models want them <b>wide</b>: one row per day, with a bowl column and a snack column. PROC TRANSPOSE does that reshape. <code>by day;</code> gives one output row per day (sort by day first), <code>id kind;</code> turns each value of kind into a column name, and <code>var kcal;</code> fills the cells. The output also gets <b>_NAME_</b>, holding the VAR variable&rsquo;s name (kcal): drop it with <code>out=w(drop=_name_)</code>.','The trap: inside one BY group each ID value is a single cell, so it may occur only once. Most days you log more than one bowl, so transposing work.meals as it is stops with <i>ERROR: The ID value "bowl" occurs twice in the same BY group.</i> Aggregate first (sum kcal by day and kind with PROC SQL or PROC MEANS), then transpose the totals. The LET option lets the step run by keeping only the <i>last</i> row of each ID value: each day gets one of its bowls, and the others are dropped.',"A cell with no input row is <b>missing</b>, not 0: a day without a snack gets <code>snack = .</code> (the next lesson fills those in). New columns appear in the order their ID values are first met. Without ID they are named COL1, COL2, and so on; with ID, <code>prefix=kcal_</code> names them kcal_bowl and kcal_snack. In SQL you would write one <code>sum(case when kind = 'bowl' ...)</code> per value you know about; TRANSPOSE makes a column for every value it finds."],
+ ex:R`/* study minutes per month, one column per track */
+data s;
+  set work.study;
+  month = substr(day, 1, 7);          /* '2026-10' */
+run;
+
+/* step 1: one row per month and track (several sessions add up) */
+proc means data=s noprint nway;
+  class month track;
+  var minutes;
+  output out=month_track(drop=_type_ _freq_) sum=minutes;
+run;                                  /* comes out sorted by month, then track */
+
+/* step 2: long to wide */
+proc transpose data=month_track out=study_wide(drop=_name_);
+  by month;                           /* one output row per month */
+  id track;                           /* Python, SAS, SQL, Tableau become columns */
+  var minutes;                        /* the values that fill the cells */
+run;
+
+proc print data=study_wide; run;      /* a track you skipped that month is . */`,
+ quiz:{q:'<b>work.meals</b> is in day order. <code>proc transpose data=work.meals out=w; by day; id kind; var kcal; run;</code> stops with <i>ERROR: The ID value "bowl" occurs twice in the same BY group.</i> What is the right fix?',o:['Add the LET option to the PROC TRANSPOSE statement','Sort by day and kind, then run the same step','Sum kcal by day and kind first, then transpose the totals','Add PREFIX=kcal_ so the new columns get unique names'],a:2,why:"A day has one bowl cell, but most days have more than one bowl row. Summing first leaves one row per day and kind, so every cell gets exactly one value: the day's total. LET runs without the error but keeps only the last bowl of each day (the others are dropped), sorting by kind as well still leaves two bowl rows in the same day, and PREFIX= only renames the columns."},
+ prac:{task:'Build <b>daily_kcal</b> with one row per day and exactly the columns <b>day</b>, <b>bowl</b> and <b>snack</b>: that day&rsquo;s total kcal from bowls and from snacks. Most days have more than one bowl, so sum kcal by day and kind first (PROC SQL or PROC MEANS), make sure the result is sorted by day, then transpose and drop _NAME_. Days without a snack keep a missing snack. Keep daily_kcal (rerun this if your session has ended): the arrays lesson&rsquo;s example starts from it and fills in those missing snacks.',sol:R`/* 1. one row per day and kind */
+proc sql;
+  create table day_kind as
+  select day, kind, sum(kcal) as kcal
+  from work.meals
+  group by day, kind
+  order by day, kind;
+quit;
+
+/* 2. long to wide */
+proc transpose data=day_kind out=daily_kcal(drop=_name_);
+  by day;
+  id kind;
+  var kcal;
+run;
+/* columns: day bowl snack; snack is . on days without a snack */`}},
+{id:'sas22',t:'sas',lv:4,title:'Arrays: one rule, many columns',
+ learn:['An <b>ARRAY</b> gives several columns one name, so a loop can apply one rule to each: after <code>array g{3} protein carbs fat;</code>, <code>g{2}</code> is carbs, and the iterative loop <code>do i = 1 to dim(g); ... g{i} ...; end;</code> runs once for each i from 1 to 3. DIM returns the number of elements, and <code>{*}</code> lets SAS count them (<code>array n{*} _numeric_;</code> takes every numeric column defined so far in the step). The array is only a name used while the step runs: it is not stored in the output.','Names that do not exist yet become new columns: <code>array pct{3} pct_protein pct_carbs pct_fat;</code> creates three (with no names at all, <code>array pct{3};</code> makes pct1 to pct3). A <b>_TEMPORARY_</b> array holds constants without creating any columns: <code>array kpg{3} _temporary_ (4 4 9);</code> for kcal per gram. All elements must be the same type, so numeric and character columns cannot share an array. Functions take a whole array: <code>sum(of pct{*})</code>.','Gotchas: a subscript outside 1 to DIM stops the step with <i>ERROR: Array subscript out of range</i>, so loop to <code>dim(g)</code>, not a typed number. The index <code>i</code> is an ordinary variable and lands in the output unless you drop it. The ARRAY statement must come before the first use of the array. Arrays write a rule once for many columns; macros (next lesson) do the same for whole steps.'],
+ ex:R`/* daily_kcal from the TRANSPOSE lesson: day bowl snack (snack is . on days without one) */
+data daily_kcal0;
+  set daily_kcal;
+  array k{*} _numeric_;               /* every numeric column so far: bowl snack */
+  do i = 1 to dim(k);
+    if missing(k{i}) then k{i} = 0;   /* no snack that day: 0 kcal, not missing */
+  end;
+  total = sum(of k{*});               /* a function over the whole array */
+  drop i;
+run;`,
+ quiz:{q:'These statements run in a DATA step that reads <b>work.meals</b>. What happens?<br><code>array g{3} protein carbs fat;<br>do i = 1 to 4;<br>&nbsp;&nbsp;x = g{i};<br>end;</code>',o:['The step stops with ERROR: Array subscript out of range','The loop quietly stops after the 3rd element, because DIM(g) is 3','x is set to missing when i = 4, and the step carries on','SAS adds a 4th element, g4, as a new column'],a:0,why:'SAS checks every subscript while the step runs. g has 3 elements, so g{4} does not exist: on the very first row the step stops with ERROR: Array subscript out of range, and no rows are written. Write do i = 1 to dim(g); so the loop always matches the array.'},
+ prac:{task:'Where do your meal calories come from? From <b>work.meals</b> (one row per meal, not daily_kcal), create <b>macro_split</b> with <b>pct_protein</b>, <b>pct_carbs</b> and <b>pct_fat</b>: the share of the meal&rsquo;s kcal from each macro, that is grams times kcal per gram (4, 4 and 9, held in a _TEMPORARY_ array) divided by kcal, times 100, rounded to 0.1. Use arrays and one DO loop, not three copied formulas. Keep only day, name, kcal and the three pct columns. kcal is never 0 or missing. The shares need not add up to exactly 100: labels round, and 4-4-9 is an approximation.',sol:R`data macro_split;
+  set work.meals;
+  array g{3}   protein carbs fat;                  /* grams */
+  array kpg{3} _temporary_ (4 4 9);                /* kcal per gram: no columns */
+  array pct{3} pct_protein pct_carbs pct_fat;      /* new columns */
+  do i = 1 to dim(g);
+    pct{i} = round(g{i} * kpg{i} / kcal * 100, 0.1);
+  end;
+  keep day name kcal pct_protein pct_carbs pct_fat;   /* i is not kept */
+run;`}},
 {id:'sas7',t:'sas',lv:4,title:'Macros for reusable extracts',
  learn:['The macro language writes SAS code for you. %macro / %mend defines a template, parameters become &variables, and %do loops repeat steps.','Macro variables only resolve inside <b>double</b> quotes. In single quotes, &val stays literal text. That is the #1 macro bug.'],
  ex:R`%macro pull(data=, col=, val=, out=);
@@ -1372,7 +1884,7 @@ run;`}},
 
 %pull(data=work.trades, col=side, val=Long,  out=longs)
 %pull(data=work.meals,  col=kind, val=bowl,  out=bowls)`,
- quiz:{q:'Why does the WHERE clause use <b>"&val"</b> (double quotes)?',o:['Double quotes are faster','Macro variables resolve inside double quotes but not single quotes','SAS requires double quotes for all text','It prevents SQL injection'],a:1,why:'Inside single quotes the macro processor does not scan, so the query would look for the literal text &val.'},
+ quiz:{q:'Why does the WHERE clause use <b>"&val"</b> (double quotes)?',o:['Double quotes are faster','SAS requires double quotes for all text','Macro variables resolve inside double quotes but not single quotes','It prevents SQL injection'],a:2,why:'Inside single quotes the macro processor does not scan, so the query would look for the literal text &val.'},
  prac:{task:'Write a %do loop that calls %pull on work.study once per track (SQL, Python, SAS, Tableau), creating study_SQL, study_Python and so on (hint: %scan).',sol:R`%macro all_tracks;
   %let list = SQL Python SAS Tableau;
   %do i = 1 %to 4;
@@ -1381,6 +1893,46 @@ run;`}},
   %end;
 %mend all_tracks;
 %all_tracks`}},
+{id:'sas23',t:'sas',lv:4,title:'Macro variables from data: INTO',
+ learn:["So far you typed macro variables in (<code>%let list = SQL Python SAS Tableau;</code>). PROC SQL&rsquo;s <b>INTO</b> fills them from the data: <code>select count(distinct contract) into :n trimmed from work.trades;</code> and <code>select distinct contract into :clist separated by ' ' from work.trades;</code> (add NOPRINT to PROC SQL so nothing is printed). <code>%put &amp;=clist;</code> writes <i>CLIST=ESZ6 GCZ6 NQZ6</i> to the log. Your code now adapts: a new contract next month gets its own data set without an edit.","In a DATA step, <code>call symputx('net', net);</code> does the same job. It strips blanks and turns numbers into clean text; the older SYMPUT keeps them, so a number arrives padded with leading blanks. Timing matters: the macro variable exists only <i>after</i> that step finishes. A <code>&amp;net</code> inside the same step was resolved before the step ran. Macro variables are always text.",'Gotchas: without SEPARATED BY, INTO keeps only the <b>first</b> row&rsquo;s value, with no error or warning. Without TRIMMED, a number is stored with leading blanks, which breaks names like <code>trades_&amp;n</code>. If the query returns no rows, the macro variable is not updated, so an old value silently survives: check <code>&amp;sqlobs</code> (rows from the last SQL statement). And <code>title "P&amp;L";</code> makes SAS look for a macro variable L (<i>WARNING: Apparent symbolic reference L not resolved</i>), so write PnL.'],
+ ex:R`/* your study tracks and total minutes, straight from the data */
+proc sql noprint;
+  select distinct track into :tracks separated by ', '
+    from work.study;
+  select sum(minutes) into :total trimmed
+    from work.study;
+quit;
+%put &=tracks &=total;
+
+/* the same from a DATA step: the day of your latest session */
+data _null_;                       /* a DATA step that writes no data set */
+  set work.study end=last;         /* last = 1 on the final row read */
+  if last then call symputx('last_day', day);
+run;
+
+title "Study: &total minutes on &tracks (latest &last_day)";
+proc means data=work.study n sum mean maxdec=1;
+  class track;
+  var minutes;
+run;
+title;`,
+ quiz:{q:'You traded 3 contracts. After <code>proc sql noprint; select distinct contract into :clist from work.trades; quit;</code> what does <code>%put &amp;=clist;</code> show?',o:['CLIST= followed by all three contracts, separated by blanks','CLIST= followed by one contract: the value from the first row','CLIST= followed by all three contracts, separated by commas','Nothing: PROC SQL stops with an ERROR because 3 rows come back'],a:1,why:"Without SEPARATED BY, INTO :clist stores a single value, the first row's, and ignores the other rows without any warning. Add separated by ' ' to get the whole list."},
+ prac:{task:'Make the macros lesson&rsquo;s loop data-driven. With PROC SQL INTO, store your distinct contracts in <b>clist</b> (separated by a blank) and their count in <b>n</b> (count distinct, trimmed), and show both with %put. Then write a macro that loops <code>%do i = 1 %to &amp;n</code>, takes the i-th contract from clist with %scan and calls <b>%pull</b> (from the macros lesson; rerun its definition if your session restarted) with <code>data=work.trades</code>, <code>col=contract</code>, <code>val=</code> that contract and <code>out=trades_</code> plus the contract: trades_ESZ6, trades_GCZ6 and trades_NQZ6 on your data, with no contract code typed.',sol:R`proc sql noprint;
+  select distinct contract into :clist separated by ' '
+    from work.trades;
+  select count(distinct contract) into :n trimmed
+    from work.trades;
+quit;
+%put &=n &=clist;
+
+%macro by_contract;
+  %local i c;
+  %do i = 1 %to &n;
+    %let c = %scan(&clist, &i);
+    %pull(data=work.trades, col=contract, val=&c, out=trades_&c)
+  %end;
+%mend by_contract;
+%by_contract`}},
 {id:'sas8',t:'sas',lv:4,title:'SQL pass-through to databases',
  learn:['When data lives in a database, push the work there. Say your app logs sync to a Postgres copy (a backup or sync server). Explicit pass-through (CONNECT TO … / CONNECTION TO …) sends native SQL to it, and only the result travels back to SAS.','EXECUTE (...) BY runs statements that return nothing (updates, refreshing a view). LIBNAME engines try implicit pass-through, but explicit pass-through gives you full control of the dialect.'],
  ex:R`proc sql;
@@ -1400,7 +1952,7 @@ run;`}},
   execute (refresh materialized view day_summary) by db;
   disconnect from db;
 quit;`,
- quiz:{q:'Main benefit of explicit SQL pass-through?',o:['It converts SQL into DATA steps','The query runs inside the database in its own dialect, so only the result is transferred','It encrypts the data','It avoids needing credentials'],a:1,why:'Filtering and aggregating in the database means only a few summary rows cross the network, not every logged row.'},
+ quiz:{q:'Main benefit of explicit SQL pass-through?',o:['It converts SQL into DATA steps','It avoids needing credentials','It encrypts the data','The query runs inside the database in its own dialect, so only the result is transferred'],a:3,why:'Filtering and aggregating in the database means only a few summary rows cross the network, not every logged row.'},
  prac:{task:'Using an existing connection <b>db</b> to the synced database, pull your total protein per week from its meals table (columns day, protein) into <b>weekly_protein</b>.',sol:R`create table weekly_protein as
 select * from connection to db (
   select date_trunc('week', day::date) as week,
@@ -1409,6 +1961,49 @@ select * from connection to db (
   group by date_trunc('week', day::date)
   order by week
 );`}},
+{id:'sas24',t:'sas',lv:4,title:'ODS EXCEL: reports to a workbook',
+ learn:['The Output Delivery System (ODS) decides where procedure output goes. <code>ods excel file="~/isionlogs/weekly_review.xlsx" options(sheet_name=\'Contracts\' embedded_titles=\'yes\');</code> opens a workbook. Every table a PROC prints after that lands in it, each on its own sheet by default, and <code>ods excel close;</code> finishes the file. Unlike PROC EXPORT (from the import lesson), which writes a data set&rsquo;s raw rows, ODS sends the formatted report you see in Results.',"Rename the next tab between PROCs with <code>ods excel options(sheet_name='Habits');</code>. <code>embedded_titles='yes'</code> writes the TITLE text into the sheet itself. <code>ods select CrossTabFreqs;</code> before a PROC sends only that table (by its ODS name; <code>ods trace on;</code> lists the names in the log) and resets after the step. The same open, run, close pattern works for <code>ods pdf</code> and <code>ods rtf</code>.",'Gotchas: the workbook is not complete until <b>ODS EXCEL CLOSE</b> runs. Before that it is empty or Excel will not open it. A PROC with NOPRINT sends nothing, and neither does a DATA step. FILE= takes a path, not a libref, and the folder must already exist (~/isionlogs from the libraries lesson). Clear the title with <code>title;</code> afterwards, or it follows every later report.'],
+ ex:R`/* one titled sheet of training stats */
+ods excel file="~/isionlogs/training.xlsx"
+          options(sheet_name='Lifts' embedded_titles='yes');
+
+title 'Weighted lifts: sessions and load';
+proc means data=work.workouts n mean max maxdec=1;
+  where type = 'Weighted';
+  class exercise;
+  var load;
+run;
+
+ods excel close;
+title;
+
+/* the same pattern to a PDF */
+ods pdf file="~/isionlogs/practices.pdf";
+title 'Sessions per practice';
+proc freq data=work.mind;
+  tables practice / nocum;
+run;
+ods pdf close;
+title;`,
+ quiz:{q:'Your program opens <code>ods excel file="~/isionlogs/weekly_review.xlsx";</code>, then runs PROC MEANS and PROC FREQ without errors, and ends there. The workbook is empty, or Excel says it cannot open it. What is missing?',o:['ODS EXCEL CLOSE; at the end of the program','A RUN; after the last PROC step','A LIBNAME statement for the ~/isionlogs folder','ODS HTML CLOSE; before the ODS EXCEL statement'],a:0,why:'ODS EXCEL builds the workbook while the destination is open and writes the finished .xlsx only when it is closed, so without ODS EXCEL CLOSE the file is incomplete. FILE= takes a path, so no LIBNAME is needed, and the HTML results can stay open alongside. Both PROCs ran, so a missing RUN is not the problem.'},
+ prac:{task:'Build <b>weekly_review.xlsx</b> in ~/isionlogs with two sheets, each showing a TITLE inside the sheet (your own wording). Sheet <b>Contracts</b>: PROC MEANS on work.trades with the n, sum and mean of pnl per contract, to 2 decimals. Sheet <b>Habits</b>: a PROC FREQ crosstab of habit by event from work.habits with counts only (norow nocol nopercent), sending only the crosstab table (by its ODS name). Close the destination so the file is written, and clear the title.',sol:R`ods excel file="~/isionlogs/weekly_review.xlsx"
+          options(sheet_name='Contracts' embedded_titles='yes');
+
+title 'Trades and PnL by contract';
+proc means data=work.trades n sum mean maxdec=2;
+  class contract;
+  var pnl;
+run;
+
+ods excel options(sheet_name='Habits');
+title 'Habits by outcome';
+ods select CrossTabFreqs;
+proc freq data=work.habits;
+  tables habit*event / norow nocol nopercent;
+run;
+
+ods excel close;
+title;`}},
 /* ---------- Tableau ---------- */
 {id:'tab1',t:'tab',lv:1,title:'Live connections vs extracts',
  learn:['A <b>live</b> connection queries the source every time the view changes: always current, but only as fast as the source. An <b>extract</b> (.hyper) is a compressed snapshot Tableau stores and refreshes on a schedule.','Your app logs are a good fit for an extract: they grow by a few rows a day. Extract filters and “Aggregate data for visible dimensions” keep it small; data source filters limit what any workbook can see.'],
@@ -1417,7 +2012,7 @@ Data Source tab → Connection: ( ) Live  (•) Extract → Edit…
   • Filters → Add… → Day — relative date: last 12 months
   • ☑ Aggregate data for visible dimensions
   • Incremental refresh on: Id`,
- quiz:{q:'When is an <b>extract</b> usually the better choice?',o:['When you need second-by-second real-time data','When the source is slow, you want to reduce load on it, or you need offline access','When the data is under 100 rows','Never: live is always better'],a:1,why:'Extracts trade freshness for speed and lower load on the source. Live makes sense for near-real-time needs on a fast database.'},
+ quiz:{q:'When is an <b>extract</b> usually the better choice?',o:['When the source is slow, you want to reduce load on it, or you need offline access','When you need second-by-second real-time data','When the data is under 100 rows','Never: live is always better'],a:0,why:'Extracts trade freshness for speed and lower load on the source. Live makes sense for near-real-time needs on a fast database.'},
  prac:{task:'Describe how you would set up a <b>trades</b> extract that keeps only the last 2 years and adds just the new trades each day.',sol:R`Extract → Edit → Filters: Day — relative date: last 2 years
 Incremental refresh: ☑ identify new rows using Id (or Closed)
 Schedule: full refresh weekly, incremental refresh daily`}},
@@ -1431,6 +2026,133 @@ Rows:    SUM([Pnl])
 Rows:    [Habit]
 Text/Columns: CNT([Habits])   (the table's count field)
 Sort descending`}},
+{id:'tab9',t:'tab',lv:1,title:'Discrete vs continuous',
+ learn:['Blue or green is a separate choice from dimension or measure. A <b>discrete</b> (blue) pill draws <b>headers</b>, one per value; a <b>continuous</b> (green) pill draws an <b>axis</b>. <i>Dimensions, measures &amp; aggregation</i> paired dimensions with blue and measures with green: that is only the usual case. SUM([Pnl]) can be made discrete (one header per distinct total), and a number or date dimension continuous; a text field cannot.','Dates are the main case. Right-click a date pill: the <b>first group</b> holds date <i>parts</i> (Year, Quarter, Month, Day, and Weekday under More), discrete by default, so WEEKDAY([Day]) puts every Monday under one header. The <b>second group</b> holds date <i>values</i> (Year, Quarter, Month, Week Number, Day), continuous by default: a timeline. Both Day items read DAY(Day) on the pill, but the first is the day of the month (1–31), so check which one is ticked. Below both groups, <b>Exact Date</b> uses the full date as stored.',"Two gotchas. Dragging [Day] onto a shelf gives the discrete <b>YEAR([Day])</b>, and all your logs are from 2026, so “P&amp;L over time” comes out as one bar labelled 2026: pick Day from the second group instead. And [Day] is stored as text ('YYYY-MM-DD') in SQLite: if the Data pane shows <b>Abc</b> next to it, right-click it → Change Data Type → Date first, or there are no date parts to pick at all."],
+ ex:R`Same field, two pills (checkins)
+
+Energy over time: a weekly timeline
+  Columns: WEEK([Day])     green: Week Number from the 2nd group (date values)
+  Rows:    AVG([Energy])
+  Marks:   Line            → one axis, one point per week, spaced in real time
+
+Energy by weekday: one header per value
+  Columns: WEEKDAY([Day])  blue: Weekday from the 1st group (date parts)
+  Rows:    AVG([Energy])
+  Marks:   Bar             → every Monday's check-in under one header
+
+Trap: Day from the 1st group is the day of the month (1-31):
+  September 20 and October 20 land under the same header, 20
+
+Dragged straight in, [Day] arrives as YEAR([Day]): one header, 2026`,
+ quiz:{q:'You drag [Day] to Columns and [Pnl] to Rows to see your P&amp;L over time, but you get <b>one bar labelled 2026</b>. Why?',o:['SUM([Pnl]) adds all your trades into one total: convert Pnl to a dimension to get a bar per day','[Day] is a dimension, so it can only draw headers: it must become a measure before it can draw a time axis','Tableau used the discrete date part YEAR([Day]), and every trade is from 2026: pick Day from the second group','Bars always group dates by year: change the mark type to Line to see each day'],a:2,why:'A date dropped on a shelf starts as YEAR([Day]), a discrete date part: one header per year, and every trade is from 2026. Day from the second group of the pill menu is a continuous date value and draws a timeline with one point per day. B mixes the two choices up: [Day] stays a dimension when it turns continuous. A and D change the measure or the mark, but the view is still grouped by year.'},
+ prac:{task:'On <b>trades</b>, build two sheets: (a) your daily P&amp;L as a line over time, (b) your total P&amp;L per weekday as bars. Which pill (and colour) does [Day] need in each, how does the axis in (a) differ from the headers in (b), and which weekday has your lowest total P&amp;L?',sol:R`(a) Daily P&L line
+Columns: DAY([Day])      green: Day from the 2nd (date value) group
+Rows:    SUM([Pnl])
+Marks:   Line
+→ an axis of real time: weekends and days without trades still
+  take space, and the line runs straight across them
+
+(b) P&L by weekday
+Columns: WEEKDAY([Day])  blue: Weekday from the 1st (date part) group
+Rows:    SUM([Pnl])
+Marks:   Bar
+→ one header per weekday: every Monday's trades under one Monday.
+  Only Monday to Friday appear, because there are no weekend trades.
+
+Lowest total: it depends on your trades. In the built-in sample it
+is Thursday, the only weekday with a net loss (-$700).
+
+If [Day] shows Abc in the Data pane: Change Data Type → Date first.`}},
+{id:'tab10',t:'tab',lv:1,title:'The Marks card & level of detail',
+ learn:['The <b>Marks card</b> puts more fields on the same marks: <b>Color</b>, <b>Size</b>, <b>Label</b>, <b>Detail</b>, <b>Tooltip</b>, and <b>Shape</b> when the mark type is Shape. The rule that matters: a <b>dimension</b> anywhere on it joins the view’s level of detail (the GROUP BY) and splits the marks, exactly as on Rows or Columns. A <b>measure</b> there only encodes the marks that already exist. <b>Detail</b> splits without encoding anything.','That is how a scatter works. SUM([Minutes]) against SUM([Pnl]) with no dimension in the view is <b>one dot</b>: every trade summed. Put a field that is unique per trade, [Id], on Detail and you get one dot per trade (turning off Analysis → Aggregate Measures also draws one mark per row). Watch the status bar at the bottom of the window: it counts the marks.','Two gotchas. If [Id] is listed with the measures in the Data pane (Tableau may well treat a number column that way), dropping it on Detail gives SUM([Id]), which splits nothing: right-click it → <b>Convert to Dimension</b> first. And Tooltip counts too: a dimension dragged to Tooltip joins the level of detail like any other, so it can split marks you only meant to label.'],
+ ex:R`Protein vs calories, one step at a time (meals)
+Watch the mark count in the status bar as you go.
+
+Columns: AVG([Kcal])    Rows: AVG([Protein])
+                         → 1 mark: every meal averaged together
++ Color:  [Kind]         → 2 marks: bowl and snack
++ Detail: [Name]         → one mark per meal name, still coloured by kind
++ Size:   AVG([Fiber])   → the same marks, now sized:
+                           a measure only encodes, it never splits`,
+ quiz:{q:'Columns: SUM([Minutes]), Rows: SUM([Pnl]). Your scatter of hold time against P&amp;L shows a <b>single dot</b>. How do you get one dot per trade?',o:['Put [Id], as a dimension, on Detail','Put SUM([Pnl]) on Size','Change the mark type from Automatic to Circle','Put [Side] on Color'],a:0,why:'With no dimension in the view, every trade is summed into one mark. [Id] is unique per trade, so as a dimension on Detail it splits the view into one mark per trade (Analysis → Aggregate Measures off does it too). A measure on Size only sizes the one dot, the mark type only changes how it looks, and [Side] does split it, but only into two dots: Long and Short.'},
+ prac:{task:'On <b>trades</b>, build a scatter with <b>one mark per trade</b>: minutes held across, P&amp;L up, [Side] as the colour and [Contract] as the shape. Do your winners and losers differ in how long you held them?',sol:R`Columns: SUM([Minutes])     Rows: SUM([Pnl])
+Detail:  [Id]   as a dimension (if it is listed with the measures:
+                right-click → Convert to Dimension first)
+Color:   [Side]
+Shape:   [Contract]  (no Shape button? set the mark type to Shape)
+Alternative to [Id] on Detail: Analysis → Aggregate Measures off
+
+Reading it: Pnl takes only a few values (stop-outs at -305,
+scratches at 0 or -5, targets at +895), so the marks form
+horizontal bands. Compare where each band sits on the minutes
+axis. In the sample data the winners were held about 25 minutes
+on average and the losers about 8: the -305 band ends before
+15 minutes, while the +895 band starts near 8 and runs past 40.`}},
+{id:'tab11',t:'tab',lv:1,title:'Dimension vs measure filters',
+ learn:['A <b>dimension filter</b> ([Contract], [Side], a range of [Day]) removes rows <i>before</i> the view adds anything up, like SQL’s WHERE. A <b>measure filter</b> on an aggregate, such as SUM([Pnl]) at least 200, runs <i>after</i> the aggregation and keeps the marks whose total passes, like HAVING. Both sit on the same Filters shelf; a pill that reads SUM(Pnl) is the HAVING kind.','Drag a measure to Filters and Tableau asks how to filter it. <b>All values</b> tests every row, so [Pnl] at least 0 keeps each non-losing trade: a WHERE on pnl. <b>Sum</b> (or Average, Count…) tests the aggregated marks: the HAVING. Pick the wrong one and you get each contract’s total of its non-losing trades when you wanted the contracts that are at least even overall.','Gotcha: a measure filter is computed at the view’s level of detail. SUM([Pnl]) at least 200 with only [Day] on Rows keeps whole days. Add [Side] and the same filter tests each day’s Long and Short totals on their own: a day can come back with only its winning side, or show up twice. Nothing about the filter changed; the grain did.'],
+ ex:R`Which weighted exercises got real volume? (workouts)
+
+Rows:    [Exercise]
+Text:    SUM([Sets])
+Filters: [Type] = Weighted        dimension filter: rows out first (WHERE)
+         SUM([Sets]) at least 12  measure filter, "Sum" in the dialog:
+                                  exercises out after adding up (HAVING)
+same as SQL:
+  SELECT exercise, SUM(sets) FROM workouts
+  WHERE type = 'Weighted'
+  GROUP BY exercise
+  HAVING SUM(sets) >= 12
+
+"All values" at least 12 would test each logged entry instead
+(WHERE sets >= 12): no single entry has 12 sets, so the view empties.`,
+ quiz:{q:'[Contract] on Rows, SUM([Pnl]) on Text. You drag [Pnl] to Filters, choose <b>All values</b> and set <b>At least 0</b>. What does the table show?',o:['Only the contracts whose total P&L is at least 0, with their full totals','Each contract’s total of its non-losing trades only: All values tests each trade','The full totals, but only for contracts with at least one trade at 0 or above','Every contract with its full total: a filter on a measure only hides marks'],a:1,why:'All values filters the individual rows, like WHERE pnl >= 0: losing trades are dropped before the SUM, so each contract shows the total of its non-losing trades only (a contract with a net loss can even turn positive). Choosing Sum in that dialog gives A, the HAVING version; Maximum would give C. D is wrong because the losing trades are gone before the totals are computed.'},
+ prac:{task:'On <b>trades</b>, list the days when your <b>NQZ6</b> trades together made at least $200: [Day] on Rows as one discrete header per date (not per day of the month), SUM([Pnl]) on Text. Which of your two filters is a dimension filter and which a measure filter, and which acts first? Then add [Side] to Rows: why does the list change?',sol:R`Rows:    DAY([Day]) as discrete headers, one per date
+         (Day from the 2nd group or Exact Date, then right-click → Discrete;
+          not Day from the 1st group, which is the day of the month)
+Text:    SUM([Pnl])
+Filters: [Contract] = NQZ6        dimension filter, acts first: the
+                                  other contracts' trades are gone (WHERE)
+         SUM([Pnl]) at least 200  measure filter (choose Sum, not All
+                                  values): keeps the days whose NQZ6
+                                  total is at least 200 (HAVING)
+≈ SELECT day, SUM(pnl) FROM trades WHERE contract = 'NQZ6'
+  GROUP BY day HAVING SUM(pnl) >= 200
+(21 days in the built-in sample)
+
+After [Side] goes on Rows the grain is day + side, so the filter
+tests each day's Long total and Short total separately. A day where
+both sides made 200+ now shows twice, a day that missed overall can
+come back with just its winning side, and a day that only made it
+with both sides together would drop out. In the sample: 21 → 22 rows.`}},
+{id:'tab12',t:'tab',lv:1,title:'Measure Names & Measure Values',
+ learn:['<b>Measure Values</b> is one field that holds several measures at once; <b>Measure Names</b> is the dimension Tableau generates to label them. Together they put several measures side by side in one view: Measure Names on Columns (or Color) splits the view by measure, Measure Values on Text or Rows shows each one’s value. That is how you build a KPI table with sleep, quality and energy as its columns.','You rarely set it up by hand. Double-click a second measure into a text table, or drop a measure onto an existing axis, and Tableau places both fields for you. Which measures are in it lives on the <b>Measure Values card</b> under the Marks card: drag a pill off to remove it. Each pill keeps its own aggregation, so one can be AVG and another SUM (right-click → Measure).','Gotcha: everything in Measure Values shares <b>one axis</b>. A bowl’s kcal (about 1,100) next to its grams of protein flattens the grams into slivers. Keep measures of the same unit together, and give a different unit its own pill on Rows: each measure pill there gets its own axis. Dragging Measure Values in from the Data pane brings every measure along, so prune the card.'],
+ ex:R`Morning check-in averages by month (checkins): a text table
+
+Rows:    MONTH([Day])     (discrete)
+Columns: Measure Names
+Text:    Measure Values
+Measure Values card: AVG([Sleep])  AVG([Quality])  AVG([Energy])
+  (drag the other measures off; right-click each → Measure → Average)
+
+As a chart, keep only the two 1-5 scores on the card:
+Columns: MONTH([Day]), Measure Names
+Rows:    Measure Values        Color: Measure Names
+Measure Values card: AVG([Quality])  AVG([Energy])
+→ one shared axis, fine for two 1-5 scores; add AVG([Weight])
+  (about 80) and those bars flatten`,
+ quiz:{q:'Your bar chart of Measure Values with [Kcal], [Protein], [Carbs] and [Fat] (Measure Names on Columns) shows one huge bar and three slivers. Why?',o:['Protein, Carbs and Fat are averaged while Kcal is summed','Measure Values turns each measure into its share of the total, and kcal is most of it','All four measures share one axis, so grams look tiny next to kcal','Measure Names hides small values, so most protein, carbs and fat rows are left out'],a:2,why:'Measure Values draws every measure it holds on a single shared axis, so a scale that fits the kcal leaves the grams near zero. Mixed aggregations would change the heights, but the grams would still be tiny next to kcal; Measure Values shows plain values, not shares; and Measure Names only labels the measures, it does not drop rows. Keep same-unit measures together, or give Kcal its own pill on Rows and so its own axis.'},
+ prac:{task:'On <b>meals</b>, for each meal [Name], show side-by-side bars of the <b>average</b> protein, carbs and fat per logged meal (one row of meals), in one chart with a colour legend. Which meal has the highest average protein?',sol:R`Columns: [Name], Measure Names   (Measure Names after Name:
+                                   the three bars stand side by side)
+Rows:    Measure Values
+Color:   Measure Names            (the legend)
+Measure Values card: keep only Protein, Carbs and Fat; drag Kcal,
+  Fiber and any other measure off. Right-click each remaining pill
+  → Measure → Average (each pill keeps its own aggregation).
+(With Measure Names only on Color, the bars stack instead.)
+
+Kcal stays out: on the shared axis 1,100+ kcal would flatten the grams.
+Highest average protein: the Chicken bowl (about 72 g in the sample
+data), with the Steak bowl close behind.`}},
 {id:'tab3',t:'tab',lv:2,title:'Relationships vs joins',
  learn:['Tableau’s logical layer uses <b>relationships</b> (“noodles”): tables stay separate and are joined at query time, at the right level of detail. Physical-layer <b>joins</b> flatten the tables into one first.','Your logs show why this matters. <b>trades</b> has one row per trade; <b>checkins</b> has one row per day. They relate on Day. Join them physically and each morning’s sleep is copied onto every trade that day.'],
  ex:R`Logical layer:   Trades ──(Day = Day)── Checkins
@@ -1440,7 +2162,7 @@ Sort descending`}},
 Physical join:   Trades ⨝ Checkins on Day
   → a day with 6 trades repeats its sleep 6 times
   → SUM([Sleep]) is inflated, AVG([Sleep]) leans to busy days`,
- quiz:{q:'Trades (one row per trade) and Checkins (one row per day) are combined with a <b>physical join</b> on Day. What happens to SUM([Sleep])?',o:['It is correct','It is inflated, because each day’s sleep repeats on every trade that day','It becomes NULL','Tableau blocks the join'],a:1,why:'Joining tables of different grain duplicates the coarser rows. Relationships (or a FIXED LOD) prevent this.'},
+ quiz:{q:'Trades (one row per trade) and Checkins (one row per day) are combined with a <b>physical join</b> on Day. What happens to SUM([Sleep])?',o:['It is correct','It becomes NULL','It is inflated, because each day’s sleep repeats on every trade that day','Tableau blocks the join'],a:2,why:'Joining tables of different grain duplicates the coarser rows. Relationships (or a FIXED LOD) prevent this.'},
  prac:{task:'You really do want a row-level table of trades with that morning’s sleep. How do you get to the physical layer and build a left join?',sol:R`Data Source tab → double-click the logical table Trades
 → opens the physical layer → drag Checkins in
 → choose Left join, clause: Day = Day
@@ -1458,11 +2180,273 @@ DATEDIFF('minute', [Opened], [Closed])
 
 // Week bucket
 DATETRUNC('week', [Day])`,
- quiz:{q:'What does <b>IF [Side] = "Long" THEN [Pnl] END</b> return for a Short trade?',o:['0','NULL','An error','The P&L anyway'],a:1,why:'With no ELSE branch, rows that do not match return NULL. Aggregations like SUM skip NULLs.'},
+ quiz:{q:'What does <b>IF [Side] = "Long" THEN [Pnl] END</b> return for a Short trade?',o:['0','The P&L anyway','An error','NULL'],a:3,why:'With no ELSE branch, rows that do not match return NULL. Aggregations like SUM skip NULLs.'},
  prac:{task:'Write a calc on <b>checkins</b> that labels each night: sleep under 6 hours "short", under 7.5 "ok", else "rested".',sol:R`IF [Sleep] < 6 THEN "short"
 ELSEIF [Sleep] < 7.5 THEN "ok"
 ELSE "rested"
 END`}},
+{id:'tab13',t:'tab',lv:2,title:'Aggregate vs row-level calcs',
+ learn:['A calculated field is one of two kinds. The calcs in <i>Calculated fields</i> are all <b>row-level</b>: <code>[Mood After] - [Mood Before]</code> or <code>[Protein] / [Kcal]</code> is computed on each row <i>before</i> anything is grouped, and on a shelf it then gets an aggregation like any measure. An <b>aggregate</b> calc, such as <code>SUM([Protein]) / SUM([Kcal])</code>, has every field inside an aggregation: it is computed <i>after</i> grouping, once per mark at the view&rsquo;s level of detail, and shows on the shelf as AGG(…).','Ratios and KPIs belong in aggregate calcs. For protein per kcal across a day&rsquo;s meals, <code>SUM([Protein] / [Kcal])</code> adds up one ratio per meal, a number that grows with every meal you log; <code>AVG([Protein] / [Kcal])</code> is the average meal&rsquo;s ratio, where a banana weighs as much as a steak bowl. Only <code>SUM([Protein]) / SUM([Kcal])</code> is the ratio of the totals. A conditional sum such as <code>SUM(IF [Pnl] &gt; 0 THEN [Pnl] END)</code> is fine: a row-level IF inside an aggregate.','Gotchas: mixing the two kinds is refused. <code>SUM([Pnl]) / [Minutes]</code> fails with “Cannot mix aggregate and non-aggregate arguments with this function”, and <code>IF SUM([Pnl]) &gt; 0 THEN [Contract] END</code> gets a similar IF error. Aggregate every field to fix it: SUM, AVG, MIN, or <code>ATTR([Contract])</code>, which returns the value when every row of the mark shares it and * otherwise. Division by zero gives NULL, not an error, so a ratio whose denominator is 0 or empty shows as an empty cell.'],
+ ex:R`// mind table
+// Row-level: computed on each session, before grouping
+[Mood After] - [Mood Before]
+    // save as [Mood lift]; on a shelf it arrives as SUM:
+    // switch it to AVG([Mood lift]) for the average session's lift
+
+// Aggregate: every field inside an aggregation, computed once
+// per mark after grouping (AGG on the shelf)
+SUM(IF [Practice] = "Meditation" THEN [Minutes] END) / SUM([Minutes])
+    // with WEEK([Day]) on Columns: the share of each week's
+    // minutes spent meditating (a row-level IF inside SUM is fine)
+
+// Mixed: refused with
+// "Cannot mix aggregate and non-aggregate arguments with this function."
+[Mood After] - AVG([Mood Before])          // wrong
+AVG([Mood After]) - AVG([Mood Before])     // fixed: aggregate every field`,
+ quiz:{q:'A text table shows only your snacks ([Kind] on Rows, filtered to snack). Which calc gives the protein per 100 kcal of all your snacks <i>together</i>?',o:['SUM([Protein] / [Kcal] * 100)','AVG([Protein] / [Kcal]) * 100','[Protein] / SUM([Kcal]) * 100','SUM([Protein]) / SUM([Kcal]) * 100'],a:3,why:'“Together” means total protein over total kcal: a ratio of two sums, computed after grouping. A adds up one ratio per snack, so it grows with every snack you log (on the built-in data it lands in the hundreds). B is the average snack’s ratio: a 95 kcal apple counts as much as a 160 kcal protein shake, so on the built-in data it comes out lower. C mixes the row-level [Protein] with SUM([Kcal]), and Tableau refuses it: Cannot mix aggregate and non-aggregate arguments with this function.'},
+ prac:{task:'On <b>trades</b>, build a KPI table with [Contract] on Rows and these aggregate calcs side by side (Measure Values). <b>Profit factor</b>: dollars won divided by dollars lost. <b>Payoff ratio</b>: the average winning trade divided by the average losing trade. Make both positive, and count a trade with [Pnl] = 0 as neither a win nor a loss. <b>$ per minute</b>: total P&amp;L per minute held. Next to it, add the AVG of a row-level <code>[Pnl] / [Minutes]</code>. Which contract has the best profit factor, why do the two per-minute columns disagree, and which cells would be empty for a contract with no losing trade?',sol:R`// Profit factor: dollars won / dollars lost
+SUM(IF [Pnl] > 0 THEN [Pnl] END) / ABS(SUM(IF [Pnl] < 0 THEN [Pnl] END))
+
+// Payoff ratio: average win / average loss
+AVG(IF [Pnl] > 0 THEN [Pnl] END) / ABS(AVG(IF [Pnl] < 0 THEN [Pnl] END))
+
+// $ per minute held
+SUM([Pnl]) / SUM([Minutes])
+
+// Row-level, for the comparison column (set its pill to AVG)
+[Pnl] / [Minutes]
+
+Rows: [Contract] · Columns: Measure Names · Text: Measure Values
+
+Why aggregate: each KPI is a ratio of totals or averages per contract,
+so it must be computed after grouping (AGG on the shelf). The IFs are
+row-level inside the aggregates: a 0 trade is NULL in both branches and
+skipped, so it counts as neither a win nor a loss.
+
+Best profit factor: above 1 means the contract won more than it lost.
+Built-in sample: NQZ6 leads (about 2.1) and GCZ6 sits below 1 (about
+0.67). Apps' data: ESZ6 leads (about 2.4).
+Payoff ratio: on the apps' data every win is +895 and every loss -305,
+so it is 895 / 305 = 2.93 for every contract. The built-in sample also
+has -5 trades on ESZ6 and GCZ6: they count as losses, shrink the average
+loss and push the ratio up (ESZ6 about 4.2, GCZ6 3.1, NQZ6 2.93).
+
+$ per minute: SUM / SUM is the dollars the contract made per minute in
+the market. AVG([Pnl] / [Minutes]) is the average trade's own rate, so a
+-305 stop-out after a few minutes (about -50 a minute) weighs as much
+as a 25-minute winner (about +36 a minute). On both datasets it is
+negative for every contract, even the ones that made money: a different
+question.
+
+Empty cells: a contract with no losing trade loses its profit factor
+and its payoff ratio. Both denominators aggregate no values, so they
+are NULL, and dividing by NULL (or by 0) gives NULL, not an error.
+The two per-minute columns still show.`}},
+{id:'tab14',t:'tab',lv:2,title:'Dual-axis & combo charts',
+ learn:['Two measures on Rows give two panes stacked one above the other, each with its own axis. Right-click the second pill → <b>Dual Axis</b> (or drag the measure to the right edge of the view until a dashed line appears) and they overlay in one pane: one axis on the left, one on the right, and a Marks card per measure (plus All). That is how daily P&amp;L becomes bars and morning energy a line over the same dates.','A <b>shared</b> (blended) axis is different: drop the second measure onto the first axis itself and Tableau switches to Measure Values (as in <i>Measure Names &amp; Measure Values</i>): one scale, one Marks card. Use it, or a dual axis with <b>Synchronize Axis</b> (right-click the right axis), only when the units match, such as protein and carbs (both grams). Dollars next to a 1–5 score need two independent scales, or the score flattens along zero.','Gotchas: unsynchronized axes have their own ranges, so the two zero lines need not meet and heights can&rsquo;t be compared across measures; title both axes (right-click → Edit Axis). Dual Axis may reset the mark types, so set Bar and Line on each measure&rsquo;s own card, and put colour there too, not on All. Energy comes from <b>checkins</b>, related to <b>trades</b> on Day (<i>Relationships vs joins</i>): put Trades&rsquo; [Day] on Columns, and energy is still averaged per check-in, not repeated per trade.'],
+ ex:R`Combo on meals: daily kcal (bars) + protein (line)
+Columns: DAY([Day])                  (continuous, green)
+Rows:    SUM([Kcal])   SUM([Protein])
+         → two stacked panes, one axis each
+
+Right-click SUM([Protein]) → Dual Axis
+         → one pane: Kcal axis on the left, Protein on the right
+Marks cards:  All · SUM(Kcal) → Bar · SUM(Protein) → Line
+Synchronize Axis?  No: kcal and grams are different units.
+
+Protein and Carbs instead (both grams)?
+         → Dual Axis, then right-click the right axis → Synchronize Axis
+
+Shared (blended) axis instead: drag SUM([Protein]) onto the Kcal axis
+         → Measure Values on Rows: one axis, one Marks card`,
+ quiz:{q:'Daily SUM([Pnl]) bars over continuous DAY([Day]). You drop AVG([Energy]) onto the P&amp;L axis, so both measures share one axis, and the energy values barely leave zero. What is the best fix?',o:['Make it a dual axis, then right-click the right axis → Synchronize Axis so both read on one scale','Change the pill to SUM([Energy]) so the values grow into the dollar range','Put AVG([Energy]) on Rows as its own pill → Dual Axis, and leave the axes unsynchronized','Edit the shared axis to a fixed range of 0 to 5 so the energy values fill it'],a:2,why:'Dollars and a 1–5 score cannot share a scale. On a dual axis, Energy gets its own independent axis on the right, and its own Marks card, so it can be a line over the bars. Synchronizing forces that axis back onto the dollar range, so energy flattens again. There is one check-in per day, so SUM([Energy]) per day is the same number as AVG. A fixed 0 to 5 range clips almost every P&L bar.'},
+ prac:{task:'On <b>trades</b> related to <b>checkins</b> on Day, build one combo chart: Trades&rsquo; [Day] as continuous DAY([Day]) on Columns; daily SUM([Pnl]) as bars, coloured by the aggregate calc <code>SUM([Pnl]) &gt; 0</code> (True green, False red) on the bars only; AVG([Energy]) as a line on a dual axis. Should you synchronize the axes, and why? Do low-energy check-ins (Energy 1 or 2) line up with red days?',sol:R`Calc [Green day]:  SUM([Pnl]) > 0     (aggregate: one True/False per day)
+
+Columns: DAY([Day]) from Trades, continuous
+Rows:    SUM([Pnl])   AVG([Energy])
+Right-click AVG(Energy) → Dual Axis     (the Energy axis moves to the right)
+
+Marks cards (Dual Axis may have reset both mark types):
+  SUM(Pnl)    → Bar, [Green day] on Color
+                (on this card only, so the line keeps one colour)
+                Color → Edit Colors: True green, False red
+  AVG(Energy) → Line
+
+Do not Synchronize Axis: dollars vs a 1-5 score. Synced, the energy line
+flattens near 0 again.
+Title both axes (right-click → Edit Axis): "Daily P&L ($)" and
+"Morning energy (1-5)". The zero lines don't match, so read each
+measure against its own axis.
+
+Reading it: days with trades but no check-in have no energy point, and
+check-in days without trades have no date on Trades' axis, so their
+energy is left out. On both datasets, days with a 1-2 check-in average
+clearly less P&L than days with a 4-5 (built-in sample: about 110 vs 730),
+but many of them still finish green: a hint, not a rule.`}},
+{id:'tab15',t:'tab',lv:2,title:'Reference lines & trend lines',
+ learn:['The <b>Analytics</b> pane (the tab next to Data) holds ready-made items you drag onto the view, among them Constant Line, Average Line, Median with Quartiles, Box Plot, Totals, Trend Line and Forecast, plus custom Reference Line, Reference Band and Distribution Band. Drag a line and drop zones appear: <b>Table</b>, <b>Pane</b> or <b>Cell</b>. That is the scope: one line for the whole view, one per pane (each [Contract] row, say) or one per cell. Right-click a line → Edit to change it later.','A reference line is computed from the <b>marks</b> in the view, not the raw rows. On daily SUM([Pnl]) bars an Average Line is the mean of the bars: your average trading day, not your average trade (a day with four trades counts once, as their total). Days with no trades are not zeros; they have no bar, so they don&rsquo;t count. Put [Contract] on Rows and even the Table average moves, because each mark is now one contract on one day; switch the scope to Per Pane for one average per contract.','A <b>Trend Line</b> (Linear, Logarithmic, Exponential, Polynomial or Power) needs numbers or dates on both axes, so use continuous DAY([Day]), not text headers. By default it draws one trend per colour (“Allow a trend line per color” in its options). Right-click it → <b>Describe Trend Line</b> for the equation, R-Squared (how much of the variation the line explains) and the p-value: above 0.05, the slope could well be noise.'],
+ ex:R`Daily practice minutes (mind)
+Columns: DAY([Day]) continuous · Rows: SUM([Minutes]) · Mark: Bar
+
+Analytics pane → drag onto the view:
+  Constant Line → Table → type 20    your daily target
+  Average Line  → Table              the mean of the daily bars: your
+                                     average practice day, not your
+                                     average session
+  Trend Line    → Linear             is your practice growing?
+     right-click the trend line → Describe Trend Line…
+     → equation, R-Squared, p-value
+
+Rows: + [Practice]                   one pane per practice
+  right-click the average line → Edit → Scope: Per Pane
+                                     → one average per practice`,
+ quiz:{q:'Daily P&amp;L bars: continuous DAY([Day]) on Columns, SUM([Pnl]) on Rows. You drag <b>Average Line</b> from the Analytics pane and drop it on <b>Table</b>. What value does the line show?',o:['The average P&L per trade, because averages are computed from the rows','The mean of the daily totals, one per day you traded: your average trading day','The average over every calendar day on the axis, with no-trade days counted as 0','A moving average that follows the bars from one day to the next'],a:1,why:'Reference lines aggregate the marks in the view, not the rows. Each bar is one day’s SUM([Pnl]), so the Average Line is the mean of those bars. Days without trades have no bar, so they are left out, not counted as 0. A per-trade average would need AVG([Pnl]) in the view, and a moving average needs a table calculation (a later lesson), not an Average Line.'},
+ prac:{task:'(a) On <b>meals</b>: daily kcal bars (continuous DAY([Day]) on Columns, SUM([Kcal]) on Rows) with a Constant Line at a 2,400 kcal target and an Average Line, both on Table. What does the average line measure, why is it not your average meal, and is it above the target? Now put [Kind] on Rows: why does the Table average drop? Then edit its scope to Per Pane: what are your average bowl day and your average snack day? (b) On <b>checkins</b>: AVG([Weight]) as a line over continuous DAY([Day]) with a linear Trend Line. Open Describe Trend Line: is the slope down, and is it significant (p-value below 0.05)?',sol:R`(a) Analytics pane → Constant Line → drop on Table → type 2400
+    Analytics pane → Average Line → drop on Table
+    → one line at the mean of the daily bars: your average logged day
+      (days with nothing logged have no bar, so they don't count). It is
+      not your average meal: each bar adds up all of that day's meals,
+      while AVG([Kcal]) would average the meals one by one.
+      Built-in sample: about 2,441 a day, just above the target, against
+      about 876 a meal. Apps' data: about 2,383 a day (just under) and 821.
+    Rows: [Kind] → one pane per kind. Each mark is now one kind on one
+      day, so the Table average averages kind-days and drops (built-in
+      sample: about 2,441 → 1,577; apps' data: 2,383 → 1,478).
+    Right-click the average line → Edit → Scope: Per Pane
+    → one line per kind, over the days you ate it: bowls about 2,333 a
+      day and snacks about 197 on the sample (apps' data: 2,251 and 215).
+
+(b) Columns: DAY([Day]) continuous · Rows: AVG([Weight]) · Mark: Line
+    Analytics pane → Trend Line → Linear
+    Right-click the trend line → Describe Trend Line…
+    → the equation (its Day coefficient is the slope), R-Squared, p-value.
+    Days with no weight (NULL) are left out of the line and the fit.
+    Built-in sample: slope down, R-Squared high (about 0.9), p-value far
+    below 0.05: a real downtrend.
+    Apps' data: the weight zig-zags around 81 and the line is nearly
+    flat; R-Squared is near 0 and the p-value far above 0.05: no real
+    trend, the slope is noise.`}},
+{id:'tab16',t:'tab',lv:2,title:'Dashboards & filter actions',
+ learn:['A <b>dashboard</b> (Dashboard → New Dashboard) puts sheets together: drag them in from the Sheets list, tiled into a grid or floating on top, at a Fixed, Automatic or Range size. <b>Dashboard → Actions</b> makes them talk to each other. A <b>Filter</b> action turns a click on one sheet into a filter on others; <b>Use as Filter</b> (the funnel icon on a sheet&rsquo;s frame) makes one in a click. Highlight, Go to URL and Go to Sheet actions also exist; parameter and set actions come later.','Each filter action has <b>source</b> sheets, <b>target</b> sheets, a trigger (<i>Run action on</i>: Hover, Select or Menu) and what <b>Clearing the selection will</b> do: Show all values (the default: the target shows everything again), Keep filtered values (the last selection stays) or Exclude all values (the target goes blank). It filters on the dimensions of the clicked mark (All fields) or only the ones you pick (Selected fields): click the NQZ6 bar and the targets keep Contract = NQZ6.','Gotchas: a filter card shown on a dashboard filters only its own sheet until you open its menu → <b>Apply to Worksheets</b> → All Using This Data Source (or Selected Worksheets). Clearing is set per action, so a detail list that stays empty until a click, next to a chart that shows everything, needs two actions. A <b>highlight</b> action fades the other marks instead of removing them, and the target sheet needs the field it matches on.'],
+ ex:R`Dashboard "Urges" on habits ([Event] = resisted, slipped on both sheets)
+  Sheet "By trigger": Rows [Trigger] · Columns AVG([Intensity])
+  Sheet "Log":        Rows [Id] · [Day] (exact date, discrete) · [Event]
+                      · [Trigger] · Text SUM([Intensity])
+
+Dashboard → Actions → Add Action → Filter…
+  Name:           Pick a trigger
+  Source sheets:  By trigger      Run action on: (•) Select ( ) Hover ( ) Menu
+  Target sheets:  Log
+  Clearing the selection will:
+    (•) Show all values  ( ) Keep filtered values  ( ) Exclude all values
+  Filter:         (•) All fields  ( ) Selected fields
+→ click the Boredom bar: the log keeps only Boredom urges
+
+Filter card [Event] ▾ → Apply to Worksheets → All Using This Data Source
+  (by default a card filters only the sheet it came from)`,
+ quiz:{q:'On your trading dashboard, clicking a contract in the P&amp;L bar chart filters the trade list. You want the list to stay <b>empty</b> until a contract is clicked, and empty again after you clear the click. Which setting does that?',o:['Filter action: Clearing the selection will → Show all values','Filter action: Clearing the selection will → Keep filtered values','Change Run action on from Select to Hover','Filter action: Clearing the selection will → Exclude all values'],a:3,why:'Exclude all values filters every row out of the target while nothing is selected, so the list is blank until you click a bar and blank again when you clear it. Show all values (the default) fills the list with every trade whenever nothing is selected. Keep filtered values leaves the last contract’s trades in place after you clear, and the list is still full before the first click. Hover only changes what triggers the action, not what clearing does.'},
+ prac:{task:'Build a <b>Trading review</b> dashboard on <b>trades</b> with three sheets. <b>A</b>: bars of SUM([Pnl]) by [Contract]. <b>B</b>: a trade list, one row per trade ([Id] as a dimension, [Day] as a discrete exact date, [Side], with SUM([Minutes]) and SUM([Pnl])). <b>C</b>: daily P&amp;L lines, continuous DAY([Day]) and SUM([Pnl]) with [Side] on Color. Clicking a contract in A filters B and C; while nothing is clicked, B is empty and C shows every contract. Hovering a trade in B highlights its side (matched on [Side] only) in B and C. Add a [Day] range filter card that applies to all three sheets. Save the workbook as Trading review: later lessons build on it.',sol:R`Sheets
+  A: Columns [Contract] · Rows SUM([Pnl])
+  B: Rows [Id] (dimension) · [Day] (exact date, discrete) · [Side]
+     Text: Measure Values = SUM([Minutes]), SUM([Pnl])
+     Columns: Measure Names
+  C: Columns DAY([Day]) continuous · Rows SUM([Pnl]) · Color [Side] · Line
+
+Dashboard → New Dashboard → drag in A, B, C (tiled)
+
+Dashboard → Actions → Add Action → Filter…
+  1  Source: A · Run action on: Select · Target: B
+     Clearing the selection will: Exclude all values
+  2  Source: A · Run action on: Select · Target: C
+     Clearing the selection will: Show all values
+  (clearing is set per action, so B and C need one action each;
+   Filter: All fields, so the clicked bar passes its Contract)
+
+Dashboard → Actions → Add Action → Highlight…
+  Source: B · Run action on: Hover · Targets: B, C
+  Target highlighting: Selected fields → Side
+  (Side is on Rows in B and on Color in C, so both can match it)
+
+Date filter: on C, drag [Day] to Filters → Range of Dates
+  On the dashboard: C's ▾ menu → Filters → Day (shows the card)
+  Card ▾ → Apply to Worksheets → All Using This Data Source
+  (A, B and C all use trades, so all three follow it)
+
+File → Save As… → Trading review
+
+Check: click the NQZ6 bar → B lists only NQZ6 trades, C shows NQZ6's
+daily P&L per side. Click empty space in A → B empties again and C shows
+every contract. Hover a Long trade in B → the Long rows and the Long
+line stay bright, Short fades.`}},
+{id:'tab17',t:'tab',lv:3,title:'Parameters: user inputs',
+ learn:['A <b>parameter</b> is one workbook-wide value (a number, text, a date or True/False) that the viewer sets through a control: right-click it in the Data pane → <b>Show Parameter</b>. On its own it does nothing. It only acts where something refers to it: a calculated field, the N of a Top N filter (the Top tab of a filter dialog), a reference line (<i>Reference lines &amp; trend lines</i>), a title. Unlike a filter it belongs to no data source, and filters never change its value.','The classic build is a <b>measure switcher</b>: a String parameter [Metric] with the list Kcal, Protein, Carbs, Fat, and a row-level calc <code>CASE [Metric] WHEN "Kcal" THEN [Kcal] WHEN "Protein" THEN [Protein] … END</code>. Each meal returns the picked column, and the SUM on the shelf adds it up per day. A parameter also sits happily next to aggregates: <code>SUM([Protein]) &gt;= [Target]</code> raises no mixing error.','Gotcha: a list’s values are fixed when you create it, so a contract or exercise you start logging later is not in it, unless you set the list to refresh from a field <b>When workbook opens</b> (dynamic parameters, Tableau 2020.1 and later). The value it opens with can also come from a calculated field, such as one that returns your latest [Day], so a Date parameter always starts on your newest data.'],
+ ex:R`// trades: let the viewer pick a side (a parameter used as a filter)
+// 1. Create Parameter [Pick side]: String · List: Long, Short, Both
+// 2. Calc [Side filter] (row-level TRUE/FALSE):
+[Pick side] = "Both" OR [Side] = [Pick side]
+// 3. Filters: [Side filter] = True
+//    right-click [Pick side] → Show Parameter
+// 4. Rows: [Contract] · Columns: SUM([Pnl])
+//    Title: P&L by contract: <Parameters.Pick side>`,
+ quiz:{q:'You created a String parameter <b>[Metric]</b> and showed its control, but picking another value does not change the chart. Why?',o:['Its allowable values are a fixed list; set them to refresh from a field when the workbook opens','Nothing in the view uses it yet: no calc, filter, reference line or title refers to it','The chart uses another data source, and a parameter only works in the data source it was created in','It must be added to context so it applies before the aggregation'],a:1,why:'A parameter is just a value the viewer sets. Showing its control changes nothing until a calculated field (like the CASE switcher), a Top N filter, a reference line or a title uses it. A fixed list still changes value when you pick (refreshing only updates which values are offered), parameters belong to the whole workbook rather than one data source, and context applies to filters, not parameters.'},
+ prac:{task:'On <b>meals</b>, build a metric switcher. (1) A String parameter <b>[Metric]</b> with the list Kcal, Protein, Carbs, Fat, shown as a control. (2) A calc <b>[Selected metric]</b> that returns the picked column. (3) Continuous DAY([Day]) on Columns (Day from the second, date-value group of the pill menu), SUM([Selected metric]) on Rows as bars, and the parameter’s value in the sheet title. (4) In place of a constant target line, a Float parameter <b>[Daily target]</b> drawn as a reference line, and the bars coloured by whether the day’s total is <i>at least</i> the target. Switch to Protein with a target of 120: how many days reach it?',sol:R`Parameter [Metric]: Data type String · Allowable values: List
+  Kcal, Protein, Carbs, Fat · Current value Kcal
+  right-click [Metric] → Show Parameter
+Calc [Selected metric] (row-level):
+CASE [Metric]
+  WHEN "Kcal"    THEN [Kcal]
+  WHEN "Protein" THEN [Protein]
+  WHEN "Carbs"   THEN [Carbs]
+  WHEN "Fat"     THEN [Fat]
+END
+Columns: DAY([Day]) (continuous) · Rows: SUM([Selected metric]) · Mark: Bar
+Title: Daily <Parameters.Metric>   (Edit Title → Insert → Parameters.Metric)
+
+Parameter [Daily target]: Float · Allowable values: All · Current value 2400
+  Show Parameter
+Analytics pane → Reference Line → drop on Table → Value: [Daily target]
+Calc [Hit target] = SUM([Selected metric]) >= [Daily target]  → Color
+Metric = Protein, target 120: the line moves to 120 and the colours recompute.
+Count the True bars: 13 of 42 days on the built-in sample (one day lands
+exactly on 120 and counts, because the calc uses >=), 16 of 31 on the apps'
+data. The target is one number,
+so set it again when you switch metric (2400 means nothing for grams).
+Filters never change either parameter: only the viewer (or an action) does.`}},
+{id:'tab18',t:'tab',lv:3,title:'Data blending: primary & secondary',
+ learn:['<b>Blending</b> combines two separate data sources in one sheet. Tableau queries each source on its own (the primary at the view’s level of detail, the secondary grouped by the <b>linking fields</b> in the view), then matches the results. The first source you use in a sheet is the <b>primary</b> (blue tick in the Data pane) and decides which marks exist; the other is the <b>secondary</b> (orange tick). It behaves like a left join of aggregated results, not of rows.','Fields with the same name link automatically; otherwise set the link in Data → Edit Blend Relationships. In the secondary’s Data pane an orange chain next to the field means the link is active, a grey broken chain that it is off; Tableau turns it on when the linking field is used in the view. Make [Day] a Date in both sources first, as in <i>Discrete vs continuous</i>. The primary is chosen per sheet: whichever source you drag a field from first.','Gotchas: (1) secondary fields are always aggregated. A secondary dimension comes in as <code>ATTR()</code>, which shows <b>*</b> when one primary mark matches several values. (2) Rows that exist only in the secondary disappear, because the primary drives the marks. Blend when the tables can’t be related in one data source (two published sources you can’t edit, say); otherwise a relationship (<i>Relationships vs joins</i>) is simpler.'],
+ ex:R`Two data sources: Meals and Checkins (Data → New Data Source)
+Drag [Day] from Meals first → Meals is primary (blue tick)
+  Rows:    [Day]  (exact date, discrete)
+  Columns: SUM([Kcal])      ← Meals, primary
+           AVG([Weight])    ← Checkins, secondary (orange tick)
+  Data pane: orange chain next to Checkins' [Day] = link active
+Same result as SQL:
+  SELECT m.day, m.kcal, c.weight
+  FROM (SELECT day, SUM(kcal) AS kcal FROM meals GROUP BY day) m
+  LEFT JOIN (SELECT day, AVG(weight) AS weight FROM checkins GROUP BY day) c
+    ON c.day = m.day`,
+ quiz:{q:'Checkins is the primary source and Trades the secondary, linked on [Day]. Exact-date [Day] is on Rows and you drag Trades’ <b>[Contract]</b> onto Text. Some rows show <b>*</b>. Why?',o:['Those days have several contracts, and a secondary dimension comes in as ATTR([Contract])','The link on Day is broken for those days, so Tableau cannot match the two sources','You made no trades on those days, so the secondary returns NULL, which is shown as *','Blending repeated those check-in rows once per trade, as a join would, and * marks the duplicates'],a:0,why:'The secondary is aggregated to the linking field before it is matched, so every field from it is aggregated; a dimension becomes ATTR([Contract]), which returns the value when there is only one and * when there are several. Days with no trades get NULL, not *, and blending never duplicates primary rows the way a row-level join does.'},
+ prac:{task:'Add <b>trades</b> and <b>checkins</b> as two separate data sources (two connections, not related), with [Day] as a Date in both (checkins has one row per day). Sheet 1, Trades primary: [Day] as a discrete exact date on Rows, SUM([Pnl]) and the blended AVG([Energy]) on Columns. Sheet 2, Checkins primary: [Day] from Checkins, again as a discrete exact date, on Rows, AVG([Energy]) and Trades’ SUM([Pnl]) on Columns, and Trades’ [Contract] on Label. Which days appear in one sheet and not the other, and why? What do the * labels mean?',sol:R`Data → New Data Source twice (trades, checkins); change [Day] to Date in both.
+Link: same name → Tableau links on Day automatically
+  (if not: Data → Edit Blend Relationships → Custom → Add: Day ↔ Day)
+Sheet 1: drag [Day] from Trades first → Trades primary (blue tick)
+  Rows: [Day] (right-click → Exact Date, Discrete) · Columns: SUM([Pnl]),
+  then AVG([Energy]) from Checkins (orange tick, orange chain on Day)
+  → one row per trading day. Check-in days with no trades are missing;
+    trade days with no check-in have an empty Energy bar.
+Sheet 2: drag [Day] from Checkins first → Checkins primary
+  Rows: [Day] (Exact Date, Discrete) · Columns: AVG([Energy]), SUM([Pnl]) from Trades · Label: [Contract] from Trades
+  → one row per check-in day. Trade-only days vanish; check-in days
+    with no trades have no P&L.
+  * = ATTR([Contract]) on a day with more than one contract.
+Why: each source is queried on its own, the secondary is aggregated to Day
+and matched to the primary's rows (a left join of aggregates), so the
+primary decides which days exist. Both datasets have days of each kind:
+  built-in sample: 44 trade days, 46 check-in days; 11 trade days have no
+  check-in (only in sheet 1), 13 check-in days have no trades (only in sheet 2)
+  apps' data: 48 trade days, 33 check-in days; 24 only in sheet 1, 9 only in sheet 2
+vs a relationship ("Relationships vs joins"): both tables sit in one data
+source and no source is primary; blend only when the sources can't be modelled together.`}},
 {id:'tab5',t:'tab',lv:3,title:'LOD expressions: FIXED',
  learn:['Level of Detail expressions compute at a grain you choose, whatever the view shows. { FIXED [Day] : SUM([Pnl]) } puts the whole day’s P&L on every trade, so you can ask “how did my trades do on red days?”','FIXED runs <b>before</b> dimension filters (but after context, data source and extract filters). INCLUDE and EXCLUDE adjust the view’s grain instead.'],
  ex:R`// Whole-day P&L on every trade row
@@ -1473,8 +2457,35 @@ END`}},
 
 // Your heaviest load per exercise, on every set
 { FIXED [Exercise] : MAX([Load]) }`,
- quiz:{q:'A FIXED LOD is evaluated relative to a normal <b>dimension filter</b>…',o:['After it, so it respects the filter','Before it, so the filter does not change the FIXED result','At the same time','Only on extracts'],a:1,why:'In Tableau’s order of operations, FIXED LODs come before dimension filters. Add the filter to context if you want FIXED to respect it.'},
+ quiz:{q:'A FIXED LOD is evaluated relative to a normal <b>dimension filter</b>…',o:['Before it, so the filter does not change the FIXED result','After it, so it respects the filter','At the same time','Only on extracts'],a:0,why:'In Tableau’s order of operations, FIXED LODs come before dimension filters. Add the filter to context if you want FIXED to respect it.'},
  prac:{task:'Write an LOD that returns, for each habit, the number of distinct days you slipped on it.',sol:R`{ FIXED [Habit] : COUNTD(IF [Event] = "slipped" THEN [Day] END) }`}},
+{id:'tab19',t:'tab',lv:3,title:'LOD expressions: INCLUDE & EXCLUDE',
+ learn:['A FIXED LOD (<i>LOD expressions: FIXED</i>) ignores the view. <b>INCLUDE</b> and <b>EXCLUDE</b> are relative to it. INCLUDE adds a dimension to the view’s grain for the inner aggregate, and an outer aggregation rolls the result back up to the marks: with [Kind] on Rows, <code>AVG({ INCLUDE [Day] : SUM([Kcal]) })</code> totals kcal per kind and day, then averages those days, giving the kcal per day you ate that kind, where <code>AVG([Kcal])</code> is per meal.','<b>EXCLUDE</b> removes a dimension from the grain: <code>{ EXCLUDE [Kind] : SUM([Kcal]) }</code> is the total across all kinds, on every kind’s mark. Wrap it in MIN (one value per mark) for a share of the parent: <code>SUM([Kcal]) / MIN({ EXCLUDE [Kind] : SUM([Kcal]) })</code>. It is an ordinary measure computed in the query, so you can reuse it in further calcs. The next lesson, <i>Table calculations</i>, gets the same share from TOTAL(), computed afterwards on the marks in the view.','Gotchas: (1) both run <i>after</i> dimension filters, so a [Day] filter changes them, while FIXED runs before them and ignores it unless the filter is in context. (2) The outer aggregation matters: SUM of an INCLUDE that sums just adds the days back up to plain SUM([Kcal]); AVG gives the per-day figure. (3) EXCLUDE of a dimension that isn’t in the view changes nothing.'],
+ ex:R`// mind · Rows: [Practice]
+AVG([Minutes])                               // minutes per session
+AVG({ INCLUDE [Day] : SUM([Minutes]) })      // minutes per day you did it
+SUM({ INCLUDE [Day] : SUM([Minutes]) })      // = SUM([Minutes]): outer SUM undoes it
+
+// share of all your practice minutes (format as %)
+SUM([Minutes]) / MIN({ EXCLUDE [Practice] : SUM([Minutes]) })`,
+ quiz:{q:'[Contract] is on Rows. What does <b>AVG({ INCLUDE [Day] : SUM([Pnl]) })</b> return?',o:['Each contract’s average P&L per trade, as AVG([Pnl]) would give','Each contract’s total P&L, the same as SUM([Pnl]), since the days are added back up','One number on every row: your average daily P&L across all contracts','Each contract’s average daily P&L, over the days you traded it'],a:3,why:'INCLUDE adds [Day] to the view’s grain for the inner SUM, so Tableau first totals P&L per contract and day, then the outer AVG rolls those daily totals back up to each contract. The per-trade average is AVG([Pnl]); only an outer SUM would give back the plain total; and because [Contract] stays in the grain, each contract gets its own value.'},
+ prac:{task:'On <b>workouts</b> (one row per exercise logged), with [Type] on Rows, show three columns side by side: the average sets per exercise logged, the average sets per <i>day</i> you trained that type (an INCLUDE calc), and each type’s share of all your sets (an EXCLUDE calc), formatted as a percentage. Cardio logs no sets, so its row stays empty. Why are Weighted’s first two columns so far apart, and why does the INCLUDE need an outer AVG? Then add a [Day] filter that keeps only October 2026: do the two LOD columns respect it, and would <code>{ FIXED [Type] : SUM([Sets]) }</code>?',sol:R`Rows: [Type] · Measure Names on Columns · Measure Values on Text:
+  AVG([Sets])                                     → sets per exercise logged
+  [Sets per day] = AVG({ INCLUDE [Day] : SUM([Sets]) })
+     inner SUM per Type × Day, outer AVG over the days you trained that type
+  [Share of sets] = SUM([Sets]) / MIN({ EXCLUDE [Type] : SUM([Sets]) })
+     denominator = all types' total on every row; MIN because it is one
+     value per mark · Format → Numbers → Percentage
+Weighted: about 3 sets per exercise, but you log several exercises in one
+  session, so about 8 sets per training day on the built-in sample (about 16
+  on the apps' data, where Stretch also goes from 2 to 16). One exercise a
+  day of a type means both columns match, as Bodyweight and Stretch do on
+  the sample. Weighted is about 84% of all sets on the sample, 70% on apps.
+Outer AVG: with SUM outside you add the days back up to plain SUM([Sets]).
+[Day] filter (October 2026 only): both LOD columns change (the share is now
+  of October's sets), because INCLUDE and EXCLUDE run after dimension
+  filters. { FIXED [Type] : SUM([Sets]) } would keep the all-time total
+  unless the [Day] filter is added to context.`}},
 {id:'tab6',t:'tab',lv:3,title:'Table calculations',
  learn:['Table calculations run <b>last</b>, on the aggregated numbers already in the view: running totals, % of total, rank, difference, moving averages. Your equity curve is a running sum of daily P&L.','“Compute Using” (table across, pane down, or specific dimensions) sets the direction and scope: the Tableau version of PARTITION BY / ORDER BY.'],
  ex:R`// Columns: DAY([Day])
@@ -1482,10 +2493,48 @@ RUNNING_SUM(SUM([Pnl]))                 // equity curve
 SUM([Pnl]) / TOTAL(SUM([Pnl]))          // % of total per contract
 RANK(SUM([Pnl]))                        // contract rank
 WINDOW_AVG(AVG([Sleep]), -6, 0)         // 7-day moving avg sleep`,
- quiz:{q:'When are table calculations computed?',o:['Before any filters, at row level','In the database during extraction','Last, on the aggregated results currently in the view','Only when exporting'],a:2,why:'They work on the view’s result table, so they change if you filter out marks or change the dimensions in the view.'},
+ quiz:{q:'When are table calculations computed?',o:['Before any filters, at row level','Last, on the aggregated results currently in the view','In the database during extraction','Only when exporting'],a:1,why:'They work on the view’s result table, so they change if you filter out marks or change the dimensions in the view.'},
  prac:{task:'Write a table calc for the week-over-week % change in your meditation minutes (from <b>mind</b>).',sol:R`(ZN(SUM([Minutes])) - LOOKUP(ZN(SUM([Minutes])), -1))
 / ABS(LOOKUP(ZN(SUM([Minutes])), -1))
 // Columns: WEEK([Day]) · Compute using: Day`}},
+{id:'tab20',t:'tab',lv:3,title:'Groups vs sets',
+ learn:['A <b>group</b> relabels members by hand: select Bench Press, Overhead Press and Triceps Pushdown → Group → “Push”. The result is still a dimension with many values (Push, Pull, Legs…), and ticking <b>Include ‘Other’</b> pools everything ungrouped into one Other member. Gotcha: a group doesn’t place new members. An exercise you start logging next week stays on its own, or falls into Other, until you edit the group.','A <b>set</b> splits members into <b>In</b> and <b>Out</b>. It can be fixed (members you tick) or computed: by condition (SUM([Volume]) &gt; 10000, volume being sets × reps × load) or Top N by a field, where N can be a parameter (<i>Parameters: user inputs</i>). Computed sets recompute as your data grows. In a calc a set is TRUE/FALSE: <code>IF [Top exercises] THEN [Exercise] ELSE "Other" END</code>. Create Combined Set merges two sets on one dimension (all, shared, or one set except shared members).','Gotcha: conditional and Top N sets are computed at the same stage as Top N filters and FIXED LODs (<i>LOD expressions: FIXED</i>), before ordinary dimension filters. A [Day] filter for the last two weeks hides older workouts but doesn’t change who is in the set: it is still your all-time top N. If the set should follow the filter, right-click it → <b>Add to Context</b>: a context filter runs before sets and FIXED.'],
+ ex:R`// mind
+// Group: right-click [Practice] → Create → Group
+//   Calm = Meditation, Breathwork, Body Scan
+//   Mind = Visualization, Focus
+//   ☑ Include 'Other'  → Journaling lands in Other
+//   → a new dimension with 3 values
+
+// Set by condition: right-click [Practice] → Create → Set
+//   Condition tab · By formula: AVG([Depth]) >= 6.5   → [Deep practices]
+//   Color: [Deep practices]   → In / Out
+
+// A set in a calc is TRUE/FALSE:
+IF [Deep practices] THEN [Practice] ELSE "Other" END`,
+ quiz:{q:'You want a bar for each of your top <i>N</i> exercises by training volume plus one “Other” bar, with N picked through a parameter, membership that updates as you log more, and a TRUE/FALSE you can use in a calc. What do you build?',o:['A group of your current top five exercises, with Include Other ticked','A Top N set on [Exercise] by SUM([Volume]), with N set to the parameter','A Top N filter on [Exercise] by SUM([Volume]), with N set to the parameter','A String parameter whose list holds your top exercise names'],a:1,why:'A Top N set recomputes its In/Out members from the data, takes a parameter for N, and is TRUE/FALSE in a calc, so IF [Top exercises] THEN [Exercise] ELSE "Other" END builds the Other bar. A group is a fixed hand-made mapping that does not move as your volumes change; a Top N filter removes the other exercises instead of pooling them; a parameter list is fixed values a viewer picks from, not a ranking.'},
+ prac:{task:'On <b>workouts</b>: (1) a row-level calc <b>[Volume]</b> = <code>ZN([Sets] * [Reps] * [Load])</code> (0 for anything without a load). (2) An integer parameter <b>[Top N]</b> (current value 5), shown as a control. (3) A set <b>[Top exercises]</b>: the top [Top N] of [Exercise] by SUM([Volume]). (4) A calc <b>[Exercise or Other]</b> and a bar chart of SUM([Volume]) by it, with the set on Color. (5) Group the exercises into Push / Pull / Legs with Include ‘Other’ ticked: what happens to the group and to the set when you log a new exercise? (6) Add a [Day] filter that keeps only October 2026. What happens to the bars, does set membership change, and what would make the set rank on October only?',sol:R`[Volume] = ZN([Sets] * [Reps] * [Load])     // 0 for cardio, stretch, bodyweight
+Parameter [Top N]: Integer · Current value 5 · Range 1 to 10 · Show Parameter
+Set: right-click [Exercise] → Create → Set → Top tab
+     By field: Top [Top N] by [Volume] Sum   → [Top exercises]
+[Exercise or Other] = IF [Top exercises] THEN [Exercise] ELSE "Other" END
+Rows: [Exercise or Other] · Columns: SUM([Volume]) · Color: [Top exercises]
+  sort descending: Leg Press is your top exercise on both datasets (on the
+  apps' data the Other bar, 31 exercises together, is bigger still)
+Group: right-click [Exercise] → Create → Group → select members → Group
+  Push (Bench Press, Overhead Press, Triceps Pushdown…), Pull (Deadlift,
+  Barbell Row, Pull-up…), Legs (Leg Press, Back Squat, Romanian Deadlift…)
+  ☑ Include 'Other'
+New exercise: the set recomputes (a heavy one can enter the top N, and N
+  moves with the control); the group is a fixed mapping, so the new exercise
+  lands in Other until you edit the group. A group has many values; a set
+  has In/Out and is TRUE/FALSE in calcs.
+[Day] filter: the bars shrink to October's volume, but membership stays your
+  all-time top N, because Top N sets are computed before dimension filters.
+  Built-in sample: Deadlift keeps its own bar although Triceps Pushdown (in
+  Other) lifted more in October. Right-click the filter → Add to
+  Context and the set ranks October only: Triceps Pushdown comes in, Deadlift
+  goes to Other. (On the apps' data the top 5 is the same either way.)`}},
 {id:'tab7',t:'tab',lv:4,title:'Order of operations & context filters',
  learn:['Tableau’s query pipeline: extract filters → data source filters → <b>context filters</b> → Top N / FIXED LOD → dimension filters → INCLUDE/EXCLUDE LOD → measure filters → table calcs → table-calc filters.','Most “why is my Top 5 wrong?” bugs come from this order. Adding a filter to context makes it apply before Top N and FIXED.'],
  ex:R`Goal: your Top 5 contracts by P&L *on Short trades only*
@@ -1493,10 +2542,139 @@ WINDOW_AVG(AVG([Sleep]), -6, 0)         // 7-day moving avg sleep`,
 2. Filters: [Side] = Short  → right-click → Add to Context
    (without context, the Top 5 is picked from all trades first,
     then Short is applied, so you may see fewer or wrong contracts)`,
- quiz:{q:'Your Top 5 Contracts filter ignores the Side filter. The fix?',o:['Convert Side to a measure','Add the Side filter to context','Use a live connection','Sort descending'],a:1,why:'Top N filters run before regular dimension filters; context filters run before Top N.'},
+ quiz:{q:'Your Top 5 Contracts filter ignores the Side filter. The fix?',o:['Convert Side to a measure','Use a live connection','Add the Side filter to context','Sort descending'],a:2,why:'Top N filters run before regular dimension filters; context filters run before Top N.'},
  prac:{task:'Where do FIXED LODs sit relative to context filters and dimension filters? What does that mean for { FIXED [Day] : SUM([Pnl]) } with a Side filter on?',sol:R`Context filters → FIXED LOD → dimension filters
 A normal Side filter does not change the whole-day P&L;
 add Side to context to get the day's P&L for that side only.`}},
+{id:'tab21',t:'tab',lv:4,title:'Filtering without breaking table calcs',
+ learn:['A dimension filter on [Day] removes rows <b>before</b> table calculations run (the pipeline in <i>Order of operations &amp; context filters</i>). Filter your equity curve, RUNNING_SUM(SUM([Pnl])), to October and the sum starts over: the first point is just that day’s P&amp;L. % of total and RANK are likewise recomputed on whatever is left.','A filter built on a <b>table calculation</b> runs last, so it only <b>hides</b> marks and every calc still sees all the data. <code>LAST() &lt;= 9</code> keeps the last 10 marks, <code>INDEX() &lt;= 5</code> the first five, and <code>LOOKUP(MIN([Day]), 0)</code> is the same date returned as a table calc, so a date range on it hides days instead of removing them.','Gotchas: (1) give the filter calc the same Compute Using as the running sum (Day), or it counts within the wrong partition. (2) It still queries every row, so it is no faster. (3) Hidden marks still count in TOTAL() and the WINDOW_ calcs, so the visible shares no longer add up to 100%. LAST() counts marks: on a daily chart that means trading days, not calendar days.'],
+ ex:R`// mind: each practice's share of ALL your minutes, showing only the top 3
+Rows: [Practice]
+Text: SUM([Minutes]) / TOTAL(SUM([Minutes]))      Compute Using: Table (down)
+
+[Top 3 practices] = RANK(SUM([Minutes])) <= 3     Compute Using: Table (down)
+Filters: [Top 3 practices] = True
+→ three rows, each still a share of ALL minutes: together less than 100%
+
+Same view with a dimension filter instead ([Practice]: tick those three)
+→ the other rows are gone before TOTAL() runs, so the three add up to 100%`,
+ quiz:{q:'Your equity curve is RUNNING_SUM(SUM([Pnl])) on a continuous DAY([Day]) axis, starting in August. You add a normal <b>[Day] filter</b> that keeps only October. What happens to the curve?',o:['Only the axis zooms in to October; every point keeps the value it had with all days shown','Nothing is filtered, because table calcs run before dimension filters','It starts over: the first October point is just that day’s P&L, and it adds up from there','Each October point shows only that day’s P&L, because a filtered running sum stops accumulating'],a:2,why:'Dimension filters run before table calcs, so the running sum only ever sees October’s rows. It still accumulates within October (so not D), but from zero instead of from your earlier total. To keep the level built up in earlier months, filter on a table calc such as LOOKUP(MIN([Day]), 0) or LAST(), which only hides marks.'},
+ prac:{task:'On <b>trades</b>: an equity curve, RUNNING_SUM(SUM([Pnl])) on a continuous DAY([Day]) axis, that shows only your <b>last 10 trading days</b> (days with trades) but still counts from your first trade. Write the table-calc filter and say how you set its Compute Using. Then show a single month (October, or your latest month), again without restarting the curve: a date range on a table-calc version of [Day], not on [Day] itself. Where do both filters sit in the order of operations, and how do you check that the first visible point is right?',sol:R`Sheet: Columns DAY([Day]) (continuous)   Rows: RUNNING_SUM(SUM([Pnl]))
+       running sum Compute Using: Day
+
+1. Last 10 trading days
+   [Last 10 days] = LAST() <= 9
+   Drag it to Filters → tick True
+   Right-click the filter pill → Compute Using → Day (same as the running sum)
+   LAST() counts marks, so these are the last 10 days with trades.
+
+2. One month
+   [Day shown] = LOOKUP(MIN([Day]), 0)          Compute Using: Day
+   Drag it to Filters (keep all dates) → right-click → Show Filter
+   → narrow the range to the month, e.g. 1–31 October
+   It returns each mark's own date, but as a table calc, so it runs last.
+
+Order: dimension filters → measure filters → table calcs (the running sum)
+→ table-calc filters (these two). The running sum is computed over every day,
+then the earlier marks are hidden.
+
+Check: compare with the unfiltered curve. The first visible point must equal
+the value the full curve had on that day (your running total up to then), not
+that day's own P&L, which is what a plain [Day] filter would give. For the
+last 10 days, the last point also equals your all-time SUM([Pnl]).`}},
+{id:'tab22',t:'tab',lv:4,title:'Parameter & set actions',
+ learn:['A <b>filter action</b> removes what you did not click from its targets. <b>Parameter</b> and <b>set actions</b> write the clicked value into a parameter or a set instead, so the rest of the data stays in the view for comparison. Both are in Dashboard → Actions → Add Action: Change Parameter and Change Set Values.','A parameter action has source sheets, a trigger (Hover, Select, Menu), a target parameter, a source field and an aggregation; clearing keeps the current value (the default) or sets a value you choose. Its data type must match the field: a Date parameter for [Day]. A set action can <b>Assign values to set</b>, <b>Add values to set</b> or <b>Remove values from set</b>; clearing keeps the set values, adds all or removes all.','Nothing changes until something uses the target, as with any parameter (<i>Parameters: user inputs</i>): <code>[Day] = [Picked Day]</code> on Filters, a reference line at [Picked Day] (<i>Reference lines &amp; trend lines</i>) or the set on Color. A parameter is not tied to a data source, so one click can drive a checkins sheet too. Check older actions: a filter action that clears with Exclude all values keeps its target empty whatever the parameter says.'],
+ ex:R`// workouts: click exercises to compare them with everything else
+Set: right-click [Exercise] → Create → Set… → [Compare]  (nothing ticked)
+Sheet "Sets by exercise": Rows [Exercise], Columns SUM([Sets]), Color [Compare]
+Dashboard → Actions → Add Action → Change Set Values…
+  Source sheet: Sets by exercise      Run action on: Select
+  Target set: Compare
+  Running the action will:     Add values to set   (each click adds one more)
+  Clearing the selection will: Keep set values
+The set works in calcs too:
+  IF [Compare] THEN [Exercise] ELSE "Everything else" END
+
+// mind: click a practice to see its sessions, keeping every practice on screen
+Parameter [Picked Practice]: String, current value "Meditation"
+Add Action → Change Parameter…
+  Source sheet: Minutes by practice   Target parameter: Picked Practice
+  Source field: Practice              Aggregation: None
+  Clearing the selection will: Keep current value
+Sessions sheet: calc [Practice] = [Picked Practice] on Filters → True`,
+ quiz:{q:'On the Trading review dashboard, clicking a contract in the P&amp;L bar chart should turn that bar orange, keep the other contracts on screen in grey, and let a calc such as <code>IF [Selected contracts] THEN [Side] END</code> use the choice. Which setup does that?',o:['A set [Selected contracts] on [Contract], placed on Color and filled by a set action (Assign values to set)','A filter action from the bar chart to itself, with Clearing the selection set to Keep filtered values','A highlight action on [Contract], which fades every contract except the clicked one','A parameter action that writes the clicked contract into a string parameter, with nothing else in the view'],a:0,why:'A set action only changes who is IN the set: the set on Color draws IN and OUT in two colours, the calc can test it, and every contract stays drawn. A filter action removes the unclicked contracts from its target; Keep filtered values only decides what happens when you clear. A highlight action fades the rest but cannot be used in a calc. A parameter does nothing until a calc, filter or reference line refers to it.'},
+ prac:{task:'Extend the <b>Trading review</b> dashboard from <i>Dashboards &amp; filter actions</i> (on <b>trades</b>). (1) Clicking a day on the daily P&amp;L chart (C) stores it in a Date parameter [Picked Day]: a reference line marks that day, the trade list (B) shows only that day’s trades, and C keeps every day. Before any click the list shows your latest trading day; clicking empty space keeps the last pick. (2) Clicking a contract on the bar chart (A) turns it orange and the others grey; clearing the click turns every bar grey again. (3) Optional: only the clicked contract splits into Long and Short bars, the others keep one “Both sides” bar. Give the parameter, the calcs and the settings of both action dialogs.',sol:R`1. Create Parameter → [Picked Day]: Data type Date, Allowable values All,
+   Current value: your latest trading day
+   ([Day] must be a Date field, see Discrete vs continuous; if it is
+    Date & Time, compare DATE([Day]) instead)
+   Dashboard → Actions → Add Action → Change Parameter…
+     Source sheets: C (daily P&L)      Run action on: Select
+     Target parameter: Picked Day
+     Source field: Day                 Aggregation: None
+     Clearing the selection will: Keep current value
+   C: right-click the Day axis → Add Reference Line
+     Scope: Entire Table   Value: Picked Day (parameter)   Label: Value
+   B (trade list): calc [Is picked day] = [Day] = [Picked Day] → Filters: True
+   The old filter action A → B clears with Exclude all values, so B would stay
+   empty until a contract is clicked: set its clearing to Show all values
+   (or take B out of its targets).
+   C is never filtered by the parameter, so every day stays visible.
+
+2. Right-click [Contract] → Create → Set… → [Selected contracts], none ticked
+   A: [Selected contracts] on Color (Edit Colors: In orange, Out grey)
+   Add Action → Change Set Values…
+     Source sheets: A (P&L by contract)   Run action on: Select
+     Target set: Selected contracts
+     Running the action will: Assign values to set
+     Clearing the selection will: Remove all values from set (all grey again)
+   (Keep set values would leave the last contract orange.)
+
+3. [Side detail] = IF [Selected contracts] THEN [Side] ELSE "Both sides" END
+   A: Columns [Contract], [Side detail] → only the clicked contract shows
+   a Long and a Short bar
+
+Nothing moves until a calc, filter or reference line uses the parameter or set.`}},
+{id:'tab23',t:'tab',lv:4,title:'Performance: recording & tuning',
+ learn:['Measure before you fix. In Tableau Desktop choose Help → Settings and Performance → <b>Start Performance Recording</b>, use the dashboard as a viewer would, then Stop Performance Recording. Tableau opens a Performance Summary workbook: a <b>Timeline</b> of events by sheet, the <b>Events</b> longest first (Executing Query, Compiling Query, Computing Layouts and others) and the <b>Query</b> text of a query event you click.','Slow queries point at the data: an extract with unused fields hidden and data aggregated (<i>Live connections vs extracts</i>), booleans and integers instead of strings, few COUNTDs on many-valued fields. Slow layout points at the dashboard: fewer marks, sheets and filter cards. An <b>Only Relevant Values</b> card re-queries its list after every change to another filter; <b>All Values in Database</b> avoids that, and an Apply button or action filter cuts how often it runs.','Gotchas: (1) a context filter (<i>Order of operations &amp; context filters</i>) helps only when it removes a large share of the rows; otherwise it just adds a step. (2) Tableau caches query results, so a repeat of the same steps can look faster with nothing fixed: far fewer Executing Query events means the cache answered. (3) On your logs every event is tiny; the method is what carries over to work data.'],
+ ex:R`// workouts: recording a Training dashboard
+Help → Settings and Performance → Start Performance Recording
+  open the dashboard · change the [Type] filter · click an exercise
+Help → Settings and Performance → Stop Performance Recording
+→ the Performance Summary opens as a new workbook
+  Timeline: which sheet was busy, and when
+  Events: the longest first, for example
+    Executing Query     on "Volume by exercise"   → the data side
+    Computing Layouts   on "Training dashboard"   → the layout side
+  click an Executing Query bar → its text appears in Query
+
+Fixes it might point to:
+  IF [Type] = "Weighted" THEN "yes" ELSE "no" END   →  [Type] = "Weighted"  (boolean)
+  [Exercise] card: Only Relevant Values             →  All Values in Database`,
+ quiz:{q:'A dashboard has six filter cards, all set to <b>Only Relevant Values</b>, and it is slow every time you change any one of them. What is the main reason?',o:['Only Relevant Values turns each card into a context filter, so a temporary table is rebuilt on every change','Filter cards force a live connection, even when the data source is an extract','Every filter change makes the table calculations run again in the database, on all rows','After each change, every relevant-values card has to query the data again to rebuild its own list of values'],a:3,why:'An Only Relevant Values card lists only the values that pass the other filters, so each change sends a new query for every other card’s list, on top of the view’s own queries. All Values in Database avoids those queries; an Apply button or action filters cut how often they run. Filter cards do not change the connection type or create context filters, and table calcs run in Tableau on the results already in the view, not in the database.'},
+ prac:{task:'In Tableau Desktop, record the <b>Trading review</b> dashboard from <i>Dashboards &amp; filter actions</i> (on <b>trades</b>) while you open it, change the [Day] filter and click a contract. Which event took longest, and on which sheet? Write down three concrete changes, ranked by what the recording shows, make them, then record the same steps again and compare, allowing for the query cache.',sol:R`Help → Settings and Performance → Start Performance Recording
+  open the dashboard · move the [Day] filter · click a contract bar
+Help → Settings and Performance → Stop Performance Recording
+
+Reading the Performance Summary
+  Events: the top bar is the slowest event; its type says where to look
+  (Executing Query = the data source, Computing Layouts = the dashboard)
+  Timeline: which sheet or dashboard it belonged to, and when it happened
+  Query: click an Executing Query event to read the query it sent
+
+Ranked fixes (typical for this dashboard)
+1. Queries: use an extract; Extract → Edit → Hide All Unused Fields, so only
+   the fields the sheets use (Id, Day, Contract, Side, Minutes, Pnl) are stored
+2. Filter cards: All Values in Database wherever Only Relevant Values is set;
+   Customize → Show Apply Button on list cards
+3. Marks and layout: the trade list draws one row per trade; keep it short
+   (empty until a click, or only the picked day from Parameter & set actions),
+   and remove sheets nobody looks at
+
+Record the same steps again and compare the time per event type. If the
+second run has far fewer Executing Query events, the cache answered them,
+so credit a fix only for what it changed. With a couple of hundred trades
+every event takes milliseconds; on a work dataset the same reading shows
+where the seconds go.`}},
 {id:'tab8',t:'tab',lv:4,title:'Automating extracts: Hyper API & REST',
  learn:['The Tableau Hyper API (Python package tableauhyperapi) builds .hyper extracts straight from code: ideal after a SQL or pandas step that cleans your app logs. You define a table, insert rows, and publish.','Publishing and refreshing are automated with the REST API (the Python wrapper is tableauserverclient, TSC) or the tabcmd command line.'],
  ex:R`from tableauhyperapi import (HyperProcess, Telemetry, Connection, CreateMode,
@@ -1516,13 +2694,64 @@ with HyperProcess(Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hp:
         with Inserter(con, t) as ins:
             ins.add_rows(rows)   # list of tuples from trades; day as datetime.date
             ins.execute()`,
- quiz:{q:'Which tool would you use to <b>publish and refresh</b> data sources on Tableau Server/Cloud from a Python script?',o:['tableauhyperapi only','Tableau Server Client (REST API) or tabcmd','PROC SQL','Tableau Prep only'],a:1,why:'The Hyper API creates files; publishing, refresh jobs and permissions go through the REST API (tableauserverclient) or tabcmd.'},
+ quiz:{q:'Which tool would you use to <b>publish and refresh</b> data sources on Tableau Server/Cloud from a Python script?',o:['tableauhyperapi only','Tableau Prep only','PROC SQL','Tableau Server Client (REST API) or tabcmd'],a:3,why:'The Hyper API creates files; publishing, refresh jobs and permissions go through the REST API (tableauserverclient) or tabcmd.'},
  prac:{task:'Sketch TSC code to publish isionlogs.hyper to a project, overwriting the existing data source.',sol:R`import tableauserverclient as TSC
 auth = TSC.PersonalAccessTokenAuth("token-name", "token-secret", site_id="mysite")
 server = TSC.Server("https://tableau.example.com", use_server_version=True)
 with server.auth.sign_in(auth):
     ds = TSC.DatasourceItem(project_id="PROJECT_ID")
     server.datasources.publish(ds, "isionlogs.hyper", TSC.Server.PublishMode.Overwrite)`}},
+{id:'tab24',t:'tab',lv:4,title:'Row-level security with USERNAME()',
+ learn:['<b>Row-level security</b>: one published data source in which each viewer sees only their own rows. The usual pattern is an entitlement table (User, Contract) inner-joined to the facts in the physical layer, a calc [Allowed] = <code>[User] = USERNAME()</code> added as a <b>data source filter</b> (True), then Server → Publish Data Source. For groups, test <code>ISMEMBEROF("Coaches")</code>.','Data source filters travel with the published source: every workbook that connects to it gets them, and authors and viewers cannot remove them. A sheet filter can be deleted by anyone who edits the workbook, and an extract filter runs once, when the extract is built, so it cannot vary by viewer. Server → Create User Filter is quicker but lives in one workbook and is kept up by hand.','Gotchas: (1) USERNAME() is your Server or Cloud user name when signed in (on Cloud, your sign-in email) and your local user name in Desktop otherwise; the User column must match it exactly. (2) Before the filter, a contract two users share repeats every trade; after it, each user has one row per contract, so nothing is double-counted. (3) A contract with no entitlement row is hidden from everyone. Tableau Public cannot publish separate data sources.'],
+ ex:R`// habits: an accountability partner sees only the urge they help with
+Entitlements_Habits.csv
+  User,Habit
+  analyst,Doomscrolling
+  analyst,Drink water
+  analyst,Walk 10 min
+  partner,Doomscrolling
+
+Data Source tab: Connections → Add → Text file (the CSV)
+  double-click Habits → drag the CSV next to it → Inner join: Habit = Habit
+[Allowed] = [User] = USERNAME()
+Data Source tab → Filters: Add… → Allowed → True      (data source filter)
+Server → Publish Data Source → Habits
+
+// group version, no entitlement table:
+NOT ISMEMBEROF("Partners") OR [Habit] = "Doomscrolling"`,
+ quiz:{q:'Why add the USERNAME() filter as a <b>data source filter</b> on the published data source, rather than as a normal filter on each sheet?',o:['It applies to every workbook that connects to the source, and workbook authors and viewers cannot remove it','USERNAME() can only be used in data source filters; a sheet filter cannot call it','Data source filters run after table calculations, so totals are computed on every user’s rows first','A data source filter is applied when the extract is built, giving each user their own copy of the extract'],a:0,why:'Data source filters are part of the published source, so every query from every workbook carries them and nobody downstream can edit them away. USERNAME() works in any calc, sheet filters included; the trouble is that a sheet filter covers one workbook and anyone who edits it can delete the filter. Data source filters run near the start of the pipeline, long before table calcs. A filter applied when the extract is built (an extract filter) runs once, which is exactly why it cannot vary per viewer.'},
+ prac:{task:'On <b>trades</b>: your coach should see only NQZ6 and ESZ6 trades, and you should see all three contracts (ESZ6, GCZ6 and NQZ6). Build an Entitlements table (User, Contract), inner-join it to trades on [Contract] in the physical layer, write [Allowed] and add it as a data source filter before publishing. Then explain what each user sees, what happens to a contract with no entitlement row, how you preview the coach’s view in Desktop, and how a user filter (Server → Create User Filter) would differ.',sol:R`Entitlements (a CSV or an Excel sheet)
+  User          Contract
+  <your name>   ESZ6
+  <your name>   GCZ6
+  <your name>   NQZ6
+  coach         ESZ6
+  coach         NQZ6
+<your name> = exactly what USERNAME() returns for you: your Server user name
+or Cloud sign-in email, or your local user name in Desktop when you are not
+signed in (check it with a calc USERNAME() on Text).
+
+Data Source tab: Connections → Add the file; double-click Trades (physical layer)
+  and drag Entitlements next to it → Inner join: Contract = Contract
+  (before the filter, every ESZ6 and NQZ6 trade appears twice: once per user)
+[Allowed] = [User] = USERNAME()
+Data Source tab → Filters: Add… → Allowed → True   (data source filter)
+  With an extract, create the extract first, then add this filter: Tableau
+  offers existing data source filters as extract filters, and as one it would
+  keep only your own rows in the extract.
+Server → Publish Data Source → Trades; build workbooks on the published source.
+
+You: all three contracts, each trade once. Coach: ESZ6 and NQZ6 only; the
+coach's queries never return GCZ6 rows.
+A contract with no entitlement row (say a new one you start trading): the inner
+join drops it, so nobody sees it, you included, until you add rows for it.
+Preview the coach in Desktop: temporarily change [Allowed] to [User] = "coach",
+then put USERNAME() back before publishing.
+
+User filter: Server → Create User Filter → Contract (signed in to Server or
+Cloud), tick the contracts for each user. It becomes a set on the Filters shelf
+of one workbook: quick to make, but every workbook needs its own, anyone who
+edits the workbook can remove it, and each change is made by hand.`}},
 ];
 const LM=Object.fromEntries(LESSONS.map(l=>[l.id,l]));
 const ROSETTA=[
