@@ -154,6 +154,7 @@ td .acts button:hover{border-color:var(--acc);color:var(--acc)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:25;padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))}
 .box{background:var(--card);border:1px solid var(--acc);padding:20px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
 .box.wide{max-width:900px}
+#mbox:focus{outline:0}
 .box h3{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:14px}
 .box p{margin-bottom:12px}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -204,6 +205,7 @@ a.btn{text-decoration:none}
 
 /* code */
 pre,.ed{font:12.5px/1.55 var(--f)}
+/* code and result blocks scroll sideways on a phone: each one carries tabindex="0" so a keyboard can reach and scroll it */
 pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow:auto;color:var(--tx);white-space:pre;tab-size:2}
 .ed{width:100%;min-height:170px;background:#050505;border:1px solid var(--line2);padding:12px 14px;color:var(--tx);caret-color:var(--acc);resize:vertical;tab-size:2;white-space:pre;overflow:auto}
 .ed:focus{border-color:var(--acc);outline:0}
@@ -294,18 +296,18 @@ h1.brand{margin:0}
   <h1 class="brand">ISIONXXX <b>//</b> LEARN<i class="cur"></i></h1>
   <div class="acts" id="barBtns"></div>
 </header>
-<div id="top"></div>
-<div class="bar">
+<div id="top" role="region" aria-label="Today and next lessons"></div>
+<div class="bar" role="region" aria-label="Filters">
   <select id="fTrack" aria-label="Track" class="sel"><option value="all">All tracks</option><option value="sql">SQL</option><option value="py">Python</option><option value="sas">SAS</option><option value="tab">Tableau</option></select>
   <select id="fRange" aria-label="Date range" class="sel">
     <option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="all" selected>All time</option>
   </select>
   <span id="ctx" class="ctx"></span>
 </div>
-<div id="xf" class="xf" hidden></div>
+<div id="xf" class="xf" role="region" aria-label="Active filters" hidden></div>
 <div id="app" role="main"></div>
-<div id="po" class="po hidden"></div>
-<div id="modal" class="modal hidden"><div class="box" id="mbox"></div></div>
+<div id="po" class="po hidden" role="dialog" aria-modal="true" aria-label="Lesson"></div>
+<div id="modal" class="modal hidden"><div class="box" id="mbox" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
 <script src="sync.js" data-keys="xl.progress.v1 xl.events.v1 xl.sessions.v1 xl.drafts.v1 xl.settings.v1 xl.videos.v1"></script>
 <script src="ui.js"></script>
@@ -3639,7 +3641,7 @@ const TBL={
 const DATA=(()=>{
   const p2=n=>String(n).padStart(2,'0'),iso=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
   const stamp=ms=>{const d=new Date(ms);return `${iso(d)} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`};
-  const get=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+  const get=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},arr=v=>Array.isArray(v)?v:[];   // another app's log may be missing, broken or of another shape
   const n2=v=>v==null||v===''||!isFinite(v)?null:Math.round(v*100)/100;
   // samples: seeded, so a sample table is the same every time; dates run up to today
   const rng=seed=>{let sd=seed;return()=>(sd=sd*16807%2147483647)/2147483647};
@@ -3684,16 +3686,16 @@ const DATA=(()=>{
     checkins:x=>[x.day,x.sleep??null,x.q??null,x.energy??null,x.w??null],
     study:x=>[stamp(x.at),iso(new Date(x.at)),x.min,x.track,x.n]};
   // what each app saved on this device, in the shape the samples use
-  const rw=get('isx.rewire.v1'),bad=Object.fromEntries((rw?.bad||[]).map(b=>[b.id,b.name])),TRN={sql:'SQL',py:'Python',sas:'SAS',tab:'Tableau'};
+  const rw=get('isx.rewire.v1'),bad=Object.fromEntries(arr(rw?.bad).filter(b=>b).map(b=>[b.id,b.name])),TRN={sql:'SQL',py:'Python',sas:'SAS',tab:'Tableau'};
   const MINE={
     trades:get('isx.journal.v1')?.trades,workouts:get('isx.training.v1')?.log,mind:get('isx.mind.v1')?.log,
     // NUTRITION writes its meals with their nutrients worked out (nj.mealnut.v1); bowls can't be totalled from here
-    meals:(get('nj.mealnut.v1')?.meals||[]).map(([id,time,kind,name,...v])=>({at:Date.parse(time),kind:kind==='bowl'?'bowl':'snack',name,v})),
-    habits:(rw?.log||[]).filter(e=>e.at&&['resist','slip','done'].includes(e.t)).map(e=>({at:e.at,event:{resist:'resisted',slip:'slipped',done:'done'}[e.t],habit:e.t==='done'?e.g:bad[e.b]||'—',int:e.t==='done'?null:e.int??null,trig:e.t==='done'?null:e.trig||null})),
-    checkins:(get('isx.checkin.v1')?.log||[]).filter(e=>e.day),
-    study:(get('xl.sessions.v1')||[]).filter(x=>x.time).map(x=>({at:Date.parse(x.time),min:x.min,track:TRN[(x.tracks||[])[0]]||'',n:(x.lessons||[]).length}))};
+    meals:arr(get('nj.mealnut.v1')?.meals).filter(Array.isArray).map(([id,time,kind,name,...v])=>({at:Date.parse(time),kind:kind==='bowl'?'bowl':'snack',name,v})),
+    habits:arr(rw?.log).filter(e=>e?.at&&['resist','slip','done'].includes(e.t)).map(e=>({at:e.at,event:{resist:'resisted',slip:'slipped',done:'done'}[e.t],habit:e.t==='done'?e.g:bad[e.b]||'—',int:e.t==='done'?null:e.int??null,trig:e.t==='done'?null:e.trig||null})),
+    checkins:arr(get('isx.checkin.v1')?.log).filter(e=>e?.day),
+    study:arr(get('xl.sessions.v1')).filter(x=>x?.time).map(x=>({at:Date.parse(x.time),min:x.min,track:TRN[(x.tracks||[])[0]]||'',n:(x.lessons||[]).length}))};
   const tab={},src={},ord=x=>x.at??x.close??Date.parse(x.day);
-  for(const t in TBL){const m=Array.isArray(MINE[t])?MINE[t].filter(x=>isFinite(ord(x))):[],mine=m.length>=5,rows=(mine?m:S[t]()).sort((a,b)=>ord(a)-ord(b));
+  for(const t in TBL){const m=arr(MINE[t]).filter(x=>x&&isFinite(ord(x))),mine=m.length>=5,rows=(mine?m:S[t]()).sort((a,b)=>ord(a)-ord(b));
     tab[t]=rows.map((x,i)=>TBL[t].key==='id'?[i+1,...FROM[t](x)]:FROM[t](x));src[t]=mine?TBL[t].app:null}
   const q=v=>v==null?'NULL':typeof v==='number'?v:`'${String(v).replace(/'/g,"''")}'`;
   const sql=Object.entries(TBL).map(([t,d])=>`CREATE TABLE ${t} (${d.c.map(([n,y])=>`"${n}" ${y}${n===d.key?' PRIMARY KEY':''}`).join(', ')});\n`+tab[t].map(r=>`INSERT INTO ${t} VALUES (${r.map(q).join(',')});`).join('\n')).join('\n');
@@ -3705,7 +3707,7 @@ const DATA=(()=>{
     meals:tab.meals.filter(r=>r[col('meals','day')]===d).map(pick('meals',['name','kcal','protein']))}});
   const kv=o=>Object.entries(o).filter(([,v])=>v!=null&&v!=='').map(([k,v])=>`${k}=${typeof v==='string'&&/[\s"]/.test(v)?JSON.stringify(v):v}`).join(' ');
   const L=[];
-  tab.trades.forEach(r=>L.push([r[col('trades','closed')],'JOURNAL','trade',kv({contract:r[2],side:r[3],qty:r[4],pnl:r[12].toFixed(2)})]));
+  tab.trades.forEach(r=>L.push([r[col('trades','closed')],'JOURNAL','trade',kv({contract:r[2],side:r[3],qty:r[4],pnl:r[12]?.toFixed(2)})]));
   tab.workouts.forEach(r=>L.push([r[1],'TRAINING','exercise',kv({name:r[3],sets:r[5],reps:r[6],load:r[7],distance:r[8],rpe:r[10]})]));
   tab.mind.forEach(r=>L.push([r[1],'MIND','session',kv({practice:r[3],minutes:r[5],before:r[6],after:r[7]})]));
   tab.meals.forEach(r=>L.push([r[1],'NUTRITION','meal',kv({name:r[4],kcal:Math.round(r[5]),protein:Math.round(r[6])})]));
@@ -3718,9 +3720,14 @@ const SCHEMA=Object.entries(TBL).map(([t,d])=>[t,`${DATA.src[t]?`your ${DATA.src
 
 /* ================= storage ================= */
 const K={p:'xl.progress.v1',e:'xl.events.v1',s:'xl.sessions.v1',d:'xl.drafts.v1',c:'xl.settings.v1',v:'xl.videos.v1'};
-const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}};
-let progress=load(K.p,{}),events=load(K.e,[]),sessions=load(K.s,[]),drafts=load(K.d,{}),videos=load(K.v,{}),settings=Object.assign({goal:30,focus:25,last:null},load(K.c,{}));
-if(!Array.isArray(events))events=[];if(!Array.isArray(sessions))sessions=[];
+// a saved value of the wrong type (a bad sync, restore or edit) reads as empty and a list keeps only its dated records,
+// so the app always starts and can still save; a session's minutes and lists are put back in shape, and so are the settings
+const obj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
+const list=v=>(Array.isArray(v)?v:[]).filter(x=>obj(x)&&isFinite(Date.parse(x.time)));
+const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return Array.isArray(d)?list(v):obj(v)?v:d}catch{return d}};
+const fixS=a=>list(a).map(s=>({...s,min:+s.min||0,lessons:Array.isArray(s.lessons)?s.lessons:[],tracks:Array.isArray(s.tracks)?s.tracks:[]}));
+const tidy=()=>{for(const id in progress)if(!obj(progress[id]))delete progress[id];settings.goal=+settings.goal>0?+settings.goal:30;settings.focus=+settings.focus>=0?+settings.focus:25};
+let progress=load(K.p,{}),events=load(K.e,[]),sessions=fixS(load(K.s,[])),drafts=load(K.d,{}),videos=load(K.v,{}),settings=Object.assign({goal:30,focus:25,last:null},load(K.c,{}));tidy();
 // a plan saved before its steps named their lesson l (they called it id)
 settings.plan?.items?.forEach?.(x=>{if(x&&typeof x.id==='string'&&!x.l){x.l=x.id;delete x.id}});
 // a full disk must not abort the click that saved; sync.js says what happened and how to make room
@@ -3753,7 +3760,7 @@ const pct=(a,b)=>b?Math.round(a/b*100)+'%':'0%';
 const pls=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
 const dago=d=>{const n=diffDays(d,today());return n<=0?'today':n===1?'yesterday':n+' days ago'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const toast=m=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)};
+const toast=m=>{const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)};
 const CV={grn:'var(--g)',red:'var(--r)',amb:'var(--a)','':'transparent'};
 const pr=id=>progress[id]||(progress[id]={att:0,hint:0,rev:0,done:false,first:false,xp:0,date:null});
 const isDone=id=>!!progress[id]?.done;
@@ -3771,7 +3778,7 @@ $('#barBtns').innerHTML=`<button class="btn go" data-act="startnext">&#9654; STA
 /* ================= runtimes ================= */
 const SQLJS='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/';
 const PYIDX='https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
-const loadScript=src=>new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Could not download the runtime — check your internet connection (needed once).'));document.head.appendChild(s)});
+const loadScript=src=>new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>{s.remove();rej(new Error('Could not download the runtime — check your internet connection (needed once).'))};document.head.appendChild(s)});   // a failed one goes, so the next try downloads again
 let SQLM=null,DBB=null,PY=null,PYP=null;
 async function ensureSQL(){
   if(SQLM)return;
@@ -3865,7 +3872,7 @@ function compare(u,s,ordered){
 }
 const resTable=r=>{if(!r||!r.cols.length)return'<div class="mu" style="font-size:12px;margin-top:8px">(no rows returned)</div>';
   const rows=r.rows.slice(0,200);
-  return`<div class="outw"><table class="rt"><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>`<tr>${x.map(v=>`<td>${v==null?'<span class="mu">NULL</span>':esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+  return`<div class="outw" tabindex="0" role="region" aria-label="Result rows"><table class="rt"><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>`<tr>${x.map(v=>`<td>${v==null?'<span class="mu">NULL</span>':esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
   <div class="mu" style="font-size:11px;margin-top:4px">${r.rows.length} row${r.rows.length===1?'':'s'}${r.rows.length>200?' (showing 200)':''}</div>`};
 
 /* ================= audio ================= */
@@ -4193,32 +4200,34 @@ function render(){
 }
 
 /* ================= study session timing ================= */
-let ST=null,CUR=null;
+let ST=null,CUR=null,LF=null;   // LF: what had focus when the lesson view opened
 const curLesson=()=>LM[CUR];
-function stStart(){if(!ST)ST={start:Date.now(),acc:0,run:Date.now(),lessons:new Set(),tracks:new Set(),chimed:false};else if(!ST.run)ST.run=Date.now()}
+function stStart(){if(!ST)ST={id:uid(),start:Date.now(),acc:0,run:Date.now(),lessons:new Set(),tracks:new Set(),chimed:false};else if(!ST.run)ST.run=Date.now()}
 function stPause(){if(ST&&ST.run){ST.acc+=(Date.now()-ST.run)/1000;ST.run=null}}
 const stSec=()=>ST?ST.acc+(ST.run?(Date.now()-ST.run)/1000:0):0;
-function stEnd(){
-  if(!ST)return;stPause();
-  const min=r1(ST.acc/60);
-  if(min>=.5){sessions.push({id:uid(),time:new Date(ST.start).toISOString(),min,lessons:[...ST.lessons],tracks:[...ST.tracks]});save()}
-  ST=null;
+// the session so far is saved under its own id whenever the app goes to the background, and again when it ends: iOS can
+// close a home-screen app in the background without a pagehide, which used to lose the time studied
+function stKeep(){
+  const min=r1(ST.acc/60);if(min<.5)return;
+  const s={id:ST.id,time:new Date(ST.start).toISOString(),min,lessons:[...ST.lessons],tracks:[...ST.tracks]},i=sessions.findIndex(x=>x.id===ST.id);
+  if(i<0)sessions.push(s);else sessions[i]=s;save();
 }
+function stEnd(){if(!ST)return;stPause();stKeep();ST=null}
 setInterval(()=>{if(!ST)return;const s=stSec(),el=$('#stime');if(el)el.textContent=mmss(s);
   if(!ST.chimed&&settings.focus&&s>=settings.focus*60){ST.chimed=true;chime();toast(`${settings.focus} minutes of focus — great work. Take a short break?`)}},500);
-document.addEventListener('visibilitychange',()=>{if(!ST)return;if(document.hidden)stPause();else if(!$('#po').classList.contains('hidden'))stStart()});
+document.addEventListener('visibilitychange',()=>{if(!ST)return;if(document.hidden){stPause();stKeep()}else if(!$('#po').classList.contains('hidden'))stStart()});
 window.addEventListener('pagehide',()=>{if(ST){stEnd()}});
 
 /* ================= lesson view ================= */
 function openLesson(id){
-  const l=LM[id];if(!l)return;CUR=id;settings.last=id;save();
+  const l=LM[id];if(!l)return;if(!CUR)LF=document.activeElement;CUR=id;settings.last=id;save();
   stStart();ST.lessons.add(id);ST.tracks.add(l.t);
   $('#po').classList.remove('hidden');document.body.style.overflow='hidden';drawLesson();$('#po').scrollTop=0;
   // keyboard focus starts at the lesson, not on the page behind the view
   $('#po h2')?.focus({preventScroll:true});
 }
 // closing the lesson view pauses a running session (START resumes it); its study time adds up across the parts
-function closeLesson(){if(SP){const P=tp();if(P){P.sec=Math.round((P.sec||0)+stSec());save()}SP=false}stEnd();CUR=null;$('#po').classList.add('hidden');$('#po').innerHTML='';document.body.style.overflow='';render()}
+function closeLesson(){if(SP){const P=tp();if(P){P.sec=Math.round((P.sec||0)+stSec());save()}SP=false}stEnd();CUR=null;$('#po').classList.add('hidden');$('#po').innerHTML='';document.body.style.overflow='';render();refocus(LF)}
 function watchHTML(l){
   const v=videos[l.id],q=YTQ[l.id]||`${TR[l.t].n} ${l.title} tutorial`,C=COURSE[l.t],at=C?.at[l.id];
   return`<div class="watch" id="watch">
@@ -4243,7 +4252,7 @@ function drawLesson(){
   const notes=`${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
       ${watchHTML(l)}
       <div class="codeh"><b>EXAMPLE</b>${run?`<button class="btn xs" data-act="runex">&#9654; RUN EXAMPLE</button>`:''}<button class="btn xs" data-act="copy" data-v="ex">COPY</button></div>
-      <pre id="exCode">${esc(l.ex)}</pre>
+      <pre id="exCode" tabindex="0">${esc(l.ex)}</pre>
       <div id="exOut"></div>`;
   $('#po').innerHTML=`<div class="lv"><div class="lvh">${pill(l.t)}<span class="mu" style="font-size:12px">${s?`<b class="amb">${rv?'Review':'Lesson'} ${P.i+1} of ${P.items.length}</b><span class="sdots" aria-hidden="true">${P.items.map((x,i)=>`<i class="${i<P.i?x.res===1?'ok':x.res===0?'no':'':i===P.i?'now':''}"></i>`).join('')}</span>`:`${LV[l.lv]} · ${idx+1}/${ls.length}`}</span><div class="sp"></div>
       <span class="stime" id="stime" title="Study session time">${mmss(stSec())}</span>
@@ -4260,7 +4269,7 @@ function drawLesson(){
 function codeExercise(l,code){
   return`<div class="task"><b>YOUR TASK</b><br>${l.task}${l.ordered?'<br><span class="mu" style="font-size:11px">Row order matters for this one.</span>':''}</div>
     <div class="codeh"><b>${l.t==='sql'?'SQL EDITOR':'PYTHON EDITOR'}</b><button class="btn xs" data-act="schema">Tables</button><button class="btn xs" data-act="reset">Reset</button></div>
-    <textarea class="ed" id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">${esc(code)}</textarea>
+    <textarea class="ed" id="ed" aria-label="${l.t==='sql'?'SQL':'Python'} editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">${esc(code)}</textarea>
     <div class="mact"><button class="btn" data-act="run">&#9654; RUN</button><button class="btn go" data-act="checkc">CHECK</button>
       <button class="btn xs" data-act="hint">Hint</button><button class="btn xs" data-act="sol">Show solution</button><span class="mu" style="font-size:11px">Ctrl/⌘ + Enter to run</span></div>
     <div id="fb"></div><div id="out"></div>`;
@@ -4272,7 +4281,7 @@ function quizExercise(l,rv){
     <div class="opts">${l.quiz.o.map((o,i)=>`<button class="opt${show&&i===l.quiz.a?' right':''}" data-act="ans" data-v="${i}">${String.fromCharCode(65+i)}. ${esc(o)}</button>`).join('')}</div>
     <div id="fb">${show?`<div class="fb ok">✓ ${esc(l.quiz.why)}</div>`:''}</div>
     <div class="task" style="margin-top:22px"><b>PRACTICE</b><br>${l.prac.task}<br><span class="mu" style="font-size:11px">Write it below (or in ${l.t==='sas'?'SAS Studio / SAS OnDemand for Academics':'Tableau Public / Desktop'}), then compare.</span></div>
-    <textarea class="ed" id="ed" spellcheck="false" autocapitalize="off" style="min-height:120px" placeholder="Your attempt…">${esc(rv?'':drafts[l.id]||'')}</textarea>
+    <textarea class="ed" id="ed" aria-label="Your practice attempt" spellcheck="false" autocapitalize="off" style="min-height:120px" placeholder="Your attempt…">${esc(rv?'':drafts[l.id]||'')}</textarea>
     <div class="mact"><button class="btn" data-act="reveal">Reveal model answer</button></div>
     <div id="pracSol"></div>`;
 }
@@ -4288,20 +4297,22 @@ async function doRun(check){
   const out=$('#out');out.innerHTML='<div class="fb info">Running…</div>';
   try{
     let u;
-    if(l.t==='sql'){if(!SQLM)setFb('info','Loading the SQL engine (one-time)…');u=await runSQL(code);out.innerHTML=resTable(u)}
-    else{const r=await runPyCode(code,m=>setFb('info',m));
-      out.innerHTML=(r.out?`<div class="codeh"><b>PRINTED OUTPUT</b></div><pre>${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no"><b>Error</b><pre style="margin-top:6px;background:transparent;border:0;padding:0;color:inherit;white-space:pre-wrap">${esc(r.err)}</pre></div>`:'')+(r.res?`<div class="codeh"><b>result</b></div>${resTable(r.res)}`:'');
+    // a run that finishes after you've left its lesson shows and counts nothing (the next lesson has its own #fb)
+    if(l.t==='sql'){if(!SQLM)setFb('info','Loading the SQL engine (one-time)…');u=await runSQL(code);if(CUR!==l.id)return;out.innerHTML=resTable(u)}
+    else{const r=await runPyCode(code,m=>CUR===l.id&&setFb('info',m));if(CUR!==l.id)return;
+      out.innerHTML=(r.out?`<div class="codeh"><b>PRINTED OUTPUT</b></div><pre tabindex="0">${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no"><b>Error</b><pre style="margin-top:6px;background:transparent;border:0;padding:0;color:inherit;white-space:pre-wrap">${esc(r.err)}</pre></div>`:'')+(r.res?`<div class="codeh"><b>result</b></div>${resTable(r.res)}`:'');
       if(r.err){if(check){pr(l.id).att++;logEvent('check',false)}setFb('no','Fix the error, then try again.');return}
       u=r.res}
     if(!check){$('#fb').innerHTML='';return}
-    const s=await solResult(l),cmp=compare(u,s,l.ordered),p=pr(l.id);p.att++;logEvent('check',cmp.ok);
+    const s=await solResult(l);if(CUR!==l.id)return;const cmp=compare(u,s,l.ordered),p=pr(l.id);p.att++;logEvent('check',cmp.ok);
     // a review passes by itself when you got there unaided; after a hint you mark it yourself
     if(cmp.ok){const first=p.att===1&&!p.hint&&!p.rev,s=sstep(),r=s?.k==='r'&&s.res==null,g=r&&!s.h;complete(l,first);if(g)grade(s,1);
       setFb('ok','✓ '+cmp.msg+(first?' First try!':'')+(g?' Review passed.':r?' You had a hint, so mark the review yourself: Got it or Not yet.':''));drawLessonKeep()}
     else setFb('no',cmp.msg+`<br><span class="mu" style="font-size:11px">Expected columns: ${esc(s.cols.join(', '))}</span>`);
   }catch(e){
-    const msg=String(e.message||e);out.innerHTML='';
-    if(check&&!/download/i.test(msg)){pr(l.id).att++;logEvent('check',false)}
+    const msg=String(e.message||e);if(CUR!==l.id)return;out.innerHTML='';
+    // your code's error counts as an attempt; a runtime that couldn't load (offline, half downloaded) doesn't
+    if(check&&(l.t==='sql'?SQLM:PY)){pr(l.id).att++;logEvent('check',false)}
     setFb('no',`<b>Error:</b> ${esc(msg)}`);
   }
 }
@@ -4384,8 +4395,19 @@ function sessionGo(isNew){
 }
 
 /* ================= modals ================= */
-const openModal=(h,wide)=>{$('#mbox').className='box'+(wide?' wide':'');$('#mbox').innerHTML=h;$('#modal').classList.remove('hidden')};
-const closeModal=()=>$('#modal').classList.add('hidden');
+// keyboard focus moves into a dialog when it opens (onto the control it was on, when one redraws itself) and goes back to
+// what opened it when it closes: see refocus
+let MF=null;
+const openModal=(h,wide)=>{const a=document.activeElement,re=!$('#modal').classList.contains('hidden'),k=re&&a?.dataset?.act&&$('#mbox').contains(a)?[a.dataset.act,a.dataset.v]:null;if(!re)MF=a;
+  $('#mbox').className='box'+(wide?' wide':'');$('#mbox').innerHTML=h;$('#mbox').setAttribute('aria-label',$('#mbox h3')?.textContent||'Dialog');$('#modal').classList.remove('hidden');
+  ((k&&[...$('#mbox').querySelectorAll('[data-act]')].find(e=>e.dataset.act===k[0]&&e.dataset.v===k[1]))||$('#mbox')).focus({preventScroll:true})};
+const closeModal=()=>{if($('#modal').classList.contains('hidden'))return;$('#modal').classList.add('hidden');refocus(MF)};
+// back to a control after its dialog or the lesson view closed: the same one, or one that does the same after a redraw,
+// or the ··· menu it sat in on a phone, else START
+function refocus(el){
+  const v=e=>!!e?.isConnected&&!!e.offsetParent,a=el?.dataset?.act;
+  const t=v(el)?el:a&&[...document.querySelectorAll('[data-act]')].find(e=>e.dataset.act===a&&e.dataset.v===el.dataset.v&&v(e)&&!e.closest('#po,#modal'))||el?.closest?.('.ui-more')?.querySelector('.ui-more-btn');
+  (v(t)?t:$('#barBtns [data-act=startnext]'))?.focus()}
 function catalog(only){
   openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">All lessons</h3><button class="btn" data-act="close">Close</button></div>
     <p class="mu">🎬 = a video is pinned to that lesson.</p>
@@ -4394,7 +4416,7 @@ function catalog(only){
 }
 let RI=0;
 function rosetta(){
-  const r=ROSETTA[RI],blk=(t,code)=>`<div><div class="codeh">${pill(t)}<b></b><button class="btn xs" data-act="copyr" data-v="${t}">COPY</button></div><pre>${esc(code)}</pre></div>`;
+  const r=ROSETTA[RI],blk=(t,code)=>`<div><div class="codeh">${pill(t)}<b></b><button class="btn xs" data-act="copyr" data-v="${t}">COPY</button></div><pre tabindex="0">${esc(code)}</pre></div>`;
   openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">Rosetta — one task, four languages</h3><button class="btn" data-act="close">Close</button></div>
     <div class="chips">${ROSETTA.map((x,i)=>`<button class="chip${i===RI?' on':''}" data-act="rtab" data-v="${i}">${esc(x.t)}</button>`).join('')}</div>
     <div class="rosetta">${blk('sql',r.sql)}${blk('py',r.py)}${blk('sas',r.sas)}${blk('tab',r.tab)}</div>`,true);
@@ -4495,7 +4517,7 @@ function review(day){
   // the morning check-in for this date, when there is one
   let ci=null;try{ci=(JSON.parse(localStorage.getItem('isx.checkin.v1'))?.log||[]).find(e=>e.day===day)}catch(e){}
   if(ci){const Q=['','poor','restless','OK','good','great'],E=['','drained','low','steady','good','charged'];
-    out+=sec('My state',`<p>I slept <b>${ci.sleep} h</b> (${Q[ci.q]||'unrated'} sleep) and my energy was <b>${E[ci.energy]||'unrated'}</b>.${ci.sleep<7&&S1.length&&min<g?' Short sleep on a short study day: worth watching if it repeats.':''}</p>`)}
+    out+=sec('My state',`<p>I slept <b>${esc(ci.sleep)} h</b> (${Q[ci.q]||'unrated'} sleep) and my energy was <b>${E[ci.energy]||'unrated'}</b>.${ci.sleep<7&&S1.length&&min<g?' Short sleep on a short study day: worth watching if it repeats.':''}</p>`)}
   // next up: the same lesson the START button opens
   const nx=S.track==='all'?recommend():nextIn(S.track);
   out+=sec('Next up',nx?`<p>${day===today()?'Next for me':'As things stand now, next for me'} is ${lt(nx)}${progress[nx.id]?.att?`, where I've already made ${pl(progress[nx.id].att,'attempt')}`:''}. Press <b>START</b> to pick it up.</p>`:`<p>I've completed every ${S.track==='all'?'':TR[S.track].n+' '}lesson. Revisit the ones that took the most attempts.</p>`);
@@ -4558,9 +4580,10 @@ function exportCSV(){
   download(`attempts-${today()}.csv`,['time,lesson,track,level,type,correct',...st.evs.map(e=>{const l=LM[e.lesson];return[e.time,l?.title,TR[l?.t]?.n,LV[l?.lv],e.kind,e.ok].map(q).join(',')})].join('\n'),'text/csv');
 }
 async function restore(file){
-  try{const o=JSON.parse(await file.text());if(!o||typeof o.progress!=='object')throw 0;
+  // a file that isn't a LEARN backup, or has a part of the wrong type, is refused before anything is replaced
+  try{const o=JSON.parse(await file.text());if(!obj(o)||!obj(o.progress)||[o.events,o.sessions].some(a=>a!=null&&!Array.isArray(a))||[o.drafts,o.videos,o.settings].some(x=>x!=null&&!obj(x)))throw 0;
     if(!confirm('Replace all current progress with this backup?'))return;
-    progress=o.progress;events=o.events||[];sessions=o.sessions||[];drafts=o.drafts||{};videos=o.videos||{};settings=Object.assign(settings,o.settings||{});if(!o.settings?.plan)settings.plan=null;save();saveDrafts();saveVideos();render();toast('Backup restored')}
+    progress=o.progress;events=list(o.events);sessions=fixS(o.sessions);drafts=o.drafts||{};videos=o.videos||{};settings=Object.assign(settings,o.settings||{});tidy();if(!o.settings?.plan)settings.plan=null;save();saveDrafts();saveVideos();render();toast('Backup restored')}
   catch{toast('Not a valid backup file')}
 }
 
@@ -4578,9 +4601,10 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='vurl'){e.preventDefault();document.querySelector('[data-act="vpin"]')?.click()}
   if(e.key==='Escape'&&!$('#modal').classList.contains('hidden'))closeModal();
 });
-// rows that act as buttons (cross-filters, calendar days) answer Enter and Space too, and keep focus after the redraw
-document.addEventListener('keydown',e=>{const b=e.target.closest?.('[role=button][data-act],[role=button][data-day]');if(!b||(e.key!=='Enter'&&e.key!==' '))return;e.preventDefault();
-  const sel=b.dataset.day?`[data-day="${b.dataset.day}"]`:`[data-act="${b.dataset.act}"][data-v="${CSS.escape(b.dataset.v||'')}"]`,i=[...document.querySelectorAll(sel)].indexOf(b);b.click();document.querySelectorAll(sel)[i]?.focus()});
+// rows that act as buttons (cross-filters, calendar days) answer Enter and Space too, and keep focus after the redraw;
+// so do the buttons that only redraw the dashboard (month, page, the Today card's periods)
+document.addEventListener('keydown',e=>{const b=e.target.closest?.('[role=button][data-act],[role=button][data-day],:is(#app,#top) button:is([data-act=mprev],[data-act=mnext],[data-act=mtoday],[data-act=pp],[data-act=pn],[data-act=rng])');if(!b||(e.key!=='Enter'&&e.key!==' '))return;e.preventDefault();
+  const sel=b.dataset.day?`[data-day="${b.dataset.day}"]`:`[data-act="${b.dataset.act}"]`+(b.dataset.v!=null?`[data-v="${CSS.escape(b.dataset.v)}"]`:':not([data-v])'),i=[...document.querySelectorAll(sel)].indexOf(b);b.click();document.querySelectorAll(sel)[i]?.focus()});
 function redrawWatch(){const w=$('#watch');if(!w||!curLesson())return;const tmp=document.createElement('div');tmp.innerHTML=watchHTML(curLesson());w.replaceWith(tmp.firstElementChild)}
 document.addEventListener('click',async e=>{
   if(e.target.id==='modal')return closeModal();
@@ -4604,12 +4628,12 @@ document.addEventListener('click',async e=>{
     // today's session: BEGIN or RESUME, another one once it's done, the track for its lesson, and the steps
     sgo:()=>sessionGo(v==='new'),sagain:()=>sessionForm(true),strk:()=>{const r=rotation()[0];SFT=r&&r.t===v?null:v;sessionForm(true);$(`#mbox [data-act="strk"][data-v="${v}"]`)?.focus()},sstep:()=>stepOn(v==null?null:+v),
     catalog:()=>catalog(v),rosetta:()=>{RI=0;rosetta()},rtab:()=>{RI=+v;rosetta()},schema:schemaModal,close:closeModal,
-    copy:async()=>{try{await navigator.clipboard.writeText(l.ex);toast('Copied')}catch{}},
-    copyr:async()=>{try{await navigator.clipboard.writeText(ROSETTA[RI][v]);toast('Copied')}catch{}},
+    copy:async()=>{try{await navigator.clipboard.writeText(l.ex);toast('Copied')}catch{toast('Copy failed — select the text instead')}},
+    copyr:async()=>{try{await navigator.clipboard.writeText(ROSETTA[RI][v]);toast('Copied')}catch{toast('Copy failed — select the text instead')}},
     vpin:()=>{const p=parseYT($('#vurl').value);if(!p)return toast('That doesn’t look like a YouTube link');videos[l.id]=p;saveVideos();redrawWatch();toast('Video pinned to this lesson')},
     vremove:()=>{delete videos[l.id];saveVideos();redrawWatch()},
     runex:async()=>{const o=$('#exOut');o.innerHTML='<div class="fb info">Running example…</div>';
-      try{if(l.t==='sql')o.innerHTML=resTable(await runSQL(l.ex));else{const r=await runPyCode(l.ex,m=>o.innerHTML=`<div class="fb info">${m}</div>`);o.innerHTML=(r.out?`<pre style="margin-top:8px">${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no">${esc(r.err)}</div>`:'')+(r.res?resTable(r.res):'')}}
+      try{if(l.t==='sql')o.innerHTML=resTable(await runSQL(l.ex));else{const r=await runPyCode(l.ex,m=>o.innerHTML=`<div class="fb info">${m}</div>`);o.innerHTML=(r.out?`<pre tabindex="0" style="margin-top:8px">${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no">${esc(r.err)}</div>`:'')+(r.res?resTable(r.res):'')}}
       catch(err){o.innerHTML=`<div class="fb no">${esc(err.message||err)}</div>`}},
     run:()=>doRun(false),checkc:()=>doRun(true),
     // in a review, a hint means you mark it yourself, and the solution means not yet
@@ -4617,7 +4641,7 @@ document.addEventListener('click',async e=>{
     sol:()=>{const s=sstep(),r=s?.k==='r'&&s.res==null;
       if(!confirm(r?'Show the solution? This review then counts as not yet: it comes back tomorrow, from the 1-day step.':'Show the solution? You can still complete the lesson, but without the first-try bonus.'))return;pr(l.id).rev++;save();
       if(r){grade(s,0);drawLessonKeep()}
-      setFb('info',`<b>Solution</b><pre style="margin-top:8px">${esc(l.sol)}</pre><button class="btn xs" data-act="usesol" style="margin-top:8px">Put it in the editor</button>`)},
+      setFb('info',`<b>Solution</b><pre tabindex="0" style="margin-top:8px">${esc(l.sol)}</pre><button class="btn xs" data-act="usesol" style="margin-top:8px">Put it in the editor</button>`)},
     usesol:()=>{$('#ed').value=l.sol;drafts[l.id]=l.sol;saveDrafts()},
     reset:()=>{if(confirm('Reset the editor to the starter code?')){$('#ed').value=l.start;drafts[l.id]=l.start;saveDrafts()}},
     ans:()=>{const i=+v,p=pr(l.id),ok=i===l.quiz.a;
@@ -4629,7 +4653,7 @@ document.addEventListener('click',async e=>{
       if(ok){b.classList.add('right');complete(l,p.att===1);const fbh=`✓ Correct${p.att===1?' — first try!':''} ${esc(l.quiz.why)}`;drawLesson();setFb('ok',fbh)}
       else setFb('no','Not quite — think about it and try another option.')},
     reveal:()=>{drafts[l.id]=$('#ed').value;saveDrafts();
-      $('#pracSol').innerHTML=`<div class="codeh"><b>MODEL ANSWER</b></div><pre>${esc(l.prac.sol)}</pre><div class="mact"><span class="mu" style="font-size:12px">Did yours match?</span><button class="btn xs go" data-act="self" data-v="1">I got it</button><button class="btn xs" data-act="self" data-v="0">Not yet</button></div>`},
+      $('#pracSol').innerHTML=`<div class="codeh"><b>MODEL ANSWER</b></div><pre tabindex="0">${esc(l.prac.sol)}</pre><div class="mact"><span class="mu" style="font-size:12px">Did yours match?</span><button class="btn xs go" data-act="self" data-v="1">I got it</button><button class="btn xs" data-act="self" data-v="0">Not yet</button></div>`},
     self:()=>{logEvent('self',v==='1');toast(v==='1'?'Nice — logged':'Logged — worth another try later');$('#pracSol').querySelector('.mact').innerHTML='<span class="mu" style="font-size:12px">Logged ✓</span>'},
     review:()=>reviewForm(rvDefault()),rvgo:()=>v&&reviewForm(v),
     rvcopy:()=>{const t=reviewText();(navigator.clipboard?.writeText(t)||Promise.reject()).then(()=>toast('Review copied'),()=>toast('Copy failed — select the text instead'))},
@@ -4641,9 +4665,14 @@ document.addEventListener('click',async e=>{
 });
 
 render();
+// a phone keeps the app in memory overnight: a new day redraws today, the week and the plan, and the calendar moves on to
+// the new month when it was showing the old one
+let RD=today();
+const roll=()=>{const t=today(),o=pd(RD);if(t===RD)return;if(S.month.getFullYear()===o.getFullYear()&&S.month.getMonth()===o.getMonth()){const d=pd(t);S.month=new Date(d.getFullYear(),d.getMonth(),1)}RD=t;render();UI.replan()};
+setInterval(roll,6e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)roll()});
 if(new URLSearchParams(location.search).has('start')){history.replaceState(null,'',location.pathname);sessionForm()}
 // a study session logged from another app (REWIRE) lands in storage while this page is open: pick it up instead of overwriting it
-addEventListener('storage',e=>{if(e.key===K.s){const v=load(K.s,[]);sessions=Array.isArray(v)?v:[];render();UI.replan()}});
+addEventListener('storage',e=>{if(e.key===K.s){sessions=fixS(load(K.s,[]));render();UI.replan()}});
 // TODAY's plan card: what START would begin now (ui.js keeps it fresh after every save)
 UI.planner('learn',[K.p,K.e,K.s,K.c],planRows);
 // another ISIONXXX app can send you straight to an action here (REWIRE's LOG buttons): #do=<action> or a message
