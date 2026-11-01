@@ -30,7 +30,8 @@ body{margin:0 auto;max-width:1440px;padding:calc(env(safe-area-inset-top) + 14px
 button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0}
 :focus-visible{outline:1px solid var(--acc);outline-offset:1px}
-::selection{background:var(--acc);color:#000}
+/* body ::selection, not ::selection: a selection rule that also matches <html> made every root change (the mouse glow) restyle the whole page */
+body ::selection{background:var(--acc);color:#000}
 .red{color:var(--r)}.grn{color:var(--g)}.amb{color:var(--acc)}.mu{color:var(--mu)}.mu2{color:var(--mu)}
 .hidden{display:none!important}
 
