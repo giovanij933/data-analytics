@@ -4551,8 +4551,8 @@ function reviewText(){
 }
 /* ================= sample learner ================= */
 // four weeks ending yesterday: a session most days, the first SQL and Python lessons in order, checks that mostly pass. Fixed seed: the same every time.
-function sample(){
-  if((events.length||sessions.length||Object.values(progress).some(p=>p.done))&&!confirm('Replace your progress, attempts and study history with the sample?'))return;
+async function sample(){
+  if((events.length||sessions.length||Object.values(progress).some(p=>p.done))&&!await UI.confirm({title:'Load the sample?',body:'Your progress, attempts and study history are replaced with the sample month.',ok:'Replace',danger:true}))return;
   let sd=1337;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
   // lesson, days spent on it, failed checks, hints; the last one is still in progress
   const PLAN=[['sql1',1,0,0],['py1',1,1,0],['sql2',1,0,0],['sql3',2,2,1],['py2',1,0,0],['sql4',3,3,1],['py3',2,1,0],['sql5',1,0,0],['py4',3,2,1],['sql6',2,1,0],['py5',2,0,0],['sql7',2,1,0]];
@@ -4583,7 +4583,7 @@ function exportCSV(){
 async function restore(file){
   // a file that isn't a LEARN backup, or has a part of the wrong type, is refused before anything is replaced
   try{const o=JSON.parse(await file.text());if(!obj(o)||!obj(o.progress)||[o.events,o.sessions].some(a=>a!=null&&!Array.isArray(a))||[o.drafts,o.videos,o.settings].some(x=>x!=null&&!obj(x)))throw 0;
-    if(!confirm('Replace all current progress with this backup?'))return;
+    if(!await UI.confirm({title:'Restore this backup?',body:'All current progress is replaced with the backup.',ok:'Replace',danger:true}))return;
     progress=o.progress;events=list(o.events);sessions=fixS(o.sessions);drafts=o.drafts||{};videos=o.videos||{};settings=Object.assign(settings,o.settings||{});tidy();if(!o.settings?.plan)settings.plan=null;save();saveDrafts();saveVideos();render();toast('Backup restored')}
   catch{toast('Not a valid backup file')}
 }
@@ -4639,12 +4639,14 @@ document.addEventListener('click',async e=>{
     run:()=>doRun(false),checkc:()=>doRun(true),
     // in a review, a hint means you mark it yourself, and the solution means not yet
     hint:()=>{const s=sstep();if(s?.k==='r'&&s.res==null)s.h=1;pr(l.id).hint++;save();setFb('info','💡 '+esc(l.hint))},
-    sol:()=>{const s=sstep(),r=s?.k==='r'&&s.res==null;
-      if(!confirm(r?'Show the solution? This review then counts as not yet: it comes back tomorrow, from the 1-day step.':'Show the solution? You can still complete the lesson, but without the first-try bonus.'))return;pr(l.id).rev++;save();
+    sol:async()=>{const s=sstep(),r=s?.k==='r'&&s.res==null;
+      if(!await UI.confirm({title:'Show the solution?',body:r?'This review then counts as not yet: it comes back tomorrow, from the 1-day step.':'You can still complete the lesson, but without the first-try bonus.',ok:'Show it',cancel:'Keep trying'}))return;pr(l.id).rev++;save();
       if(r){grade(s,0);drawLessonKeep()}
       setFb('info',`<b>Solution</b><pre tabindex="0" style="margin-top:8px">${esc(l.sol)}</pre><button class="btn xs" data-act="usesol" style="margin-top:8px">Put it in the editor</button>`)},
     usesol:()=>{$('#ed').value=l.sol;drafts[l.id]=l.sol;saveDrafts()},
-    reset:()=>{if(confirm('Reset the editor to the starter code?')){$('#ed').value=l.start;drafts[l.id]=l.start;saveDrafts()}},
+    // the editor goes back to the starter code at once; the toast brings your code back
+    reset:()=>{const was=$('#ed').value;$('#ed').value=l.start;drafts[l.id]=l.start;saveDrafts();
+      UI.undo('Editor reset to the starter code',()=>{const ed=$('#ed');if(ed)ed.value=was;drafts[l.id]=was;saveDrafts()})},
     ans:()=>{const i=+v,p=pr(l.id),ok=i===l.quiz.a;
       // a review takes your first answer: right is got it, wrong is not yet
       if(p.done){const s=sstep();if(s?.k==='r'&&s.res==null){logEvent('quiz',ok);grade(s,ok?1:0);drawLessonKeep()}
@@ -4660,7 +4662,8 @@ document.addEventListener('click',async e=>{
     rvcopy:()=>{const t=reviewText();(navigator.clipboard?.writeText(t)||Promise.reject()).then(()=>toast('Review copied'),()=>toast('Copy failed — select the text instead'))},
     data:dataForm,sample,restore:()=>$('#i_file').click(),sync:()=>{closeModal();document.getElementById('isx-sync')?.click()},export:exportCSV,backup:()=>download(`isionxxx-extract-backup-${today()}.json`,JSON.stringify({version:2,progress,events,sessions,drafts,videos,settings},null,1),'application/json'),
     savedata:async()=>{settings.goal=Math.max(5,+$('#s_goal').value||30);settings.focus=Math.max(0,+$('#s_focus').value||0);save();closeModal();render()},
-    clear:()=>{if(confirm('Reset ALL progress, attempts, study history and drafts? Pinned videos are kept. Make a backup first if you want to keep the rest.')){progress={};events=[];sessions=[];drafts={};settings.plan=null;save();saveDrafts();closeModal();render()}}
+    clear:()=>UI.confirm({title:'Reset all progress?',body:'Progress, attempts, study history and drafts are deleted; pinned videos are kept. Make a backup first if you want to keep the rest.',ok:'Reset all',danger:true})
+      .then(ok=>{if(ok){progress={};events=[];sessions=[];drafts={};settings.plan=null;save();saveDrafts();closeModal();render()}})
   };
   await A[b.dataset.act]?.();
 });
