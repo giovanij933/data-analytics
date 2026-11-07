@@ -301,7 +301,7 @@ h1.brand{margin:0}
 <div class="bar" role="region" aria-label="Filters">
   <select id="fTrack" aria-label="Track" class="sel"><option value="all">All tracks</option><option value="sql">SQL</option><option value="py">Python</option><option value="sas">SAS</option><option value="tab">Tableau</option></select>
   <select id="fRange" aria-label="Date range" class="sel">
-    <option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="all" selected>All time</option>
+    <option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="year">This year</option><option value="all" selected>All time</option>
   </select>
   <span id="ctx" class="ctx"></span>
 </div>
@@ -3902,12 +3902,12 @@ function chime(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)(
 /* ================= state & stats ================= */
 const S={track:'all',range:'all',sel:null,month:null,page:1,rows:20,x:{}};   // 20 log rows a page, like the other apps; x: cross-filters set by clicking a card (lv, first, res, kind, wk)
 {const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1)}
-const RL={today:'Today',week:'This week',month:'This month',all:'All time'};
+const RL={today:'Today',week:'This week',month:'This month',year:'This year',all:'All time'};
 const tOk=t=>S.track==='all'||t===S.track;
 function range(noSel){
   if(S.sel&&!noSel)return[S.sel,S.sel];
   const t=today();
-  switch(S.range){case'today':return[t,t];case'week':return[monday(t),t];case'month':return[t.slice(0,8)+'01',t];default:return['0000-00-00','9999-99-99']}
+  switch(S.range){case'today':return[t,t];case'week':return[monday(t),t];case'month':return[t.slice(0,8)+'01',t];case'year':return[t.slice(0,5)+'01-01',t];default:return['0000-00-00','9999-99-99']}
 }
 const studyDays=()=>new Set([...sessions.map(dayOf),...events.map(dayOf)]);
 function streak(){const s=studyDays();let c=0,d=today();if(!s.has(d))d=addDays(d,-1);while(s.has(d)&&c<3650){c++;d=addDays(d,-1)}return c}
