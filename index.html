@@ -2516,9 +2516,9 @@ Three measure pills on Columns → three bar charts side by side
 ≈ SELECT type, COUNT(*), SUM(sets), AVG(rpe) FROM workouts GROUP BY type
 
 Most logged: Weighted on both datasets (62 entries on the built-in
-  sample, 66 on the apps' data).
+  sample, about 750 on the apps' data, a year of workouts).
 Hardest per entry: Weighted on the sample (about 8.0, with Bodyweight
-  7.9 just behind); Bodyweight on the apps' data (8.0 against 7.5).
+  7.9 just behind); on the apps' data the two are level (both about 7.8).
 Cardio logs minutes, not sets: its Sets are NULL and SUM skips NULLs,
   so that bar is empty. On the apps' data Stretch has no RPE either,
   so its AVG([Rpe]) bar is empty too.
@@ -2682,12 +2682,14 @@ Physical layer: double-click Meals → drag Checkins in
     SUM([Pnl]), SUM([Sleep]), AVG([Energy])
   → each measure is computed on its own table:
     built-in sample: 147 trades, $14,920, 317.5 h (46 check-ins), 2.61
-    apps' data:      200 trades, $35,160, 181.5 h (33 check-ins), 2.94
+    apps' data:      586 trades, $48,800, 317.5 h (46 check-ins), 2.61
+    (TODAY has no sample, so with the apps' data the check-ins are still
+    the built-in ones, which cover only the last eight weeks or so)
 
 Physical layer (new workbook): drag trades onto the canvas →
   double-click it → drag checkins in → Inner, Day = Day → same table
     built-in sample: 113 trades, $12,375, 766.5 h, 2.58
-    apps' data:       99 trades,  $6,190, 544.5 h, 2.90
+    apps' data:       66 trades,  $6,530, 476 h, 2.88
   Trades and P&L drop: the inner join removes every trade on a day
     without a check-in.
   SUM([Sleep]) more than doubles: each check-in is copied onto every
@@ -2696,10 +2698,10 @@ Physical layer (new workbook): drag trades onto the canvas →
     so busy trading days weigh more.
 
 Left join, trades on the left:
-  fixed: every trade is back (147 and $14,920; apps' data 200 and
-    $35,160), with empty check-in fields on days without a check-in
+  fixed: every trade is back (147 and $14,920; apps' data 586 and
+    $48,800), with empty check-in fields on days without a check-in
   not fixed: sleep is still repeated per trade (766.5 h; apps' data
-    544.5 h), energy is still weighted by trades (2.58; 2.90), and
+    476 h), energy is still weighted by trades (2.58; 2.88), and
     check-in days without trades are still missing
 Only the relationship gets all four numbers right.`}},
 {id:'tab4',t:'tab',lv:2,title:'Calculated fields',
@@ -2760,9 +2762,10 @@ Sheet 2: Rows [Type] · Text: AVG([RPE 8+]) → Format → Numbers → Percentag
 
 Built-in sample: Bodyweight 71%, Weighted 60%, Cardio 36%, Stretch 17%;
   every entry has an RPE, so "not rated" never appears.
-Apps' data: Bodyweight 100%, Weighted 24%, Cardio and Stretch 0%. None of
-  the 32 Stretch entries has an RPE: they show as "not rated" (without
-  that branch all 32 would be "max"), and ELSE 0 counts them as below 8.
+Apps' data: Bodyweight 84%, Weighted 53%, Cardio 19%, Stretch 0%. None of
+  the Stretch entries (about 380) has an RPE: they show as "not rated"
+  (without that branch they would all be "max"), and ELSE 0 counts them
+  as below 8.
   To leave them out of the share instead, end [RPE 8+] with
   ELSEIF [Rpe] < 8 THEN 0 END: Stretch's cell is then empty.`}},
 {id:'tab13',t:'tab',lv:2,title:'Aggregate vs row-level calcs',
@@ -2805,18 +2808,23 @@ skipped, so it counts as neither a win nor a loss.
 
 Best profit factor: above 1 means the contract won more than it lost.
 Built-in sample: NQZ6 leads (about 2.1) and GCZ6 sits below 1 (about
-0.67). Apps' data: ESZ6 leads (about 2.4).
-Payoff ratio: on the apps' data every win is +895 and every loss -305,
-so it is 895 / 305 = 2.93 for every contract. The built-in sample also
-has -5 trades on ESZ6 and GCZ6: they count as losses, shrink the average
-loss and push the ratio up (ESZ6 about 4.2, GCZ6 3.1, NQZ6 2.93).
+0.67). Apps' data: a year of front months, so 17 contracts (NQZ5, NQH6,
+NQM6 ... GCZ6); GCZ5 leads (about 6.9, on only 8 trades), and of the
+busiest ones NQM6 makes about 1.6 while NQH6 sits below 1 (about 0.84).
+Payoff ratio: on the built-in sample every win is +895 and every loss
+-305, so it is 895 / 305 = 2.93, except that ESZ6 and GCZ6 also have -5
+trades: they count as losses, shrink the average loss and push the ratio
+up (ESZ6 about 4.2, GCZ6 3.1, NQZ6 2.93). On the apps' data wins and
+losses come in many sizes (2R and 3R targets, early exits, stops that
+slip, scratches), so each contract has its own ratio, from about 1.7
+(NQH6) to 4.2 (GCZ5).
 
 $ per minute: SUM / SUM is the dollars the contract made per minute in
 the market. AVG([Pnl] / [Minutes]) is the average trade's own rate, so a
 -305 stop-out after a few minutes (about -50 a minute) weighs as much
-as a 25-minute winner (about +36 a minute). On both datasets it is
-negative for every contract, even the ones that made money: a different
-question.
+as a 25-minute winner (about +36 a minute). On the built-in sample it
+is negative for every contract, even the ones that made money, and on
+the apps' data for all but GCZ5: a different question.
 
 Empty cells: a contract with no losing trade loses its profit factor
 and its payoff ratio. Both denominators aggregate no values, so they
@@ -2861,7 +2869,8 @@ measure against its own axis.
 Reading it: days with trades but no check-in have no energy point, and
 check-in days without trades have no date on Trades' axis, so their
 energy is left out. On both datasets, days with a 1-2 check-in average
-clearly less P&L than days with a 4-5 (built-in sample: about 110 vs 730),
+clearly less P&L than days with a 4-5 (built-in sample: about 110 vs 730;
+apps' data: about -100 vs 300),
 but many of them still finish green: a hint, not a rule.`}},
 {id:'tab15',t:'tab',lv:2,title:'Reference lines & trend lines',
  learn:['The <b>Analytics</b> pane (the tab next to Data) holds ready-made items you drag onto the view, among them Constant Line, Average Line, Median with Quartiles, Box Plot, Totals, Trend Line and Forecast, plus custom Reference Line, Reference Band and Distribution Band. Drag a line and drop zones appear: <b>Table</b>, <b>Pane</b> or <b>Cell</b>. That is the scope: one line for the whole view, one per pane (each [Contract] row, say) or one per cell. Right-click a line → Edit to change it later.','A reference line is computed from the <b>marks</b> in the view, not the raw rows. On daily SUM([Pnl]) bars an Average Line is the mean of the bars: your average trading day, not your average trade (a day with four trades counts once, as their total). Days with no trades are not zeros; they have no bar, so they don&rsquo;t count. Put [Contract] on Rows and even the Table average moves, because each mark is now one contract on one day; switch the scope to Per Pane for one average per contract.','A <b>Trend Line</b> (Linear, Logarithmic, Exponential, Polynomial or Power) needs numbers or dates on both axes, so use continuous DAY([Day]), not text headers. By default it draws one trend per colour (“Allow a trend line per color” in its options). Right-click it → <b>Describe Trend Line</b> for the equation, R-Squared (how much of the variation the line explains) and the p-value: above 0.05, the slope could well be noise.'],
@@ -2888,13 +2897,15 @@ Rows: + [Practice]                   one pane per practice
       not your average meal: each bar adds up all of that day's meals,
       while AVG([Kcal]) would average the meals one by one.
       Built-in sample: about 2,441 a day, just above the target, against
-      about 876 a meal. Apps' data: about 2,383 a day (just under) and 821.
+      about 876 a meal. Apps' data: about 2,520 a day (above it) and 728.
     Rows: [Kind] → one pane per kind. Each mark is now one kind on one
       day, so the Table average averages kind-days and drops (built-in
-      sample: about 2,441 → 1,577; apps' data: 2,383 → 1,478).
+      sample: about 2,441 → 1,577; apps' data: 2,520 → 1,387).
     Right-click the average line → Edit → Scope: Per Pane
     → one line per kind, over the days you ate it: bowls about 2,333 a
-      day and snacks about 197 on the sample (apps' data: 2,251 and 215).
+      day and snacks about 197 on the sample (apps' data: 2,127 and 527,
+      since every food that isn't a bowl counts as a snack here, dinners
+      out included).
 
 (b) Columns: DAY([Day]) continuous · Rows: AVG([Weight]) · Mark: Line
     Analytics pane → Trend Line → Linear
@@ -2988,8 +2999,8 @@ Analytics pane → Reference Line → drop on Table → Value: [Daily target]
 Calc [Hit target] = SUM([Selected metric]) >= [Daily target]  → Color
 Metric = Protein, target 120: the line moves to 120 and the colours recompute.
 Count the True bars: 13 of 42 days on the built-in sample (one day lands
-exactly on 120 and counts, because the calc uses >=), 16 of 31 on the apps'
-data. The target is one number,
+exactly on 120 and counts, because the calc uses >=), about 200 of 349 on
+the apps' data. The target is one number,
 so set it again when you switch metric (2400 means nothing for grams).
 Filters never change either parameter: only the viewer (or an action) does.`}},
 {id:'tab18',t:'tab',lv:3,title:'Data blending: primary & secondary',
@@ -3024,7 +3035,7 @@ and matched to the primary's rows (a left join of aggregates), so the
 primary decides which days exist. Both datasets have days of each kind:
   built-in sample: 44 trade days, 46 check-in days; 11 trade days have no
   check-in (only in sheet 1), 13 check-in days have no trades (only in sheet 2)
-  apps' data: 48 trade days, 33 check-in days; 24 only in sheet 1, 9 only in sheet 2
+  apps' data: 226 trade days, 46 check-in days; 195 only in sheet 1, 15 only in sheet 2
 vs a relationship ("Relationships vs joins"): both tables sit in one data
 source and no source is primary; blend only when the sources can't be modelled together.`}},
 {id:'tab5',t:'tab',lv:3,title:'LOD expressions: FIXED',
@@ -3059,8 +3070,8 @@ source and no source is primary; blend only when the sources can't be modelled t
       AVG([Pnl])                     average per trade
     Built-in sample: 27 green days (92 trades, 3.4 a day, +269 a trade),
       17 red days (55 trades, 3.2 a day, -179 a trade).
-    Apps' data: 31 green days (128 trades, 4.1 a day, +359 a trade),
-      17 red (72 trades, 4.2 a day, -150 a trade).
+    Apps' data: 118 green days (306 trades, 2.6 a day, +363 a trade),
+      108 red (280 trades, 2.6 a day, -223 a trade).
     About the same number of trades either way: these logs show no
     over-trading on red days.
 
@@ -3069,17 +3080,19 @@ source and no source is primary; blend only when the sources can't be modelled t
     Columns: [Trades that day] · Rows: COUNTD([Day]) · Color: [Day type]
     Built-in sample: 2 to 5 trades a day (no 1-trade days); 2-trade days
       are the tallest bar (16, half of them red).
-    Apps' data: 2 to 6 trades a day, 4 and 5 most often (11 days each).
+    Apps' data: 1 to 8 trades a day, 2 most often (79 days); the 6- to
+      8-trade days come from the spring drawdown, and most of them are red.
 
 (4) [Contract] = NQZ6 as an ordinary filter: no day changes type. FIXED runs
     before dimension filters, so the label still comes from all three
     contracts; only the other contracts' rows leave the view (built-in
-    sample: 40 days with an NQZ6 trade, 25 green and 15 red; apps' data:
-    41 days, 27 green and 14 red).
+    sample: 40 days with an NQZ6 trade, 25 green and 15 red; apps' data,
+    where NQZ6 is the front month only since September: 28 days, 13 green
+    and 15 red).
     Right-click the filter → Add to Context (the pill turns grey). The
     context runs before FIXED, so [Day P&L] becomes the day's NQZ6 P&L and
     some days flip: 7 on the built-in sample (3 green → red, 4 red → green),
-    9 on the apps' data. Use context when the question is "how did NQZ6 do
+    5 on the apps' data. Use context when the question is "how did NQZ6 do
     that day", not "how did the whole day go".`}},
 {id:'tab19',t:'tab',lv:3,title:'LOD expressions: INCLUDE & EXCLUDE',
  learn:['A FIXED LOD (<i>LOD expressions: FIXED</i>) ignores the view. <b>INCLUDE</b> and <b>EXCLUDE</b> are relative to it. INCLUDE adds a dimension to the view’s grain for the inner aggregate, and an outer aggregation rolls the result back up to the marks: with [Kind] on Rows, <code>AVG({ INCLUDE [Day] : SUM([Kcal]) })</code> totals kcal per kind and day, then averages those days, giving the kcal per day you ate that kind, where <code>AVG([Kcal])</code> is per meal.','<b>EXCLUDE</b> removes a dimension from the grain: <code>{ EXCLUDE [Kind] : SUM([Kcal]) }</code> is the total across all kinds, on every kind’s mark. Wrap it in MIN (one value per mark) for a share of the parent: <code>SUM([Kcal]) / MIN({ EXCLUDE [Kind] : SUM([Kcal]) })</code>. It is an ordinary measure computed in the query, so you can reuse it in further calcs. The next lesson, <i>Table calculations</i>, gets the same share from TOTAL(), computed afterwards on the marks in the view.','Gotchas: (1) both run <i>after</i> dimension filters, so a [Day] filter changes them, while FIXED runs before them and ignores it unless the filter is in context. (2) The outer aggregation matters: SUM of an INCLUDE that sums just adds the days back up to plain SUM([Kcal]); AVG gives the per-day figure. (3) EXCLUDE of a dimension that isn’t in the view changes nothing.'],
@@ -3102,7 +3115,7 @@ Weighted: about 3 sets per exercise, but you log several exercises in one
   session, so about 8 sets per training day on the built-in sample (about 16
   on the apps' data, where Stretch also goes from 2 to 16). One exercise a
   day of a type means both columns match, as Bodyweight and Stretch do on
-  the sample. Weighted is about 84% of all sets on the sample, 70% on apps.
+  the sample. Weighted is about 84% of all sets on the sample, 69% on apps.
 Outer AVG: with SUM outside you add the days back up to plain SUM([Sets]).
 [Day] filter (October 2026 only): both LOD columns change (the share is now
   of October's sets), because INCLUDE and EXCLUDE run after dimension
@@ -3152,8 +3165,8 @@ RANK(SUM([Kcal]))                     // 1 = most kcal; with Pane (down)
     No % at all: the first week (nothing before it) and every week right
     after a 0 week, since dividing by 0 gives NULL. On the built-in sample:
     the first week, the second mid-September week and the late-September
-    week. On the apps' data you meditated every week, so the two versions
-    agree. (Weeks start on Sunday or Monday depending on your locale,
+    week. On the apps' data a couple of weeks in the year have no
+    meditation either, so the two versions differ there too. (Weeks start on Sunday or Monday depending on your locale,
     Data → Date Properties; the pattern is the same either way.)`}},
 {id:'tab20',t:'tab',lv:3,title:'Groups vs sets',
  learn:['A <b>group</b> relabels members by hand: select Bench Press, Overhead Press and Triceps Pushdown → Group → “Push”. The result is still a dimension with many values (Push, Pull, Legs…), and ticking <b>Include ‘Other’</b> pools everything ungrouped into one Other member. Gotcha: a group doesn’t place new members. An exercise you start logging next week stays on its own, or falls into Other, until you edit the group.','A <b>set</b> splits members into <b>In</b> and <b>Out</b>. It can be fixed (members you tick) or computed: by condition (SUM([Volume]) &gt; 10000, volume being sets × reps × load) or Top N by a field, where N can be a parameter (<i>Parameters: user inputs</i>). Computed sets recompute as your data grows. In a calc a set is TRUE/FALSE: <code>IF [Top exercises] THEN [Exercise] ELSE "Other" END</code>. Create Combined Set merges two sets on one dimension (all, shared, or one set except shared members).','Gotcha: conditional and Top N sets are computed at the same stage as Top N filters and FIXED LODs (<i>LOD expressions: FIXED</i>), before ordinary dimension filters. A [Day] filter for the last two weeks hides older workouts but doesn’t change who is in the set: it is still your all-time top N. If the set should follow the filter, right-click it → <b>Add to Context</b>: a context filter runs before sets and FIXED.'],
@@ -3178,7 +3191,7 @@ Set: right-click [Exercise] → Create → Set → Top tab
 [Exercise or Other] = IF [Top exercises] THEN [Exercise] ELSE "Other" END
 Rows: [Exercise or Other] · Columns: SUM([Volume]) · Color: [Top exercises]
   sort descending: Leg Press is your top exercise on both datasets (on the
-  apps' data the Other bar, 31 exercises together, is bigger still)
+  apps' data the Other bar, 33 exercises together, is bigger still)
 Group: right-click [Exercise] → Create → Group → select members → Group
   Push (Bench Press, Overhead Press, Triceps Pushdown…), Pull (Deadlift,
   Barbell Row, Pull-up…), Legs (Leg Press, Back Squat, Romanian Deadlift…)
@@ -3221,26 +3234,30 @@ Step 4 holds FIXED and sets as well:
  quiz:{q:'A trades sheet has a Top N filter on [Day], a computed set on [Contract], a FIXED LOD, an INCLUDE LOD, a measure filter and a RANK table calc. You add an ordinary <b>[Side] = Long</b> filter. Which of them still count Short trades too, until you add [Side] to context?',o:['The measure filter and the RANK, which come after the aggregation','The INCLUDE LOD and the measure filter, which follow the view’s grain','The Top N filter, the set and the FIXED LOD','None of them: an ordinary filter applies to every step alike'],a:2,why:'Ordinary dimension filters such as [Side] run after the step that holds sets, conditional and Top N filters and FIXED LODs, so those three are still computed on all trades, Short included. Context filters run before that step, which is why Add to Context fixes them. INCLUDE and EXCLUDE LODs, measure filters and table calcs all come after the dimension filters, so they already see only Long trades.'},
  prac:{task:'On <b>meals</b>, build a table of your <b>top 3 snacks</b> by total kcal: [Name] on Rows, SUM([Kcal]) on Text, a [Kind] = snack filter and a Top 3 by SUM([Kcal]) filter on [Name]. (1) Why is it empty at first, and which one change fixes it? (2) Add a column <b>[Share]</b> = <code>SUM([Kcal]) / MIN({ FIXED : SUM([Kcal]) })</code>, formatted as a %: a share of what, before and after your fix (remove the Top N for a moment to see the before)? (3) Add a measure filter, SUM([Kcal]) at least 1,000: how many rows are left, and why does no fourth snack move up? (4) With your fix in place, number your filters and the FIXED in the order Tableau runs them.',sol:R`(1) Top N filters (step 4) run before ordinary dimension filters (step 5).
     The top 3 meals by kcal are picked from all meals: three bowls (Eggs,
-    Steak and Salmon on the built-in sample; Eggs, Salmon and Sardines on
+    Steak and Salmon on the built-in sample; Eggs, Salmon and Steak on
     the apps' data). Then [Kind] = snack removes all three.
     Fix: right-click the [Kind] filter → Add to Context (it turns grey).
     Step 3 now keeps only snacks, so the Top 3 is picked among them:
       built-in sample: Almonds (1 oz) 1,476 · Protein shake 1,120 · Apple 760
-      apps' data:      Protein shake 1,760 · Almonds (1 oz) 1,148 · Apple 570
+      apps' data:      Protein shake 22,240 · Burger and fries 17,550 ·
+                       Peanut butter toast 13,050 (a dinner out counts as a
+                       snack here: every food that isn't a bowl does)
 
 (2) { FIXED : SUM([Kcal]) } has no dimension: one grand total, computed in
     step 4, after context and before dimension filters. MIN() because an
     LOD inside an aggregate calc must be aggregated too (one value per mark).
     [Kind] as an ordinary filter: the total of ALL your meals, so a snack is
     a sliver (Almonds about 1.4% on the built-in sample, Protein shake
-    about 2.4% on the apps' data).
+    about 2.5% on the apps' data).
     [Kind] in context: the total of your snacks (4,541 kcal on the sample,
-    4,093 on the apps' data): Almonds 32.5%, Protein shake 24.7%, Apple
-    16.7% (apps' data: Protein shake 43.0%, Almonds 28.0%, Apple 13.9%).
+    154,299 on the apps' data): Almonds 32.5%, Protein shake 24.7%, Apple
+    16.7% (apps' data: Protein shake 14.4%, Burger and fries 11.4%,
+    Peanut butter toast 8.5%).
 
-(3) Measure filters run in step 7, after the Top 3 was picked in step 4:
-    Apple (under 1,000 kcal) drops out and nothing refills the list, so
-    2 rows are left on both datasets. The shares stay the same too: the
+(3) Measure filters run in step 7, after the Top 3 was picked in step 4.
+    Built-in sample: Apple (under 1,000 kcal) drops out and nothing refills
+    the list, so 2 rows are left. On the apps' data, a year of snacks, all
+    three are far above 1,000 and stay. The shares stay the same too: the
     FIXED total was computed before the measure filter.
 
 (4) 3  [Kind] = snack              context filter
@@ -4436,7 +4453,7 @@ function dataForm(){
     ${row('Focus chime','Minutes into a session, 0 = off',`<input id="s_focus" type="number" min="0" step="5" value="${settings.focus}" aria-label="Focus chime, minutes">`)}
     ${row('Sync',window.ISXSync?.state==='ok'?'On · this app syncs across your devices':'Keep every app the same on all your devices',btns('<button type="button" class="btn" data-act="sync">SYNC…</button>'))}
     ${row('Backup','Saved on this device. Download a copy, or restore one.',btns('<button type="button" class="btn" data-act="backup">BACKUP JSON</button><button type="button" class="btn" data-act="restore">RESTORE</button>'))}
-    ${row('Sample data','Four weeks of a learner on SQL and Python. Replaces your progress.',btns('<button type="button" class="btn" data-act="sample">LOAD SAMPLE</button>'))}
+    ${row('Sample data','A year of a learner on SQL, Python, Tableau and SAS. Replaces your progress.',btns('<button type="button" class="btn" data-act="sample">LOAD SAMPLE</button>'))}
     ${row('Reset all progress','Clears progress, attempts, study history and drafts. Pinned videos are kept.',btns('<button type="button" class="btn ui-danger" data-act="clear">RESET ALL</button>'))}
   </div><input id="i_file" type="file" accept=".json,application/json" class="hidden" aria-label="Backup file">
     <p class="mu" style="margin-top:10px;font-size:11px">Everything stays on this device. The SQL engine and Python runtime are downloaded once from public CDNs and then cached for offline use; videos always need a connection.</p>
@@ -4550,30 +4567,36 @@ function reviewText(){
     ...[...x.children].slice(1).map(el=>el.matches('ol,ul')?[...el.children].map((l,i)=>`${el.matches('ol')?i+1+'.':'-'} ${li(l)}`).join('\n'):tx(el))].join('\n'))].join('\n\n');
 }
 /* ================= sample learner ================= */
-// four weeks ending yesterday: a session most days, the first SQL and Python lessons in order, checks that mostly pass. Fixed seed: the same every time.
+// a year of study ending today: SQL and Python in turn from the start, Tableau joining after four months and SAS after
+// seven, each in its own track order. A session most weekdays and some weekends, longer as the habit sets in; fewer in
+// a busy spring, none in the summer week away or over Christmas. Harder lessons take more days, more failed checks or
+// wrong answers and the odd hint. Before each lesson the learner reviews what's due and mostly gets it; today's reviews
+// are left for you, and today's lesson is still in progress. Fixed seed: the same every time, only the dates move.
 async function sample(){
   if((events.length||sessions.length||Object.values(progress).some(p=>p.done))&&!await UI.confirm({title:'Load the sample?',body:'Your progress, attempts and study history are replaced with the sample month.',ok:'Replace',danger:true}))return;
   let sd=1337;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
-  // lesson, days spent on it, failed checks, hints; the last one is still in progress
-  const PLAN=[['sql1',1,0,0],['py1',1,1,0],['sql2',1,0,0],['sql3',2,2,1],['py2',1,0,0],['sql4',3,3,1],['py3',2,1,0],['sql5',1,0,0],['py4',3,2,1],['sql6',2,1,0],['py5',2,0,0],['sql7',2,1,0]];
-  const REST=new Set([25,21,18,14,11,7,3]),t0=today(),now=Date.now();
-  progress={};events=[];sessions=[];settings.plan=null;
-  // before each day's lesson the learner reviews up to two lessons that are due and mostly gets them; today's are left
-  // for you to see. They draw on a second seed, so the rest of the sample stays as it was
+  // reviews draw on a second seed, so the rest of the sample doesn't shift with them
   let s2=4242;const rn2=()=>(s2=s2*16807%2147483647)/2147483647;
-  let pi=0,dn=0;
-  for(let ago=27;ago>=0&&pi<PLAN.length;ago--){
-    if(REST.has(ago))continue;
-    const[id,days,fails,hint]=PLAN[pi],l=LM[id],last=++dn===days,k=addDays(t0,-ago),d=pd(k),p=pr(id),min=ri(15,45);
-    // today's session has already ended
-    let at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),rnd()<.35?ri(6,8):ri(18,21),ri(0,59)).getTime();if(!ago)at=Math.min(at,now-(min+5)*6e4);
-    const rv=ago?dueList(k).slice(0,2).map(x=>x.l):[];rv.forEach(x=>pr(x.id).sr={...progress[x.id].sr,[k]:rn2()<.85?1:0});
-    sessions.push({id:uid(),time:new Date(at).toISOString(),min,lessons:[...rv.map(x=>x.id),id],tracks:[...new Set([...rv.map(x=>x.t),l.t])]});
-    let m=ri(5,12);const ev=ok=>{p.att++;events.push({id:uid(),time:new Date(at+m*6e4).toISOString(),lesson:id,kind:'check',ok});m=Math.min(min-1,m+ri(3,9))};
-    for(let f=last?fails-p.att:Math.min(fails-p.att,Math.ceil(fails/days));f>0;f--)ev(false);
-    if(last){p.hint=hint;if(pi<PLAN.length-1){ev(true);p.done=true;p.first=p.att===1&&!p.hint&&!p.rev;p.xp=Math.round(XPL[l.lv]*(p.first?1.5:1));p.date=k}pi++;dn=0}
+  const t0=today(),now=Date.now(),last={};let cur=null;
+  progress={};events=[];sessions=[];settings.plan=null;
+  for(let ago=364;ago>=0;ago--){
+    const k=addDays(t0,-ago),d=pd(k),w=(364-ago)/7,wd=d.getDay(),m=d.getMonth(),dd=d.getDate(),am=1+(8-new Date(d.getFullYear(),7,1).getDay())%7;
+    if((m===11&&dd>=24)||(m===0&&dd<=1)||(m===7&&dd>=am-2&&dd<am+7))continue;   // Christmas and the summer week away
+    if(ago&&rnd()<(wd===6?.7:wd===0?.4:w>=16&&w<22?.4:.1))continue;               // rest days: most Saturdays, a busy spring
+    // the next lesson: the active track studied longest ago that still has one left
+    if(!cur){const T=['sql','py',...(w>=17?['tab']:[]),...(w>=30?['sas']:[])].filter(t=>nextIn(t)).sort((x,y)=>(last[x]||0)-(last[y]||0));
+      if(!T.length)break;const l=nextIn(T[0]),run=TR[l.t].run;
+      cur={l,days:ri(l.lv,l.lv+1)+(l.lv>2?1:0),fails:run?Math.max(0,l.lv-1+ri(-1,1)):ri(0,1),hint:l.lv>=3&&rnd()<.35?1:0,dn:0}}
+    const {l}=cur,p=pr(l.id),min=Math.min(90,ri(20,40)+Math.round(w/4)+(wd%6?0:15)),fin=++cur.dn>=cur.days&&ago>0;last[l.t]=365-ago;
+    // the session has ended by now today
+    let at=new Date(d.getFullYear(),m,dd,rnd()<.35?ri(6,8):ri(18,21),ri(0,59)).getTime();if(!ago)at=Math.min(at,now-(min+5)*6e4);
+    const rv=ago?dueList(k).slice(0,3).map(x=>x.l):[];rv.forEach(x=>pr(x.id).sr={...progress[x.id].sr,[k]:rn2()<.85?1:0});
+    sessions.push({id:uid(),time:new Date(at).toISOString(),min,lessons:[...rv.map(x=>x.id),l.id],tracks:[...new Set([...rv.map(x=>x.t),l.t])]});
+    let mm=ri(5,12);const kind=TR[l.t].run?'check':'quiz',ev=ok=>{p.att++;events.push({id:uid(),time:new Date(at+mm*6e4).toISOString(),lesson:l.id,kind,ok});mm=Math.min(min-1,mm+ri(3,9))};
+    for(let f=fin?cur.fails-p.att:Math.min(cur.fails-p.att,Math.ceil(cur.fails/cur.days));f>0;f--)ev(false);
+    if(fin){p.hint=cur.hint;ev(true);p.done=true;p.first=p.att===1&&!p.hint&&!p.rev;p.xp=Math.round(XPL[l.lv]*(p.first?1.5:1));p.date=k;cur=null}
   }
-  settings.last=PLAN.at(-1)[0];save();S.sel=null;S.range='all';S.page=1;closeModal();render();toast('Sample loaded')
+  settings.last=cur?.l.id||null;save();S.sel=null;S.range='all';S.page=1;closeModal();render();toast('Sample loaded')
 }
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function exportCSV(){
