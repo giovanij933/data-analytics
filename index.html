@@ -3768,10 +3768,10 @@ const today=()=>ymd(new Date());
 // an event's day, worked out once per timestamp: renders ask for it thousands of times (capped so it can't grow forever)
 const DOC=new Map(),dayOf=x=>{let d=DOC.get(x.time);if(d===undefined){if(DOC.size>50000)DOC.clear();d=ymd(new Date(x.time));DOC.set(x.time,d)}return d};
 // formatters made once: toLocaleString builds a new one on every call, which adds up over long tables and charts
-const FMT={dmy:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}),dt:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}),
+const FMT={dmy:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}),md:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric'}),nd:new Intl.DateTimeFormat('en-US',{month:'numeric',day:'numeric'}),dt:new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}),
   n0:new Intl.NumberFormat('en-US',{maximumFractionDigits:0}),n1:new Intl.NumberFormat('en-US',{maximumFractionDigits:1}),n2:new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})};
 const fdate=s=>FMT.dmy.format(pd(s));
-const fsd=s=>pd(s).toLocaleDateString('en-US',{month:'numeric',day:'numeric'});
+const fsd=s=>FMT.nd.format(pd(s));
 const fnum=v=>FMT.n1.format(+v);
 const fmin=m=>{m=Math.round(m||0);return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`};
 const mmss=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600);return h?`${h}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`:`${Math.floor(s/60)}:${pad(s%60)}`};
@@ -3999,7 +3999,7 @@ const xon=f=>{const[k,v]=f.split(':');return xval(k)!=null&&String(xval(k))===v}
 const xa=x=>x?` role="button" tabindex="0" aria-pressed="${xon(x)}" data-act="xf" data-v="${x}"`:'',xc=x=>x?' pick'+(xon(x)?' on':''):'';
 const lr=(col,label,v,p,x)=>`<div class="lr${xc(x)}"${xa(x)}><i class="dot" style="background:${col}"></i><span>${label}</span><b>${v}</b><em>${p??''}</em></div>`;
 const er=(col,label,val,tip='',x)=>`<div class="er${xc(x)}"${xa(x)}><i class="dot" style="background:${col}"></i><span>${label}</span><b>${val}</b><i class="q" title="${esc(tip)}">i</i></div>`;
-const dl=k=>pd(k).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const dl=k=>FMT.md.format(pd(k));   // asked for every day on the year chart: one formatter, not one per call (that was two thirds of a redraw)
 /* ---------- today's session: the tracks in rotation, spaced reviews, sized to your usual study time ---------- */
 // the track you've studied least recently goes next: never studied first, then the longest ago; ties go to the least
 // complete, then the usual order. Completed tracks drop out. Going back over a lesson completed on an earlier day (a
@@ -4188,7 +4188,7 @@ const LOGC=[{label:'Time (local)',get:e=>+new Date(e.time),type:'time'},{label:'
 function tableHTML(st){
   const F=UI.filter('log',LOGC,()=>{S.page=1;render()});
   const f=F.apply([...st.evs].reverse()),n=f.length,pages=Math.max(1,Math.ceil(n/S.rows));S.page=Math.max(1,Math.min(S.page,pages));
-  const rows=f.slice((S.page-1)*S.rows,S.page*S.rows),tf=d=>new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const rows=f.slice((S.page-1)*S.rows,S.page*S.rows),tf=d=>FMT.dt.format(new Date(d));
   const KIND=LOGK;
   return`<div class="th"><h3>Log</h3><button class="btn" data-act="export">EXPORT CSV</button></div>
   <div class="tw" tabindex="0" role="region" aria-label="Table"><table><thead><tr><th>${F.th(0)}</th><th>${F.th(1)}</th><th>${F.th(2)}</th><th>${F.th(3)}</th><th>${F.th(4)}</th><th>${F.th(5)}</th><th><span class="ui-sr">Actions</span></th></tr></thead><tbody>
@@ -4214,8 +4214,8 @@ function render(){
   const ban=events.length||sessions.length?'':`<div class="card ban"><div><h2 style="margin:0 0 4px;font-size:1.17em">Welcome to LEARN</h2><div class="mu" style="font-size:12px">${LESSONS.length} lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">&#9654; START WITH SQL</button><button class="btn" data-act="open" data-v="py1">&#9654; START WITH PYTHON</button><button class="btn" data-act="catalog">ALL LESSONS</button><button class="btn" data-act="sample">LOAD SAMPLE</button></div></div>`;
   // today and what to learn next don't depend on the filters, so they sit above them (today's numbers are in the hero)
-  $('#top').innerHTML=ban+heroToday()+continueHTML();
-  $('#app').innerHTML=topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`;
+  UI.paint($('#top'),ban+heroToday()+continueHTML(),{now:true});
+  UI.paint($('#app'),topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`);
 }
 
 /* ================= study session timing ================= */
