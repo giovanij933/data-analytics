@@ -3964,14 +3964,18 @@ function smooth(pts){
 // at(i) → {a, title, on} for point or bar i: what clicking its full-height column does, what hovering says.
 // The columns are paths, not rects, so UI.animate's bar growth leaves them alone
 const hit=m=>m?`${m.a?` class="hit pick${m.on?' on':''}" ${m.a}`:' class="hit"'}><title>${esc(m.title)}</title></path>`:' class="hit"/>';
-function area(series,color,{tgt,max,at}={}){
+// run(i0,i1,avg) → {title}: given it, a long range (more than 60 points) draws each point as the average of a run of
+// neighbours (a point a day for half a year is a scribble), and the caption says what one point stands for
+function area(series,color,{tgt,max,at,run}={}){
   if(series.length<2)return'<div class="empty">Not enough data yet</div>';
+  let R=null,k=1;
+  if(run&&series.length>60){k=Math.ceil(series.length/60);R=[];for(let e=series.length;e>0;e-=k)R.unshift([Math.max(0,e-k),e]);series=R.map(([a,b])=>series.slice(a,b).reduce((s,v)=>s+v,0)/(b-a))}
   const W=800,H=200,p=12,mx=max||Math.max(1,...series,(tgt||0))*1.08,X=i=>p+i*(W-2*p)/(series.length-1),Y=v=>p+(mx-v)/mx*(H-2*p);
-  const d=smooth(series.map((v,i)=>[X(i),Y(Math.max(0,Math.min(mx,v)))])),id='a'+uid();
+  const d=smooth(series.map((v,i)=>[X(i),Y(Math.max(0,Math.min(mx,v)))])),id='a'+uid(),hitAt=R?i=>run(R[i][0],R[i][1],series[i]):at;
   return`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
     <path d="${d} L${X(series.length-1)},${Y(0)} L${X(0)},${Y(0)} Z" fill="${color}" fill-opacity=".1"/>
     ${tgt?`<line x1="${p}" x2="${W-p}" y1="${Y(tgt)}" y2="${Y(tgt)}" stroke="#2c2c2c" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>`:''}
-    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>${at?series.map((_,i)=>{const cw=(W-2*p)/(series.length-1),x0=Math.max(0,X(i)-cw/2);return`<path d="M${x0.toFixed(1)} 0h${cw.toFixed(1)}v${H}h-${cw.toFixed(1)}z"${hit(at(i))}`}).join(''):''}</svg>`;
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>${hitAt?series.map((_,i)=>{const cw=(W-2*p)/(series.length-1),x0=Math.max(0,X(i)-cw/2);return`<path d="M${x0.toFixed(1)} 0h${cw.toFixed(1)}v${H}h-${cw.toFixed(1)}z"${hit(hitAt(i))}`}).join(''):''}</svg>${R?`<div class="mu" style="font-size:11px;margin-top:6px">Each point averages ${k} days</div>`:''}`;
 }
 function bars(vals,{labels,max,cols,at}={}){
   if(!vals.length||!Math.max(...vals))return'<div class="empty">No data in range</div>';
@@ -3985,7 +3989,9 @@ function radar(labels,vals,tips=[]){
   const n=labels.length,cx=160,cy=124,R=76,A=labels.map((_,i)=>(-90+i*360/n)*Math.PI/180);
   const pt=(i,v)=>[cx+R*v*Math.cos(A[i]),cy+R*v*Math.sin(A[i])];
   const poly=f=>A.map((_,i)=>pt(i,f(i)).map(x=>x.toFixed(1)).join(',')).join(' ');
-  const lab=labels.map((l,i)=>{const[x,y]=pt(i,1.22),c=Math.cos(A[i]);return`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${Math.abs(c)<.2?'middle':c>0?'start':'end'}">${l}${tips[i]?`<title>${esc(tips[i])}</title>`:''}</text>`}).join('');
+  // a label at the side goes on two short lines ("Tableau" / "core"): on one line it ran off the edge of the chart on a phone
+  const lab=labels.map((l,i)=>{const[x,y]=pt(i,1.22),c=Math.cos(A[i]),sp=l.indexOf(' '),two=sp>0&&Math.abs(c)>=.2;
+    return`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${Math.abs(c)<.2?'middle':c>0?'start':'end'}">${two?`<tspan x="${x.toFixed(1)}" dy="-5">${l.slice(0,sp)}</tspan><tspan x="${x.toFixed(1)}" dy="11">${l.slice(sp+1)}</tspan>`:l}${tips[i]?`<title>${esc(tips[i])}</title>`:''}</text>`}).join('');
   return`<svg class="radar" viewBox="0 0 320 250" font-size="10" letter-spacing=".08em" fill="#8f8a7e">
     ${[1,.75,.5,.25].map(v=>`<polygon points="${poly(()=>v)}" fill="none" stroke="#2c2c2c"/>`).join('')}
     ${A.map((_,i)=>{const[x,y]=pt(i,1);return`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#2c2c2c"/>`}).join('')}
@@ -4141,7 +4147,7 @@ function evalHTML(st){
   const RE=view(true,'res').evs,KE=view(true,'kind').evs,nOk=RE.filter(e=>e.ok).length;
   return`<div class="card"><div class="bd ev"><h3>Skill report</h3>
     <h4>TRACKS</h4>${TK.map(trow).join('')}
-    <hr><h4>QUALITY (IN RANGE)</h4>
+    <h4>QUALITY (IN RANGE)</h4>
     ${er(CV[c(ok,.6,.4)],'Check / quiz success rate',ok==null?'—':`<span class="${c(ok,.6,.4)}">${Math.round(ok*100)}%</span> of ${st.graded}`,'Share of Check runs and quiz answers that were correct')}
     ${er('var(--g)','Correct attempts',`${nOk} <span class="mu">· ${pct(nOk,RE.length)}</span>`,'Checks, quiz answers and self-checks that passed','res:ok')}
     ${er('var(--r)','Not yet',`${RE.length-nOk} <span class="mu">· ${pct(RE.length-nOk,RE.length)}</span>`,'Attempts that did not pass yet','res:no')}
@@ -4149,7 +4155,7 @@ function evalHTML(st){
     ${er('transparent','Avg attempts per lesson',att==null?'—':fnum(r1(att)))}
     ${er(st.hints?'var(--a)':'transparent','Hints used',st.hints)}
     ${er(st.revs?'var(--a)':'transparent','Solutions viewed',st.revs,'Viewing the solution removes the first-try bonus — try a hint first')}
-    <hr><h4>CONSISTENCY</h4>
+    <h4>CONSISTENCY</h4>
     ${er(st.streak?'var(--g)':'transparent','Study streak',`<span class="${st.streak?'grn':''}">${st.streak} day${st.streak===1?'':'s'}</span>`)}
     ${er(CV[c(st.days/st.span,.7,.4)],'Days studied',`${st.days} / ${st.span}`)}
     ${er(st.since==null?'transparent':st.since>2?'var(--a)':'var(--g)','Days since last study',st.since??'—')}
@@ -4169,7 +4175,7 @@ function chartsHTML(st,F){
   return`<div class="grid gm">
     <div class="card"><div class="bd"><div class="eqh"><div><h3>Study time trend</h3><div class="big" style="font-size:20px">${fmin(st.tot)}</div><div class="lbl" style="margin-top:4px">Dashed = ${settings.goal}m daily goal</div></div>
       <div class="ks"><div>SESSIONS<b>${st.ses.length}</b></div><div>LESSONS<b class="${st.done.length?'grn':''}">${st.done.length}</b></div><div>XP<b class="grn">+${st.xp}</b></div><div>SUCCESS<b>${st.okRate==null?'—':Math.round(st.okRate*100)+'%'}</b></div><div>STREAK<b class="${st.streak?'grn':''}">${st.streak}</b></div></div></div>
-      ${trend.length>1?area(trend,'#ffb000',{tgt:settings.goal,at:tAt}):bars(trend,{at:tAt})}</div>${F}</div>
+      ${trend.length>1?area(trend,'#ffb000',{tgt:settings.goal,at:tAt,run:(a,b,v)=>({title:`${dl(days[a])} – ${dl(days[b-1])}: ${fmin(v)} a day`})}):bars(trend,{at:tAt})}</div>${F}</div>
     <div class="card"><div class="bd"><h3>XP by week</h3><div class="lbl">Last 8 weeks</div><div class="big">${wk.at(-1).xp} XP <span class="mu" style="font-size:12px;font-weight:500">this week</span></div>
       ${bars(wk.map(w=>w.xp),{labels:wk.map(w=>fsd(w.ws)),at:i=>({a:`data-act="xf" data-v="wk:${wk[i].ws}"`,title:`Week of ${dl(wk[i].ws)}: ${wk[i].xp} XP — click to show this week`,off:xoff('wk:'+wk[i].ws)})})}</div>${F}</div>
   </div>
