@@ -12,10 +12,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<title>ISIONXXX // LEARN</title>
+<title>ISIONXXX — LEARN</title>
 <link rel="stylesheet" href="ui.css">
 <style>
 :root{
@@ -23,7 +20,7 @@
   --bg:var(--background);--card:var(--surface);--cell:var(--raised);--line:var(--border-soft);--line2:var(--border);
   --tx:var(--text-primary);--mu:var(--text-secondary);
   --g:var(--success);--r:var(--error);--a:var(--warning);--b:var(--info);
-  --f:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --f:var(--ui-f);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--bg)}
@@ -38,11 +35,7 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 
 /* header + filter bar */
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.brand{font-weight:600;font-size:15px;letter-spacing:.14em}
-.brand b{color:var(--secondary)}
-.cur{display:inline-block;width:.6em;height:1.05em;margin-left:6px;background:var(--primary);vertical-align:-2px;animation:bl 1.1s steps(1) infinite}
-@keyframes bl{50%{opacity:0}}
-@media(prefers-reduced-motion:reduce){.cur{animation:none}}
+.brand{font-weight:600;font-size:15px;letter-spacing:.06em}
 .top .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .top .btn svg{display:none}
 .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 0}
@@ -52,7 +45,7 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .sp{flex:1}
 
 /* buttons */
-.btn{border:1px solid var(--line2);background:var(--bg);border-radius:0;padding:7px 10px;display:inline-flex;gap:6px;align-items:center;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.btn{border:1px solid var(--line2);background:var(--bg);border-radius:0;padding:7px 10px;display:inline-flex;gap:6px;align-items:center;font-size:12px;letter-spacing:.03em;text-transform:uppercase}
 .btn:hover{border-color:var(--accent);color:var(--accent-text)}
 .btn svg{width:14px;height:14px}
 .btn.pri,.btn.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
@@ -68,9 +61,8 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .ban{flex-direction:row;align-items:center;justify-content:space-between;gap:16px;padding:16px;margin-bottom:12px;flex-wrap:wrap;border-color:var(--border)}
 .bd{padding:16px;flex:1;display:flex;flex-direction:column}
 .ft{border-top:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;font-size:11px;color:var(--mu);gap:10px;flex-wrap:wrap;align-items:center}
-.card h3{font-size:11px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--text-primary);margin-bottom:12px}
-.card h3::before{content:'> ';color:var(--mu)}
-.lbl{font-size:11px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
+.card h3{font-size:11px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;color:var(--text-primary);margin-bottom:12px}
+.lbl{font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
 .big{font-size:22px;font-weight:600;margin:2px 0 8px}
 .gauge{display:block;width:150px;max-width:100%;margin:6px auto 10px}
 .gauge path{fill:none;stroke-width:9}
@@ -86,7 +78,7 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .calhd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .wl{color:var(--mu)}
 .cal{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:12px}
-.dh{text-align:center;font-size:11px;color:var(--mu);padding:4px 0;letter-spacing:.08em;text-transform:uppercase}
+.dh{text-align:center;font-size:11px;color:var(--mu);padding:4px 0;letter-spacing:.05em;text-transform:uppercase}
 .cell{min-height:66px;background:var(--cell);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:11px;color:var(--mu);cursor:pointer;position:relative;overflow:hidden}
 .cell.hatch{background:repeating-linear-gradient(135deg,var(--raised) 0 6px,var(--border-soft) 6px 7px)}
 .cell.out{cursor:default;border-color:transparent;opacity:.5}
@@ -102,10 +94,10 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .nav{display:flex;gap:8px;align-items:center}
 .nav button{border:1px solid var(--line2);min-width:33px;height:33px;padding:0 10px;font-size:12px}
 .nav button:hover{border-color:var(--accent);color:var(--accent-text)}
-.nav .tb{font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.nav .tb{font-size:11px;letter-spacing:.03em;text-transform:uppercase}
 
 /* coverage */
-.ev h4{font-size:10px;letter-spacing:.16em;color:var(--mu);text-transform:uppercase;font-weight:400;margin:12px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
+.ev h4{font-size:10px;letter-spacing:.06em;color:var(--mu);text-transform:uppercase;font-weight:400;margin:12px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
 .ev h4:first-of-type{border:0;padding-top:0;margin-top:0}
 .er{display:flex;align-items:center;padding:5px 0;gap:2px}
 .er span{flex:1}.er b{margin-right:8px;text-align:right;font-weight:600}
@@ -119,16 +111,16 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0 8px}
 .gauge path.pick:hover{filter:brightness(1.3)}.gauge path.off,.chart .off{opacity:.25}
 .chart .hit{fill:transparent}.chart .hit:hover{fill:var(--accent-soft)}.chart .hit.on{fill:var(--accent-soft)}
 .xf{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 12px}
-.xf span{color:var(--mu);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
+.xf span{color:var(--mu);font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-right:2px}
 .xf button{border:1px solid var(--accent);color:var(--accent-text);padding:5px 8px;font-size:12px}.xf button b{font-weight:600}.xf .clr{border-color:var(--line2);color:var(--mu)}
 .xf button:hover{background:var(--accent-soft)}.xf[hidden]{display:none}
 /* charts */
 .chart{width:100%;height:160px;display:block;margin-top:8px}
 .chart *{vector-effect:non-scaling-stroke}
-.empty{height:160px;display:grid;place-items:center;color:var(--mu);letter-spacing:.14em;font-size:11px;text-transform:uppercase;text-align:center}
+.empty{height:160px;display:grid;place-items:center;color:var(--mu);letter-spacing:.06em;font-size:11px;text-transform:uppercase;text-align:center}
 .eqh{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .ks{display:flex;gap:22px;flex-wrap:wrap}
-.ks div{font-size:11px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;display:flex;flex-direction:column;gap:2px}
+.ks div{font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase;display:flex;flex-direction:column;gap:2px}
 .ks b{font-size:13px;color:var(--tx);letter-spacing:0;text-transform:none}
 .radar{width:100%;max-width:230px;height:auto;margin:0 auto;display:block}
 svg text{font-family:var(--f)}
@@ -137,9 +129,9 @@ svg text{font-family:var(--f)}
 .tw{overflow-x:auto;position:relative}
 table{width:100%;border-collapse:collapse}
 th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-size:11px;font-weight:500;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
+th{font-size:11px;font-weight:500;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
 .num{text-align:right}
-.pill{display:inline-flex;padding:1px 6px;font-size:10px;border:1px solid;letter-spacing:.06em;text-transform:uppercase}
+.pill{display:inline-flex;padding:1px 6px;font-size:10px;border:1px solid;letter-spacing:.03em;text-transform:uppercase}
 .acts{display:flex;gap:4px;justify-content:flex-end}
 td .acts button{width:24px;height:24px;border:1px solid var(--line2);color:var(--tx);display:inline-flex;align-items:center;justify-content:center}
 td .acts button:hover{border-color:var(--accent);color:var(--accent-text)}
@@ -149,7 +141,7 @@ td .acts button:hover{border-color:var(--accent);color:var(--accent-text)}
 .dim{color:var(--mu)}
 /* table pager, as in the other apps */
 .calf{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px}
-.calf button{border:1px solid var(--line2);padding:7px 10px;font-size:12px;letter-spacing:.06em}
+.calf button{border:1px solid var(--line2);padding:7px 10px;font-size:12px;letter-spacing:.03em}
 .calf button:hover{border-color:var(--accent);color:var(--accent-text)}
 
 /* modal (matches the dialogs in MIND / TRAINING / NUTRITION) */
@@ -157,10 +149,10 @@ td .acts button:hover{border-color:var(--accent);color:var(--accent-text)}
 .box{background:var(--card);border:1px solid var(--border-soft);padding:20px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
 .box.wide{max-width:900px}
 #mbox:focus{outline:0}
-.box h3{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--text-primary);margin-bottom:14px}
+.box h3{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-primary);margin-bottom:14px}
 .box p{margin-bottom:12px}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fg label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
+.fg label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
 .fg input,.fg select,.fg textarea{background:var(--bg);border:1px solid var(--line2);padding:7px 10px;width:100%;font-size:13px;letter-spacing:0;text-transform:none;color:var(--tx)}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);outline:0}
 .ck{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--tx)}
@@ -177,7 +169,7 @@ td .acts button:hover{border-color:var(--accent);color:var(--accent-text)}
 .box.rvd{max-width:680px}
 .rvh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.rvh h3{margin:0;flex:1}.rvh .btn{min-width:33px;justify-content:center}
 .rv{border-top:1px solid var(--line);padding:14px 0 4px;font-size:13.5px;line-height:1.7}
-.rv h4{margin:0 0 6px;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}
+.rv h4{margin:0 0 6px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
 .rv p{margin:0 0 8px}.rv b{font-weight:600}
 .rv ol,.rv ul{margin:0 0 8px;padding-left:22px}.rv li{margin:0 0 6px}.rv li::marker{color:var(--mu)}
 .rv .tr{display:block;color:var(--mu);font-size:12px}
@@ -185,7 +177,7 @@ td .acts button:hover{border-color:var(--accent);color:var(--accent-text)}
 
 /* chips */
 .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.chip{border:1px solid var(--line2);padding:7px 10px;font-size:12px;letter-spacing:.06em}
+.chip{border:1px solid var(--line2);padding:7px 10px;font-size:12px;letter-spacing:.03em}
 .chip:hover{border-color:var(--accent);color:var(--accent-text)}
 .chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 
@@ -206,16 +198,16 @@ a.btn{text-decoration:none}
 .l5{display:inline-flex;gap:3px}.l5 i{width:10px;height:10px}
 
 /* code */
-pre,.ed{font:12.5px/1.55 var(--f)}
+pre,.ed{font:12.5px/1.55 var(--ui-mono)}
 /* code and result blocks scroll sideways on a phone: each one carries tabindex="0" so a keyboard can reach and scroll it */
 pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow:auto;color:var(--tx);white-space:pre;tab-size:2}
 .ed{width:100%;min-height:170px;background:var(--raised);border:1px solid var(--line2);padding:12px 14px;color:var(--tx);caret-color:var(--accent);resize:vertical;tab-size:2;white-space:pre;overflow:auto}
 .ed:focus{border-color:var(--accent);outline:0}
-.codeh{display:flex;align-items:center;gap:8px;margin:16px 0 6px;font-size:11px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
+.codeh{display:flex;align-items:center;gap:8px;margin:16px 0 6px;font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
 .codeh b{flex:1;font-weight:500;color:var(--text-primary)}
 .rt{border-collapse:collapse;font:12px var(--f);width:auto}
 .rt th,.rt td{border:1px solid var(--line2);padding:5px 9px;text-align:left;white-space:nowrap}
-.rt th{background:var(--border-soft);color:var(--mu);font-weight:500;font-size:11px;letter-spacing:.06em}
+.rt th{background:var(--border-soft);color:var(--mu);font-weight:500;font-size:11px;letter-spacing:.03em}
 .outw{max-height:320px;overflow:auto;margin-top:8px}
 .fb{border:1px solid;padding:10px 12px;margin-top:10px;line-height:1.5}
 .fb.ok{background:var(--success-soft);border-color:var(--success-line);color:var(--success-text)}
@@ -239,10 +231,9 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .stime{font-size:13px;font-weight:600;color:var(--text-primary);min-width:52px}
 .lvb{padding:18px 0 40px}
 .lvb h2{font-size:18px;font-weight:600;letter-spacing:.02em;margin:6px 0 12px}
-.lvb h2::before{content:'> ';color:var(--secondary)}
 .lvb p.learn{font-size:13.5px;line-height:1.65;margin-bottom:10px}
 /* code inside a sentence: the lesson's own font and size (a bare code tag falls back to the browser's smaller monospace) */
-.lvb code{font:inherit;background:var(--border-soft);padding:0 .25em;border-radius:3px}
+.lvb code{font-family:var(--ui-mono);font-size:.92em;background:var(--border-soft);padding:0 .25em;border-radius:3px}
 .task{background:var(--card);border:1px solid var(--line);border-left:2px solid var(--info);padding:12px 14px;line-height:1.6;margin-top:18px}
 .task b{color:var(--text-primary)}
 .opts{display:grid;gap:6px;margin-top:10px}
@@ -265,7 +256,7 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .spi>i{font-style:normal;color:var(--mu);font-size:11px}
 .spi b{font-weight:500}.spi small{display:block;color:var(--mu);font-size:11px;margin-top:3px}
 .spi em{font-style:normal;color:var(--mu);font-size:11px;white-space:nowrap}
-.spi .tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary);margin-right:6px}
+.spi .tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin-right:6px}
 .spi .pill{margin-right:4px}
 .spi.now{border-color:var(--accent)}.spi.ok{border-color:var(--success-line)}.spi.ok .tag{color:var(--success-text)}.spi.off{opacity:.6}
 .sdots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:0}
@@ -273,7 +264,7 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .ssn{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .rvp{margin-top:0;margin-bottom:14px}
 .rvn{margin:4px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.rvn summary{cursor:pointer;padding:10px 0;font-size:11px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase}
+.rvn summary{cursor:pointer;padding:10px 0;font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
 .rvn summary:hover{color:var(--accent-text)}.rvn[open]{padding-bottom:12px}
 .ft .nx{display:block;margin-top:3px}
 .box.ssm .mact{position:sticky;bottom:-20px;z-index:1;margin:14px -20px -20px;padding:12px 20px;background:var(--float);backdrop-filter:var(--glass-filter);-webkit-backdrop-filter:var(--glass-filter);border-top:1px solid var(--g-line,var(--line))}
@@ -296,7 +287,7 @@ h1.brand{margin:0}
 </head>
 <body>
 <header class="top">
-  <h1 class="brand">ISIONXXX <b>//</b> LEARN<i class="cur"></i></h1>
+  <h1 class="brand">ISIONXXX LEARN</h1>
   <div class="acts" id="barBtns"></div>
 </header>
 <div id="top" role="region" aria-label="Today and next lessons"></div>
@@ -4562,7 +4553,7 @@ function review(day){
 function reviewForm(day){
   const D=rvDays();if(!D.length)return toast('Nothing to review yet');
   day=D.includes(day)?day:rvDefault();const i=D.indexOf(day);
-  openModal(`<div class="rvh"><h3>Daily review // ${pd(day).toLocaleDateString('en-US',{weekday:'short'})}, ${fdate(day)}</h3>
+  openModal(`<div class="rvh"><h3>Daily review · ${pd(day).toLocaleDateString('en-US',{weekday:'short'})}, ${fdate(day)}</h3>
     <button type="button" class="btn" data-act="rvgo" data-v="${D[i-1]||''}" ${i>0?'':'disabled'} aria-label="Previous study day">&lt;</button><button type="button" class="btn" data-act="rvgo" data-v="${D[i+1]||''}" ${i<D.length-1?'':'disabled'} aria-label="Next study day">&gt;</button></div>
     <div id="rvb">${review(day)}</div>
     <div class="mact rvf"><button type="button" class="btn" data-act="rvcopy">Copy</button><button type="button" class="btn pri" data-act="close">Done</button></div>`);
