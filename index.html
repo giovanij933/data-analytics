@@ -4093,7 +4093,9 @@ function planRows(){
   const L=it.find(x=>x.k==='l'),l=L&&LM[L.l],n=nrv(it),m=it.reduce((a,x)=>a+(+x.m||0),0),clip=(s,k)=>s.length>k?s.slice(0,k-1).trim()+'…':s,tail=` · ~${m} min`,E=P?.done&&sdone(P);
   const sub=E?`${E.ok?'Done ✓':'Ended'} · ${E.t}`:P?.more?`Another session under way: ${P.i} of ${it.length}`:P?`${P.i} of ${it.length} done${tail}`
     :l?(n?`+ ${pls(n,'review')}`:sessions.length||events.length?LV[l.lv]:'First lesson')+tail:clip(it.map(x=>LM[x.l].title).join(' · '),64-tail.length)+tail;
-  return[{title:clip(l?`${TR[l.t].n} · ${l.title}`:pls(n,'review'),28),sub:clip(sub,64),act:'startnext',done:!!(E&&E.any||P?.more)}];
+  // art: the lesson's picture (or the first review's), for TODAY's plan (concepts.js)
+  const al=l||LM[it[0]?.l];
+  return[{title:clip(l?`${TR[l.t].n} · ${l.title}`:pls(n,'review'),28),sub:clip(sub,64),act:'startnext',done:!!(E&&E.any||P?.more),art:al&&window.CPG?.art(al.id)||undefined}];
 }
 function continueHTML(){
   const P=tp(),Q=P&&!P.done?P:planFor(),L=Q.items.find(x=>x.k==='l'),rec=L?LM[L.l]:recommend(),D=dueList(),nd=nextDue(),n=nrv(Q.items),E=P?.done&&sdone(P);
