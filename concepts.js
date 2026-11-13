@@ -207,5 +207,16 @@ window.CPG=(()=>{
   // the guide
   const html=id=>{const g=get(id);if(!g)return '';
     return `<div class="cp"><div class="cp-pic">${pic(id,true)}</div><dl class="cp-l"><dt>Does</dt><dd>${esc(g[2])}</dd><dt>Write</dt><dd><code>${esc(g[3])}</code></dd><dt>Watch for</dt><dd>${esc(g[4])}</dd></dl></div>`};
-  return {get,mini,pic,html,size:Object.keys(G).length};
+  // TODAY's plan art (isionxxx ARCHITECTURE.md, 2h): a picture as a small SVG in the shared plan-art classes (pa-*), which
+  // TODAY colours with the palette, light or dark, so it shows without this app's CSS. M: class here → [pa classes, attributes]
+  const toArt=(svg,M)=>{try{const r=new DOMParser().parseFromString(svg,'image/svg+xml').documentElement;if(r.nodeName!=='svg')return '';
+    [r,...r.querySelectorAll('*')].forEach(e=>{const k=[];(e.getAttribute('class')||'').split(/\s+/).forEach(c=>{const m=M[c];if(!m)return;if(m[0])k.push(m[0]);for(const a in m[1]||{})e.setAttribute(a,m[1][a])});
+      e.removeAttribute('class');e.removeAttribute('style');e.removeAttribute('aria-hidden');if(k.length)e.setAttribute('class',k.join(' '))});
+    return new XMLSerializer().serializeToString(r)}catch(e){return ''}};
+  // TODAY's plan: the picture beside today's lesson
+  const art=id=>get(id)?toArt(pic(id,false),{'cp-c0':['pa-c'],'cp-ca':['pa-p'],'cp-cb':['pa-s'],'cp-cx':['pa-x'],'cp-ch':['pa-sm',{fill:'none','stroke-width':'.6','stroke-dasharray':'1 1'}],
+    'cp-c1':['pa-p'],'cp-c2':['pa-i'],'cp-c3':['pa-g'],'cp-ar':['pa-sm',{fill:'none','stroke-width':'1.5'}],'cp-bar':['pa-p'],'cp-soft':['pa-s'],'cp-blue':['pa-i'],'cp-dot':['pa-p'],
+    'cp-line':['pa-sp',{fill:'none','stroke-width':'10'}],'cp-noodle':['pa-sp',{fill:'none','stroke-width':'10'}],'cp-green':['pa-sw'],'cp-axis':['pa-sb',{'stroke-width':'7'}],
+    'cp-refl':['pa-sm',{'stroke-width':'7','stroke-dasharray':'18 12'}],'cp-tile':['pa-sb',{fill:'none','stroke-width':'7'}]}):'';
+  return {get,mini,pic,html,art,size:Object.keys(G).length};
 })();
