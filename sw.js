@@ -1,8 +1,8 @@
 // Bump the version string whenever you change index.html so clients pick up the new shell.
-const CACHE = 'isx-extract-v87';
+const CACHE = 'isx-extract-v88';
 // all ISIONXXX apps share one site and one cache storage: only ever clear this app's own old caches
 const MINE = k => k.startsWith('isx-extract-') || k.startsWith('xl-');
-const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './db.js', './sync.js', './ui.js', './ui.css', './apple-touch-icon.png', './icon-192.png', './icon-512.png'];
+const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './db.js', './sync.js', './ui.js', './ui.css', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './concepts.js'];
 
 // fetch this site's own files past the browser's HTTP cache (GitHub Pages lets it keep them ~10 min), so a new
 // version never installs or refreshes with the previous one's files; other sites (fonts, runtimes) as usual

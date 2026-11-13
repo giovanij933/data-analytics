@@ -260,6 +260,30 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .spi .tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin-right:6px}
 .spi .pill{margin-right:4px}
 .spi.now{border-color:var(--accent)}.spi.ok{border-color:var(--success-line)}.spi.ok .tag{color:var(--success-text)}.spi.off{opacity:.6}
+/* a lesson's concept guide (concepts.js): what it does to the data, as a table before → after or a small chart. A
+   picture beside each lesson in today's session and the lesson list, one at the top of the lesson, and the ⓘ by its
+   title opens the guide */
+.cp-svg{display:block;height:auto;overflow:visible}
+.cp-c0{fill:color-mix(in srgb,var(--text-muted) 26%,var(--track))}.cp-ca,.cp-c1{fill:var(--accent)}.cp-cb{fill:color-mix(in srgb,var(--accent) 35%,var(--track))}
+.cp-cx{fill:var(--track);opacity:.55}.cp-ch{fill:none;stroke:var(--text-muted);stroke-dasharray:2 2;stroke-width:1}.cp-c2{fill:var(--info)}.cp-c3{fill:var(--secondary)}
+.cp-t{font:600 12px var(--f);text-anchor:middle;fill:var(--text-primary)}.cp-t.cp-on{fill:var(--on-accent)}
+.cp-ar{fill:none;stroke:var(--text-secondary);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.cp-op{font:600 11px var(--f);fill:var(--text-secondary);text-anchor:middle}.cp-op.cp-end{text-anchor:end}.cp-op.cp-on{fill:var(--on-accent)}.cp-plus{font:600 14px var(--f);fill:var(--text-secondary);text-anchor:middle}
+.cp-bar{fill:var(--accent)}.cp-soft{fill:color-mix(in srgb,var(--accent) 30%,var(--track))}.cp-blue{fill:var(--info)}.cp-dot{fill:var(--accent)}
+.cp-line,.cp-noodle{fill:none;stroke:var(--accent);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}.cp-green{stroke:var(--success)}
+.cp-axis{stroke:var(--border);stroke-width:2}.cp-refl{stroke:var(--text-secondary);stroke-width:2;stroke-dasharray:6 4}.cp-tile{fill:none;stroke:var(--border);stroke-width:2}
+.cp-mini{flex:none;display:inline-flex;align-items:center;justify-content:center;width:56px;height:32px}.cp-mini .cp-svg{width:56px;height:32px}
+.cp-mini .cp-line,.cp-mini .cp-noodle{stroke-width:10}.cp-mini .cp-axis,.cp-mini .cp-tile,.cp-mini .cp-refl{stroke-width:7}.cp-mini .cp-ch{stroke-width:.6;stroke-dasharray:1 1}
+.cp-row{display:flex;align-items:center;gap:10px;min-width:0}.cp-row>div{min-width:0;flex:1}
+.cp-ib{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-14px -10px -14px -6px;vertical-align:middle;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cp-ib:focus-visible{outline:2px solid var(--accent);outline-offset:-4px;border-radius:50%}
+.cp-i{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;color:var(--accent-text);font:600 11px/1 var(--f);font-style:normal;letter-spacing:0}
+.cp-fig{margin:4px 0 14px;display:flex;justify-content:center}.cp-pic{display:flex;justify-content:center;margin:4px 0 18px}
+.cp-l{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px;line-height:1.45}
+.cp-l dt{padding-top:2px;color:var(--text-secondary);font-size:11px;letter-spacing:.05em;text-transform:uppercase}.cp-l dd{margin:0;color:var(--text-primary);min-width:0}
+.cp-l code{font-family:var(--ui-mono,ui-monospace,monospace);font-size:12.5px;overflow-wrap:anywhere}
+#gd{color:var(--tx);padding:20px;width:min(560px,calc(100vw - 24px))}#gd h3{margin:0 0 14px;font-size:13px;letter-spacing:.06em;color:var(--text-primary)}
+#gd .fa2{display:flex;margin-top:18px}.li .cp-mini{width:44px}.li .cp-mini .cp-svg{width:44px}
 .sdots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:0}
 .sdots i{width:7px;height:7px;border:1px solid var(--mu);border-radius:50%}.sdots i.ok{background:var(--g);border-color:var(--g)}.sdots i.no{border-color:var(--a)}.sdots i.now{background:var(--accent);border-color:var(--accent)}
 .ssn{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -279,7 +303,7 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
   .ed,.fg input,.fg select,.fg textarea,.vpin input,.ui-set input{font-size:16px}
   .lvb h2{font-size:16px}
   .lvh .ssn{order:9;flex-basis:100%;justify-content:flex-end}.lvh .sdots{display:none}
-  .spi{grid-template-columns:14px minmax(0,1fr);padding:9px 10px}.spi em{grid-column:2}
+  .spi{grid-template-columns:14px minmax(0,1fr);padding:9px 10px}.spi em{grid-column:2}.spi:has(.cp-mini)>em{padding-left:66px}
 }
 h1.brand{margin:0}
 .cell span{color:var(--text-secondary)}
@@ -303,10 +327,12 @@ h1.brand{margin:0}
 <div id="app" role="main"></div>
 <div id="po" class="po hidden" role="dialog" aria-modal="true" aria-label="Lesson"></div>
 <div id="modal" class="modal hidden"><div class="box" id="mbox" role="dialog" aria-modal="true" tabindex="-1"></div></div>
+<dialog id="gd" aria-labelledby="gdt"></dialog>
 
 <script src="db.js"></script>
 <script src="sync.js" data-keys="xl.progress.v1 xl.events.v1 xl.sessions.v1 xl.drafts.v1 xl.settings.v1 xl.videos.v1"></script>
 <script src="ui.js"></script>
+<script src="concepts.js"></script>
 <script type="isx/app">
 const $=s=>document.querySelector(s);
 const ACC='var(--accent)';                             // the measured series
@@ -4238,6 +4264,15 @@ document.addEventListener('visibilitychange',()=>{if(!ST)return;if(document.hidd
 window.addEventListener('pagehide',()=>{if(ST){stEnd()}});
 
 /* ================= lesson view ================= */
+// a lesson's concept guide (concepts.js): its picture, what it does, how to write it and the usual mistake. The ⓘ by
+// a lesson's title opens it, in today's session and in the lesson, over whatever is open
+const cpI=l=>window.CPG?.get(l.id)?`<button type="button" class="cp-ib" data-act="cpg" data-v="${l.id}" aria-label="${esc(l.title)}: what it does"><span class="cp-i" aria-hidden="true">i</span></button>`:'';
+function cpGuide(id){
+  const d=$('#gd'),l=LM[id];if(!window.CPG?.get(id)||!d||!l)return;
+  d.innerHTML=`<h3 id="gdt">${esc(l.title).toUpperCase()}</h3>${CPG.html(id)}<div class="fa2"><button type="button" class="btn pri" data-gx style="flex:1">DONE</button></div>`;
+  d.onclick=e=>{if(e.target===d||e.target.closest('[data-gx]'))d.close()};
+  d.showModal();d.querySelector('[data-gx]').focus();
+}
 function openLesson(id){
   const l=LM[id];if(!l)return;if(!CUR)LF=document.activeElement;CUR=id;settings.last=id;save();
   stStart();ST.lessons.add(id);ST.tracks.add(l.t);
@@ -4268,7 +4303,7 @@ function drawLesson(){
   // in a session the lesson view shows the step instead of the track's Prev / Next; a review starts from a blank exercise
   // with the notes folded away, so you try it from memory first
   const s=sstep(),P=s&&tp(),rv=s?.k==='r',code=rv?l.start:drafts[l.id]??l.start;edDirty=false;
-  const notes=`${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
+  const notes=`${window.CPG?.get(l.id)?`<div class="cp-fig">${CPG.pic(l.id,true)}</div>`:''}${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
       ${watchHTML(l)}
       <div class="codeh"><b>EXAMPLE</b>${run?`<button class="btn xs" data-act="runex">&#9654; RUN EXAMPLE</button>`:''}<button class="btn xs" data-act="copy" data-v="ex">COPY</button></div>
       <pre id="exCode" tabindex="0">${esc(l.ex)}</pre>
@@ -4278,7 +4313,7 @@ function drawLesson(){
       ${s?`<div class="ssn">${stepBar()}</div>`:`<button class="btn xs" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ Prev</button><button class="btn xs" data-act="open" data-v="${next?.id||''}" ${next?'':'disabled'}>Next ›</button>`}
       <button class="btn" data-act="lclose"${s?' title="Close for now: START picks the session up again"':''}>${s?'Close':'Done'}</button></div>
     <div class="lvb">
-      <h2 tabindex="-1">${esc(l.title)} ${p.done?`<span class="pill" style="color:var(--success-text);border-color:var(--success-line);background:var(--success-soft);vertical-align:middle">✓ ${p.xp} XP</span>`:`<span class="mu" style="font-size:12px;font-weight:500">· ${XPL[l.lv]} XP (+50% first try)</span>`}</h2>
+      <h2 tabindex="-1">${esc(l.title)}${cpI(l)} ${p.done?`<span class="pill" style="color:var(--success-text);border-color:var(--success-line);background:var(--success-soft);vertical-align:middle">✓ ${p.xp} XP</span>`:`<span class="mu" style="font-size:12px;font-weight:500">· ${XPL[l.lv]} XP (+50% first try)</span>`}</h2>
       ${rv?`<div class="task rvp" id="rvp">${rvpHTML(s)}</div><details class="rvn"><summary>Lesson notes, example and video</summary>${notes}</details>`:notes}
       ${run?codeExercise(l,code):quizExercise(l,rv)}
       <div class="lnav">${s?`<span></span><div class="ssn">${stepBar()}</div>`:`<button class="btn" data-act="open" data-v="${prev?.id||''}" ${prev?'':'disabled'}>‹ ${prev?esc(prev.title):'Start of track'}</button>
@@ -4378,7 +4413,7 @@ function spi(x,i,P){
   const l=LM[x.l],p=progress[l.id]||{},q=srOf(l.id),r=x.res,past=P&&(i<P.i||P.done),cur=P&&!P.done&&i===P.i;
   const sub=x.k==='r'?past?r===1?'✓ got it':r===0?'not yet · back tomorrow':'skipped · back tomorrow':`${q&&!q.done?IV[q.n]+'-day review · ':''}completed ${dago(p.date)}${q&&!q.done&&q.due<today()?` · waiting ${pls(diffDays(q.due,today()),'day')}`:''}`
     :past?isDone(l.id)?`✓ completed${p.date===today()?` · +${p.xp} XP`:''}`:'still in progress':`${LV[l.lv]} · ${isDone(l.id)?'completed':p.att||sessions.some(s=>(s.lessons||[]).includes(l.id))?'in progress':'new to you'}`;
-  return`<div class="spi${cur?' now':past?r===1?' ok':' off':''}"><i>${i+1}</i><div><span class="tag">${x.k==='r'?'Review':'Lesson'}</span>${pill(l.t)}<b>${esc(l.title)}</b><small>${sub}${cur?' · <b class="amb">next</b>':''}</small></div><em>~${x.m} min</em></div>`;
+  return`<div class="spi${cur?' now':past?r===1?' ok':' off':''}"><i>${i+1}</i><div class="cp-row">${window.CPG?.mini(l.id)||''}<div><span class="tag">${x.k==='r'?'Review':'Lesson'}</span>${pill(l.t)}<b>${esc(l.title)}</b>${cpI(l)}<small>${sub}${cur?' · <b class="amb">next</b>':''}</small></div></div><em>~${x.m} min</em></div>`;
 }
 // START: today's session. Under way, it picks up where you left off; done, it says how it went; else it offers a new one
 function sessionForm(fresh,P=tp()){
@@ -4431,7 +4466,7 @@ function catalog(only){
   openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">All lessons</h3><button class="btn" data-act="close">Close</button></div>
     <p class="mu">🎬 = a video is pinned to that lesson.</p>
     ${TK.filter(t=>!only||t===only).map(t=>`<div style="margin-top:16px">${pill(t)} <span class="mu" style="font-size:11px">${tLessons(t).filter(l=>isDone(l.id)).length}/${tLessons(t).length} · ${TR[t].run?'runs & auto-grades in the browser':'concepts, quizzes & practice'}</span>
-      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v].toUpperCase()}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span><b>${esc(l.title)}${videos[l.id]?' 🎬':''}</b><span class="${isDone(l.id)?'grn':'mu'}">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
+      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v].toUpperCase()}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span>${window.CPG?.mini(l.id)||''}<b>${esc(l.title)}${videos[l.id]?' 🎬':''}</b><span class="${isDone(l.id)?'grn':'mu'}">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
 }
 let RI=0;
 function rosetta(){
@@ -4637,6 +4672,7 @@ document.addEventListener('click',async e=>{
   if(day){S.sel=S.sel===day.dataset.day?null:day.dataset.day;S.page=1;render();return}
   const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const v=b.dataset.v,l=curLesson();
   const A={
+    cpg:()=>cpGuide(v),
     mprev:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);render()},
     mnext:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);render()},
     mtoday:()=>{const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1);S.sel=null;render()},
