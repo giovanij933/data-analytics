@@ -47,7 +47,7 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .sp{flex:1}
 
 /* buttons */
-.btn{border:1px solid var(--line2);background:var(--bg);border-radius:0;padding:7px 10px;display:inline-flex;gap:6px;align-items:center;font-size:12px;letter-spacing:.03em;text-transform:uppercase}
+.btn{border:1px solid var(--line2);background:var(--bg);border-radius:0;padding:7px 10px;display:inline-flex;gap:6px;align-items:center;font-size:12px}
 .btn:hover{border-color:var(--accent);color:var(--accent-text)}
 .btn svg{width:14px;height:14px}
 .btn.pri,.btn.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
@@ -63,8 +63,8 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .ban{flex-direction:row;align-items:center;justify-content:space-between;gap:16px;padding:16px;margin-bottom:12px;flex-wrap:wrap;border-color:var(--border)}
 .bd{padding:16px;flex:1;display:flex;flex-direction:column}
 .ft{border-top:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;font-size:11px;color:var(--mu);gap:10px;flex-wrap:wrap;align-items:center}
-.card h3{font-size:11px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;color:var(--text-primary);margin-bottom:12px}
-.lbl{font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
+.card h3{font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:12px}
+.lbl{font-size:12px;color:var(--mu)}
 .big{font-size:22px;font-weight:600;margin:2px 0 8px}
 .gauge{display:block;width:150px;max-width:100%;margin:6px auto 10px}
 .gauge path{fill:none;stroke-width:9}
@@ -80,7 +80,7 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .calhd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .wl{color:var(--mu)}
 .cal{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:12px}
-.dh{text-align:center;font-size:11px;color:var(--mu);padding:4px 0;letter-spacing:.05em;text-transform:uppercase}
+.dh{text-align:center;font-size:12px;color:var(--mu);padding:4px 0}
 .cell{min-height:66px;background:var(--cell);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:11px;color:var(--mu);cursor:pointer;position:relative;overflow:hidden}
 .cell.hatch{background:repeating-linear-gradient(135deg,var(--raised) 0 6px,var(--border-soft) 6px 7px)}
 .cell.out{cursor:default;border-color:transparent;opacity:.5}
@@ -96,10 +96,10 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .nav{display:flex;gap:8px;align-items:center}
 .nav button{border:1px solid var(--line2);min-width:33px;height:33px;padding:0 10px;font-size:12px}
 .nav button:hover{border-color:var(--accent);color:var(--accent-text)}
-.nav .tb{font-size:11px;letter-spacing:.03em;text-transform:uppercase}
+.nav .tb{font-size:12px}
 
 /* coverage */
-.ev h4{font-size:10px;letter-spacing:.06em;color:var(--mu);text-transform:uppercase;font-weight:400;margin:12px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
+.ev h4{font-size:11px;color:var(--mu);font-weight:400;margin:12px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
 .ev h4:first-of-type{border:0;padding-top:0;margin-top:0}
 .er{display:flex;align-items:center;padding:5px 0;gap:2px}
 .er span{flex:1}.er b{margin-right:8px;text-align:right;font-weight:600}
@@ -113,16 +113,16 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0 8px}
 .gauge path.pick:hover{filter:brightness(1.3)}.gauge path.off,.chart .off{opacity:.25}
 .chart .hit{fill:transparent}.chart .hit:hover{fill:var(--accent-soft)}.chart .hit.on{fill:var(--accent-soft)}
 .xf{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 12px}
-.xf span{color:var(--mu);font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-right:2px}
+.xf span{color:var(--mu);font-size:12px;margin-right:2px}
 .xf button{border:1px solid var(--accent);color:var(--accent-text);padding:5px 8px;font-size:12px}.xf button b{font-weight:600}.xf .clr{border-color:var(--line2);color:var(--mu)}
 .xf button:hover{background:var(--accent-soft)}.xf[hidden]{display:none}
 /* charts */
 .chart{width:100%;height:160px;display:block;margin-top:8px}
 .chart *{vector-effect:non-scaling-stroke}
-.empty{height:160px;display:grid;place-items:center;color:var(--mu);letter-spacing:.06em;font-size:11px;text-transform:uppercase;text-align:center}
+.empty{height:160px;display:grid;place-items:center;color:var(--mu);font-size:12px;text-align:center}
 .eqh{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .ks{display:flex;gap:22px;flex-wrap:wrap}
-.ks div{font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase;display:flex;flex-direction:column;gap:2px}
+.ks div{font-size:12px;color:var(--mu);display:flex;flex-direction:column;gap:2px}
 .ks b{font-size:13px;color:var(--tx);letter-spacing:0;text-transform:none}
 .radar{width:100%;max-width:230px;height:auto;margin:0 auto;display:block}
 svg text{font-family:var(--f)}
@@ -131,9 +131,9 @@ svg text{font-family:var(--f)}
 .tw{overflow-x:auto;position:relative}
 table{width:100%;border-collapse:collapse}
 th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-size:11px;font-weight:500;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
+th{font-size:12px;font-weight:500;color:var(--mu)}
 .num{text-align:right}
-.pill{display:inline-flex;padding:1px 6px;font-size:10px;border:1px solid;letter-spacing:.03em;text-transform:uppercase}
+.pill{display:inline-flex;padding:1px 6px;font-size:11px;border:1px solid}
 .acts{display:flex;gap:4px;justify-content:flex-end}
 td .acts button{width:24px;height:24px;border:1px solid var(--line2);color:var(--tx);display:inline-flex;align-items:center;justify-content:center}
 td .acts button:hover{border-color:var(--accent);color:var(--accent-text)}
@@ -151,10 +151,10 @@ td .acts button:hover{border-color:var(--accent);color:var(--accent-text)}
 .box{background:var(--card);border:1px solid var(--border-soft);padding:20px;width:100%;max-width:560px;max-height:92vh;overflow:auto}
 .box.wide{max-width:900px}
 #mbox:focus{outline:0}
-.box h3{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-primary);margin-bottom:14px}
+.box h3{font-size:17px;font-weight:600;color:var(--text-primary);margin-bottom:14px}
 .box p{margin-bottom:12px}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fg label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
+.fg label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)}
 .fg input,.fg select,.fg textarea{background:var(--bg);border:1px solid var(--line2);padding:7px 10px;width:100%;font-size:13px;letter-spacing:0;text-transform:none;color:var(--tx)}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);outline:0}
 .ck{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--tx)}
@@ -171,7 +171,7 @@ td .acts button:hover{border-color:var(--accent);color:var(--accent-text)}
 .box.rvd{max-width:680px}
 .rvh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.rvh h3{margin:0;flex:1}.rvh .btn{min-width:33px;justify-content:center}
 .rv{border-top:1px solid var(--line);padding:14px 0 4px;font-size:13.5px;line-height:1.7}
-.rv h4{margin:0 0 6px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+.rv h4{margin:0 0 6px;font-size:12px;font-weight:500;color:var(--mu)}
 .rv p{margin:0 0 8px}.rv b{font-weight:600}
 .rv ol,.rv ul{margin:0 0 8px;padding-left:22px}.rv li{margin:0 0 6px}.rv li::marker{color:var(--mu)}
 .rv .tr{display:block;color:var(--mu);font-size:12px}
@@ -205,7 +205,7 @@ pre,.ed{font:12.5px/1.55 var(--ui-mono)}
 pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow:auto;color:var(--tx);white-space:pre;tab-size:2}
 .ed{width:100%;min-height:170px;background:var(--raised);border:1px solid var(--line2);padding:12px 14px;color:var(--tx);caret-color:var(--accent);resize:vertical;tab-size:2;white-space:pre;overflow:auto}
 .ed:focus{border-color:var(--accent);outline:0}
-.codeh{display:flex;align-items:center;gap:8px;margin:16px 0 6px;font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
+.codeh{display:flex;align-items:center;gap:8px;margin:16px 0 6px;font-size:12px;color:var(--mu)}
 .codeh b{flex:1;font-weight:500;color:var(--text-primary)}
 .rt{border-collapse:collapse;font:12px var(--f);width:auto}
 .rt th,.rt td{border:1px solid var(--line2);padding:5px 9px;text-align:left;white-space:nowrap}
@@ -258,7 +258,7 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .spi>i{font-style:normal;color:var(--mu);font-size:11px}
 .spi b{font-weight:500}.spi small{display:block;color:var(--mu);font-size:11px;margin-top:3px}
 .spi em{font-style:normal;color:var(--mu);font-size:11px;white-space:nowrap}
-.spi .tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin-right:6px}
+.spi .tag{font-size:11px;color:var(--text-secondary);margin-right:6px}
 .spi .pill{margin-right:4px}
 .spi.now{border-color:var(--accent)}.spi.ok{border-color:var(--success-line)}.spi.ok .tag{color:var(--success-text)}.spi.off{opacity:.6}
 /* a lesson's concept guide (concepts.js): what it does to the data, as a table before → after or a small chart. A
@@ -281,7 +281,7 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .cp-i{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;color:var(--accent-text);font:600 11px/1 var(--f);font-style:normal;letter-spacing:0}
 .cp-fig{margin:4px 0 14px;display:flex;justify-content:center}.cp-pic{display:flex;justify-content:center;margin:4px 0 18px}
 .cp-l{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px;line-height:1.45}
-.cp-l dt{padding-top:2px;color:var(--text-secondary);font-size:11px;letter-spacing:.05em;text-transform:uppercase}.cp-l dd{margin:0;color:var(--text-primary);min-width:0}
+.cp-l dt{padding-top:2px;color:var(--text-secondary);font-size:12px}.cp-l dd{margin:0;color:var(--text-primary);min-width:0}
 .cp-l code{font-family:var(--ui-mono,ui-monospace,monospace);font-size:12.5px;overflow-wrap:anywhere}
 #gd{color:var(--tx);padding:20px;width:min(560px,calc(100vw - 24px))}#gd h3{margin:0 0 14px;font-size:13px;letter-spacing:.06em;color:var(--text-primary)}
 #gd .fa2{display:flex;margin-top:18px}.li .cp-mini{width:44px}.li .cp-mini .cp-svg{width:44px}
@@ -290,7 +290,7 @@ pre{background:var(--bg);border:1px solid var(--line);padding:12px 14px;overflow
 .ssn{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .rvp{margin-top:0;margin-bottom:14px}
 .rvn{margin:4px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.rvn summary{cursor:pointer;padding:10px 0;font-size:11px;color:var(--mu);letter-spacing:.05em;text-transform:uppercase}
+.rvn summary{cursor:pointer;padding:10px 0;font-size:12px;color:var(--mu)}
 .rvn summary:hover{color:var(--accent-text)}.rvn[open]{padding-bottom:12px}
 .ft .nx{display:block;margin-top:3px}
 .box.ssm .mact{position:sticky;bottom:-20px;z-index:1;margin:14px -20px -20px;padding:12px 20px;background:var(--float);backdrop-filter:var(--glass-filter);-webkit-backdrop-filter:var(--glass-filter);border-top:1px solid var(--g-line,var(--line))}
@@ -3813,7 +3813,7 @@ const trackLevel=t=>{let lv=0;for(let v=1;v<=4;v++){const ls=tLessons(t).filter(
 const pill=t=>`<span class="pill" style="color:var(--tx);border-color:color-mix(in srgb,${TR[t].col} 55%,transparent);background:color-mix(in srgb,${TR[t].col} 14%,transparent)">${TR[t].n}</span>`;
 const I={   // the YouTube mark on the WATCH heading; buttons with a text label carry no icon, like the other apps
   yt:`<svg viewBox="0 0 24 24"><path fill="currentColor" d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></svg>`};
-$('#barBtns').innerHTML=`<button class="btn go" data-act="startnext">&#9654; START</button><button class="btn" data-act="catalog">LESSONS</button><button class="btn" data-act="review" data-more>REVIEW</button><button class="btn" data-act="rosetta" data-more>ROSETTA</button><button class="btn" data-act="data" data-more>SETTINGS</button>`;
+$('#barBtns').innerHTML=`<button class="btn go" data-act="startnext">&#9654; Start</button><button class="btn" data-act="catalog">Lessons</button><button class="btn" data-act="review" data-more>Review</button><button class="btn" data-act="rosetta" data-more>Rosetta</button><button class="btn" data-act="data" data-more>Settings</button>`;
 
 /* ================= runtimes ================= */
 const SQLJS='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/';
@@ -4102,7 +4102,7 @@ function continueHTML(){
   const P=tp(),Q=P&&!P.done?P:planFor(),L=Q.items.find(x=>x.k==='l'),rec=L?LM[L.l]:recommend(),D=dueList(),nd=nextDue(),n=nrv(Q.items),E=P?.done&&sdone(P);
   const rows=TK.map(t=>{const ls=tLessons(t),d=ls.filter(l=>isDone(l.id)).length,n=nextIn(t),lv=trackLevel(t);
     return`<div class="tk"><div class="tkh">${pill(t)}<b>${n?esc(n.title):'<span class="grn">Track complete 🎉</span>'}</b><span class="mu" style="font-size:11px">${n?LV[n.lv]:''}</span>
-      ${n?`<button class="btn xs ${n.id===rec.id?'go':''}" data-act="open" data-v="${n.id}">${isDone(n.id)?'REVIEW':'&#9654; START'}</button>`:`<button class="btn xs" data-act="catalog" data-v="${t}">REVIEW</button>`}</div>
+      ${n?`<button class="btn xs ${n.id===rec.id?'go':''}" data-act="open" data-v="${n.id}">${isDone(n.id)?'Review':'&#9654; Start'}</button>`:`<button class="btn xs" data-act="catalog" data-v="${t}">Review</button>`}</div>
       <div class="hb"><i style="width:${d/ls.length*100}%;background:${TR[t].col}"></i></div>
       <div class="row mu"><span>${d} / ${ls.length} lessons</span><span>${lv?'Cleared: <span class="grn">'+LV[lv]+'</span>':'Level 1 in progress'}</span></div></div>`}).join('');
   // today's session, then the reviews waiting
@@ -4112,7 +4112,7 @@ function continueHTML(){
     :'<span class="grn">Every lesson complete</span>';
   const due=D.length?`<span class="amb">${pls(D.length,'review')} due</span>`:nd?`No reviews due · next ${dl(nd)}`:LESSONS.some(l=>srOf(l.id)?.done)?'No reviews left: every lesson you\'ve completed is learned':'Reviews start the day after you complete a lesson';
   return`<div class="card"><div class="bd" style="padding-bottom:4px"><h3 style="margin-bottom:6px">Continue learning</h3><div class="lbl" style="margin-bottom:8px">Beginner → Intermediate → Advanced → Expert in each track</div>${rows}</div>
-    <div class="ft"><span>${what}<span class="mu nx">${due}</span></span>${P&&P.done&&!Q.items.length?'':`<button class="btn go" data-act="startnext">&#9654; ${P&&!P.done?'RESUME':'START'} SESSION</button>`}</div></div>`;
+    <div class="ft"><span>${what}<span class="mu nx">${due}</span></span>${P&&P.done&&!Q.items.length?'':`<button class="btn go" data-act="startnext">&#9654; ${P&&!P.done?'Resume':'Start'} SESSION</button>`}</div></div>`;
 }
 function topCards(st,F){
   // course progress and experience count all time; a card leaves out the filter its rows set
@@ -4169,8 +4169,8 @@ function evalHTML(st){
   // the result and type rows leave their own filter out, so every option stays listed
   const RE=view(true,'res').evs,KE=view(true,'kind').evs,nOk=RE.filter(e=>e.ok).length;
   return`<div class="card"><div class="bd ev"><h3>Skill report</h3>
-    <h4>TRACKS</h4>${TK.map(trow).join('')}
-    <h4>QUALITY (IN RANGE)</h4>
+    <h4>Tracks</h4>${TK.map(trow).join('')}
+    <h4>Quality (in range)</h4>
     ${er(CV[c(ok,.6,.4)],'Check / quiz success rate',ok==null?'—':`<span class="${c(ok,.6,.4)}">${Math.round(ok*100)}%</span> of ${st.graded}`,'Share of Check runs and quiz answers that were correct')}
     ${er('var(--g)','Correct attempts',`${nOk} <span class="mu">· ${pct(nOk,RE.length)}</span>`,'Checks, quiz answers and self-checks that passed','res:ok')}
     ${er('var(--r)','Not yet',`${RE.length-nOk} <span class="mu">· ${pct(RE.length-nOk,RE.length)}</span>`,'Attempts that did not pass yet','res:no')}
@@ -4178,7 +4178,7 @@ function evalHTML(st){
     ${er('transparent','Avg attempts per lesson',att==null?'—':fnum(r1(att)))}
     ${er(st.hints?'var(--a)':'transparent','Hints used',st.hints)}
     ${er(st.revs?'var(--a)':'transparent','Solutions viewed',st.revs,'Viewing the solution removes the first-try bonus — try a hint first')}
-    <h4>CONSISTENCY</h4>
+    <h4>Consistency</h4>
     ${er(st.streak?'var(--g)':'transparent','Study streak',`<span class="${st.streak?'grn':''}">${st.streak} day${st.streak===1?'':'s'}</span>`)}
     ${er(CV[c(st.days/st.span,.7,.4)],'Days studied',`${st.days} / ${st.span}`)}
     ${er(st.since==null?'transparent':st.since>2?'var(--a)':'var(--g)','Days since last study',st.since??'—')}
@@ -4197,7 +4197,7 @@ function chartsHTML(st,F){
   const tAt=i=>dayAt(days[i],`${dl(days[i])}: ${fmin(trend[i])}`),aAt=i=>{const e=gd[i];return dayAt(dayOf(e),`${dl(dayOf(e))} · ${LM[e.lesson]?.title||'—'} ${e.ok?'✓ correct':'✗ not yet'} · ${acc[i]}% so far`)};
   return`<div class="grid gm">
     <div class="card"><div class="bd"><div class="eqh"><div><h3>Study time trend</h3><div class="big" style="font-size:20px">${fmin(st.tot)}</div><div class="lbl" style="margin-top:4px">Dashed = ${settings.goal}m daily goal</div></div>
-      <div class="ks"><div>SESSIONS<b>${st.ses.length}</b></div><div>LESSONS<b class="${st.done.length?'grn':''}">${st.done.length}</b></div><div>XP<b class="grn">+${st.xp}</b></div><div>SUCCESS<b>${st.okRate==null?'—':Math.round(st.okRate*100)+'%'}</b></div><div>STREAK<b class="${st.streak?'grn':''}">${st.streak}</b></div></div></div>
+      <div class="ks"><div>Sessions<b>${st.ses.length}</b></div><div>Lessons<b class="${st.done.length?'grn':''}">${st.done.length}</b></div><div>XP<b class="grn">+${st.xp}</b></div><div>Success<b>${st.okRate==null?'—':Math.round(st.okRate*100)+'%'}</b></div><div>Streak<b class="${st.streak?'grn':''}">${st.streak}</b></div></div></div>
       ${trend.length>1?area(trend,'var(--accent)',{tgt:settings.goal,at:tAt,run:(a,b,v)=>({title:`${dl(days[a])} – ${dl(days[b-1])}: ${fmin(v)} a day`})}):bars(trend,{at:tAt})}</div>${F}</div>
     <div class="card"><div class="bd"><h3>XP by week</h3><div class="lbl">Last 8 weeks</div><div class="big">${wk.at(-1).xp} XP <span class="mu" style="font-size:12px;font-weight:500">this week</span></div>
       ${bars(wk.map(w=>w.xp),{labels:wk.map(w=>fsd(w.ws)),at:i=>({a:`data-act="xf" data-v="wk:${wk[i].ws}"`,title:`Week of ${dl(wk[i].ws)}: ${wk[i].xp} XP — click to show this week`,off:xoff('wk:'+wk[i].ws)})})}</div>${F}</div>
@@ -4219,7 +4219,7 @@ function tableHTML(st){
   const f=F.apply([...st.evs].reverse()),n=f.length,pages=Math.max(1,Math.ceil(n/S.rows));S.page=Math.max(1,Math.min(S.page,pages));
   const rows=f.slice((S.page-1)*S.rows,S.page*S.rows),tf=d=>FMT.dt.format(new Date(d));
   const KIND=LOGK;
-  return`<div class="th"><h3>Log</h3><button class="btn" data-act="export">EXPORT CSV</button></div>
+  return`<div class="th"><h3>Log</h3><button class="btn" data-act="export">Export CSV</button></div>
   <div class="tw" tabindex="0" role="region" aria-label="Table"><table><thead><tr><th>${F.th(0)}</th><th>${F.th(1)}</th><th>${F.th(2)}</th><th>${F.th(3)}</th><th>${F.th(4)}</th><th>${F.th(5)}</th><th><span class="ui-sr">Actions</span></th></tr></thead><tbody>
   ${rows.map(e=>{const l=LM[e.lesson];if(!l)return'';return`<tr><td class="mu2">${tf(e.time)}</td><td><b>${esc(l.title)}</b></td><td>${pill(l.t)}</td><td class="mu2">${LV[l.lv]}</td><td class="mu2">${KIND[e.kind]||esc(e.kind||"—")}</td>
     <td class="${e.ok?'grn':'red'}">${e.ok?'✓ Correct':'✗ Not yet'}</td><td><button class="btn xs" data-act="open" data-v="${l.id}">Open</button></td></tr>`}).join('')
@@ -4241,7 +4241,7 @@ function render(){
   const st=stats(),F='';   // the date range is shown once, under the filters, like the other apps
   $('#ctx').textContent=`Statistics for ${S.track==='all'?'All Tracks':TR[S.track].n} — ${S.sel?fdate(S.sel):RL[S.range]} · ${fdate(st.from)} → ${fdate(st.to)}`;
   const ban=events.length||sessions.length?'':`<div class="card ban"><div><h2 style="margin:0 0 4px;font-size:1.17em">Welcome to LEARN</h2><div class="mu" style="font-size:12px">${LESSONS.length} lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">&#9654; START WITH SQL</button><button class="btn" data-act="open" data-v="py1">&#9654; START WITH PYTHON</button><button class="btn" data-act="catalog">ALL LESSONS</button><button class="btn" data-act="sample">LOAD SAMPLE</button></div></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">&#9654; Start with SQL</button><button class="btn" data-act="open" data-v="py1">&#9654; Start with Python</button><button class="btn" data-act="catalog">All lessons</button><button class="btn" data-act="sample">Load sample</button></div></div>`;
   // today and what to learn next don't depend on the filters, so they sit above them (today's numbers are in the hero)
   UI.paint($('#top'),ban+heroToday()+continueHTML(),{now:true});
   UI.paint($('#app'),topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`);
@@ -4272,7 +4272,7 @@ window.addEventListener('pagehide',()=>{if(ST){stEnd()}});
 const cpI=l=>window.CPG?.get(l.id)?`<button type="button" class="cp-ib" data-act="cpg" data-v="${l.id}" aria-label="${esc(l.title)}: what it does"><span class="cp-i" aria-hidden="true">i</span></button>`:'';
 function cpGuide(id){
   const d=$('#gd'),l=LM[id];if(!window.CPG?.get(id)||!d||!l)return;
-  d.innerHTML=`<h3 id="gdt">${esc(l.title).toUpperCase()}</h3>${CPG.html(id)}<div class="fa2"><button type="button" class="btn pri" data-gx style="flex:1">DONE</button></div>`;
+  d.innerHTML=`<h3 id="gdt">${esc(l.title)}</h3>${CPG.html(id)}<div class="fa2"><button type="button" class="btn pri" data-gx style="flex:1">Done</button></div>`;
   d.onclick=e=>{if(e.target===d||e.target.closest('[data-gx]'))d.close()};
   d.showModal();d.querySelector('[data-gx]').focus();
 }
@@ -4288,7 +4288,7 @@ function closeLesson(){if(SP){const P=tp();if(P){P.sec=Math.round((P.sec||0)+stS
 function watchHTML(l){
   const v=videos[l.id],q=YTQ[l.id]||`${TR[l.t].n} ${l.title} tutorial`,C=COURSE[l.t],at=C?.at[l.id];
   return`<div class="watch" id="watch">
-    <div class="codeh"><b style="color:var(--error-text)">${I.yt.replace('<svg','<svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"')}WATCH</b>${v?`<button class="btn xs" data-act="vremove">Unpin</button>`:''}</div>
+    <div class="codeh"><b style="color:var(--error-text)">${I.yt.replace('<svg','<svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"')}Watch</b>${v?`<button class="btn xs" data-act="vremove">Unpin</button>`:''}</div>
     ${v?`<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v.id)}?rel=0${v.start?'&start='+v.start:''}" title="${esc(l.title)} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`:
       C?`<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=${C.list}${at?'&index='+(at[0]-1):''}&rel=0" title="${esc(C.name)} course" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
       <div class="mu" style="font-size:12px;line-height:1.5;margin:-2px 0 10px">${esc(C.name)} course${at?` · <b style="color:var(--tx)">${esc(at[1])}</b>`:' · this topic isn\'t in the course, so the searches below find a video for it'}. Pick any video from the playlist menu in the player.</div>`:
@@ -4308,7 +4308,7 @@ function drawLesson(){
   const s=sstep(),P=s&&tp(),rv=s?.k==='r',code=rv?l.start:drafts[l.id]??l.start;edDirty=false;
   const notes=`${window.CPG?.get(l.id)?`<div class="cp-fig">${CPG.pic(l.id,true)}</div>`:''}${l.learn.map(x=>`<p class="learn">${x}</p>`).join('')}
       ${watchHTML(l)}
-      <div class="codeh"><b>EXAMPLE</b>${run?`<button class="btn xs" data-act="runex">&#9654; RUN EXAMPLE</button>`:''}<button class="btn xs" data-act="copy" data-v="ex">COPY</button></div>
+      <div class="codeh"><b>Example</b>${run?`<button class="btn xs" data-act="runex">&#9654; Run example</button>`:''}<button class="btn xs" data-act="copy" data-v="ex">Copy</button></div>
       <pre id="exCode" tabindex="0">${esc(l.ex)}</pre>
       <div id="exOut"></div>`;
   $('#po').innerHTML=`<div class="lv"><div class="lvh">${pill(l.t)}<span class="mu" style="font-size:12px">${s?`<b class="amb">${rv?'Review':'Lesson'} ${P.i+1} of ${P.items.length}</b><span class="sdots" aria-hidden="true">${P.items.map((x,i)=>`<i class="${i<P.i?x.res===1?'ok':x.res===0?'no':'':i===P.i?'now':''}"></i>`).join('')}</span>`:`${LV[l.lv]} · ${idx+1}/${ls.length}`}</span><div class="sp"></div>
@@ -4324,20 +4324,20 @@ function drawLesson(){
     </div></div>`;
 }
 function codeExercise(l,code){
-  return`<div class="task"><b>YOUR TASK</b><br>${l.task}${l.ordered?'<br><span class="mu" style="font-size:11px">Row order matters for this one.</span>':''}</div>
-    <div class="codeh"><b>${l.t==='sql'?'SQL EDITOR':'PYTHON EDITOR'}</b><button class="btn xs" data-act="schema">Tables</button><button class="btn xs" data-act="reset">Reset</button></div>
+  return`<div class="task"><b>Your task</b><br>${l.task}${l.ordered?'<br><span class="mu" style="font-size:11px">Row order matters for this one.</span>':''}</div>
+    <div class="codeh"><b>${l.t==='sql'?'SQL editor':'Python editor'}</b><button class="btn xs" data-act="schema">Tables</button><button class="btn xs" data-act="reset">Reset</button></div>
     <textarea class="ed" id="ed" aria-label="${l.t==='sql'?'SQL':'Python'} editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">${esc(code)}</textarea>
-    <div class="mact"><button class="btn" data-act="run">&#9654; RUN</button><button class="btn go" data-act="checkc">CHECK</button>
+    <div class="mact"><button class="btn" data-act="run">&#9654; Run</button><button class="btn go" data-act="checkc">Check</button>
       <button class="btn xs" data-act="hint">Hint</button><button class="btn xs" data-act="sol">Show solution</button><span class="mu" style="font-size:11px">Ctrl/⌘ + Enter to run</span></div>
     <div id="fb"></div><div id="out"></div>`;
 }
 // in a review (rv) the answer stays hidden until you've answered again, and the practice starts blank
 function quizExercise(l,rv){
   const p=pr(l.id),show=p.done&&!(rv&&sstep()?.res==null);
-  return`<div class="task"><b>QUIZ</b><br>${l.quiz.q}</div>
+  return`<div class="task"><b>Quiz</b><br>${l.quiz.q}</div>
     <div class="opts">${l.quiz.o.map((o,i)=>`<button class="opt${show&&i===l.quiz.a?' right':''}" data-act="ans" data-v="${i}">${String.fromCharCode(65+i)}. ${esc(o)}</button>`).join('')}</div>
     <div id="fb">${show?`<div class="fb ok">✓ ${esc(l.quiz.why)}</div>`:''}</div>
-    <div class="task" style="margin-top:22px"><b>PRACTICE</b><br>${l.prac.task}<br><span class="mu" style="font-size:11px">Write it below (or in ${l.t==='sas'?'SAS Studio / SAS OnDemand for Academics':'Tableau Public / Desktop'}), then compare.</span></div>
+    <div class="task" style="margin-top:22px"><b>Practice</b><br>${l.prac.task}<br><span class="mu" style="font-size:11px">Write it below (or in ${l.t==='sas'?'SAS Studio / SAS OnDemand for Academics':'Tableau Public / Desktop'}), then compare.</span></div>
     <textarea class="ed" id="ed" aria-label="Your practice attempt" spellcheck="false" autocapitalize="off" style="min-height:120px" placeholder="Your attempt…">${esc(rv?'':drafts[l.id]||'')}</textarea>
     <div class="mact"><button class="btn" data-act="reveal">Reveal model answer</button></div>
     <div id="pracSol"></div>`;
@@ -4357,7 +4357,7 @@ async function doRun(check){
     // a run that finishes after you've left its lesson shows and counts nothing (the next lesson has its own #fb)
     if(l.t==='sql'){if(!SQLM)setFb('info','Loading the SQL engine (one-time)…');u=await runSQL(code);if(CUR!==l.id)return;out.innerHTML=resTable(u)}
     else{const r=await runPyCode(code,m=>CUR===l.id&&setFb('info',m));if(CUR!==l.id)return;
-      out.innerHTML=(r.out?`<div class="codeh"><b>PRINTED OUTPUT</b></div><pre tabindex="0">${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no"><b>Error</b><pre style="margin-top:6px;background:transparent;border:0;padding:0;color:inherit;white-space:pre-wrap">${esc(r.err)}</pre></div>`:'')+(r.res?`<div class="codeh"><b>result</b></div>${resTable(r.res)}`:'');
+      out.innerHTML=(r.out?`<div class="codeh"><b>Printed output</b></div><pre tabindex="0">${esc(r.out)}</pre>`:'')+(r.err?`<div class="fb no"><b>Error</b><pre style="margin-top:6px;background:transparent;border:0;padding:0;color:inherit;white-space:pre-wrap">${esc(r.err)}</pre></div>`:'')+(r.res?`<div class="codeh"><b>result</b></div>${resTable(r.res)}`:'');
       if(r.err){if(check){pr(l.id).att++;logEvent('check',false)}setFb('no','Fix the error, then try again.');return}
       u=r.res}
     if(!check){$('#fb').innerHTML='';return}
@@ -4394,10 +4394,10 @@ function stepBar(){
 // the review panel: which step this is, what to do, and what each answer does
 function rvpHTML(s){
   const l=LM[s.l],q=srOf(l.id);
-  if(s.res===1)return`<b>REVIEWED ✓</b><br>${q?.done?'That was the 21-day step: this lesson is learned.':`Next review ${dl(q.due)}, in ${pls(diffDays(today(),q.due),'day')}.`}`;
-  if(s.res===0)return`<b>REVIEW · NOT YET</b><br>It comes back tomorrow, from the 1-day step. Open the notes below and read it through once more.`;
+  if(s.res===1)return`<b>Reviewed ✓</b><br>${q?.done?'That was the 21-day step: this lesson is learned.':`Next review ${dl(q.due)}, in ${pls(diffDays(today(),q.due),'day')}.`}`;
+  if(s.res===0)return`<b>Review · not yet</b><br>It comes back tomorrow, from the 1-day step. Open the notes below and read it through once more.`;
   const n=q&&!q.done?q.n:0,gap=IV[n+1]?IV[n+1]-IV[n]:0,late=q&&!q.done?diffDays(q.due,today()):0;
-  return`<b>REVIEW · ${IV[n]}-DAY STEP</b> <span class="mu">(${n+1} of ${IV.length})</span><br>You completed this ${dago(progress[l.id].date)}${late>0?`; the review has waited ${pls(late,'day')}`:''}. ${l.quiz?'Answer the quiz again from memory':'Write the task again from the starter code, then CHECK it'}, or recall the idea and mark it yourself. The notes are folded away below for after you've tried.
+  return`<b>Review · ${IV[n]}-day step</b> <span class="mu">(${n+1} of ${IV.length})</span><br>You completed this ${dago(progress[l.id].date)}${late>0?`; the review has waited ${pls(late,'day')}`:''}. ${l.quiz?'Answer the quiz again from memory':'Write the task again from the starter code, then check it'}, or recall the idea and mark it yourself. The notes are folded away below for after you've tried.
     <br><span class="mu" style="font-size:12px">Got it: ${gap?`the next review is in ${pls(gap,'day')}`:'that was the last step'}. Not yet: back tomorrow, from the 1-day step. Skip: back tomorrow, same step.</span>`;
 }
 const grade=(s,r)=>{s.res=r;reviewed(s.l,r)};
@@ -4428,19 +4428,19 @@ function sessionForm(fresh,P=tp()){
     openModal(`${hd}<p>${E?`${E.ok?'<span class="grn">Done ✓</span>':`Ended · ${E.t}`}${P.sec>=60?` · ${fmin(P.sec/60)} studied`:''}`:`Under way · <b>${P.i} of ${P.items.length}</b> done`} <span class="mu">· ${yours}</span></p>
       <div class="spl">${P.items.map((x,i)=>spi(x,i,P)).join('')}</div>
       ${P.done?`<p class="mu" style="font-size:12px">${D.length?`${pls(D.length,'review')} still due: another session takes them now, or START does tomorrow.`:nd?`No reviews due. The next is on ${dl(nd)}.`:''}</p>`:''}
-      <div class="mact"><button class="btn" data-act="close">${P.done?'Close':'Later'}</button>${P.done?more?'<button class="btn go" data-act="sagain">&#9654; ANOTHER SESSION</button>':'':'<button class="btn go" data-act="sgo">&#9654; RESUME</button>'}</div>`);
+      <div class="mact"><button class="btn" data-act="close">${P.done?'Close':'Later'}</button>${P.done?more?'<button class="btn go" data-act="sagain">&#9654; Another session</button>':'':'<button class="btn go" data-act="sgo">&#9654; Resume</button>'}</div>`);
     $('#mbox').classList.add('ssm');$('#mbox [data-act="sgo"],#mbox [data-act="sagain"],#mbox [data-act="close"]')?.focus();return;
   }
   if(SFT&&!nextIn(SFT))SFT=null;
   const Q=SQ=planFor(SFT),L=Q.items.find(x=>x.k==='l'),R=rotation(),t=L&&LM[L.l].t,n=nrv(Q.items);
-  if(!Q.items.length)return openModal(`${hd}<p>Nothing to study today: every lesson is complete${nd?` and the next review is on <b>${dl(nd)}</b>`:''}.</p><div class="mact"><button class="btn" data-act="catalog">ALL LESSONS</button><button class="btn pri" data-act="close">Close</button></div>`);
+  if(!Q.items.length)return openModal(`${hd}<p>Nothing to study today: every lesson is complete${nd?` and the next review is on <b>${dl(nd)}</b>`:''}.</p><div class="mact"><button class="btn" data-act="catalog">All lessons</button><button class="btn pri" data-act="close">Close</button></div>`);
   const ago=r=>r.at===-Infinity?'new':dago(ymd(new Date(r.at)));
   openModal(`${hd}<p><b>~${Q.min} min</b> <span class="mu">· ${yours}</span></p>
     ${R.length?`<div class="lbl" style="margin:14px 0 6px">Lesson from</div><div class="chips" role="group" aria-label="Lesson from track">${TK.map(k=>`<button class="chip${k===t?' on':''}" data-act="strk" data-v="${k}" aria-pressed="${k===t}"${nextIn(k)?'':' disabled title="Track complete"'}>${TR[k].n}</button>`).join('')}</div>`:''}
     <div class="spl">${Q.items.map((x,i)=>spi(x,i)).join('')}</div>
     <p class="mu" style="font-size:12px;line-height:1.6">${L?`${SFT?`You picked ${TR[t].n}. The rotation`:'The track you\'ve studied least recently goes next'}: ${R.map(r=>`${TR[r.t].n} (${ago(r)})`).join(' → ')}. `:'Every lesson is complete, so this session is reviews only. '}
       ${n&&L?'The reviews go first, as a warm-up. ':''}Completed lessons come back for review 1, 3, 7 and 21 days later.${Q.due>n?` ${pls(Q.due-n,'more review')} ${Q.due-n===1?'is':'are'} due and ${Q.due-n===1?'waits':'wait'} for the next session.`:''}</p>
-    <div class="mact"><button class="btn" data-act="close">Cancel</button><button class="btn go" data-act="sgo" data-v="new">&#9654; BEGIN</button></div>`);
+    <div class="mact"><button class="btn" data-act="close">Cancel</button><button class="btn go" data-act="sgo" data-v="new">&#9654; Begin</button></div>`);
   $('#mbox').classList.add('ssm');$('#mbox [data-act="sgo"]').focus();
 }
 // BEGIN fixes the plan for the day; RESUME carries on from the step you were on
@@ -4469,11 +4469,11 @@ function catalog(only){
   openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">All lessons</h3><button class="btn" data-act="close">Close</button></div>
     <p class="mu">🎬 = a video is pinned to that lesson.</p>
     ${TK.filter(t=>!only||t===only).map(t=>`<div style="margin-top:16px">${pill(t)} <span class="mu" style="font-size:11px">${tLessons(t).filter(l=>isDone(l.id)).length}/${tLessons(t).length} · ${TR[t].run?'runs & auto-grades in the browser':'concepts, quizzes & practice'}</span>
-      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v].toUpperCase()}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span>${window.CPG?.mini(l.id)||''}<b>${esc(l.title)}${videos[l.id]?' 🎬':''}</b><span class="${isDone(l.id)?'grn':'mu'}">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
+      ${[1,2,3,4].map(v=>`<div class="lbl" style="margin:12px 0 4px">${LV[v]}</div><div class="ltrk">${tLessons(t).filter(l=>l.lv===v).map(l=>`<button class="li${isDone(l.id)?' done':''}" data-act="open" data-v="${l.id}"><span>${isDone(l.id)?'<span class="grn">✓</span>':'○'}</span>${window.CPG?.mini(l.id)||''}<b>${esc(l.title)}${videos[l.id]?' 🎬':''}</b><span class="${isDone(l.id)?'grn':'mu'}">${isDone(l.id)?progress[l.id].xp+' XP':XPL[l.lv]+' XP'}</span></button>`).join('')}</div>`).join('')}</div>`).join('')}`,true);
 }
 let RI=0;
 function rosetta(){
-  const r=ROSETTA[RI],blk=(t,code)=>`<div><div class="codeh">${pill(t)}<b></b><button class="btn xs" data-act="copyr" data-v="${t}">COPY</button></div><pre tabindex="0">${esc(code)}</pre></div>`;
+  const r=ROSETTA[RI],blk=(t,code)=>`<div><div class="codeh">${pill(t)}<b></b><button class="btn xs" data-act="copyr" data-v="${t}">Copy</button></div><pre tabindex="0">${esc(code)}</pre></div>`;
   openModal(`<div class="row" style="align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:15px">Rosetta — one task, four languages</h3><button class="btn" data-act="close">Close</button></div>
     <div class="chips">${ROSETTA.map((x,i)=>`<button class="chip${i===RI?' on':''}" data-act="rtab" data-v="${i}">${esc(x.t)}</button>`).join('')}</div>
     <div class="rosetta">${blk('sql',r.sql)}${blk('py',r.py)}${blk('sas',r.sas)}${blk('tab',r.tab)}</div>`,true);
@@ -4487,17 +4487,17 @@ function schemaModal(){
 }
 function dataForm(){
   const row=(b,sm,c)=>`<div><span><b>${b}</b><small>${sm}</small></span>${c}</div>`,btns=h=>`<span class="ui-set-btns">${h}</span>`;
-  openModal(`<h3>SETTINGS</h3><div class="ui-set">
+  openModal(`<h3>Settings</h3><div class="ui-set">
     ${row('Daily goal','Study minutes a day',`<input id="s_goal" type="number" min="5" step="5" value="${settings.goal}" aria-label="Daily goal, minutes">`)}
     ${row('Focus chime','Minutes into a session, 0 = off',`<input id="s_focus" type="number" min="0" step="5" value="${settings.focus}" aria-label="Focus chime, minutes">`)}
     ${UI.appearance()}
-    ${row('Sync',window.ISXSync?.state==='ok'?'On · this app syncs across your devices':'Keep every app the same on all your devices',btns('<button type="button" class="btn" data-act="sync">SYNC…</button>'))}
-    ${row('Backup','Saved on this device. Download a copy, or restore one.',btns('<button type="button" class="btn" data-act="backup">BACKUP JSON</button><button type="button" class="btn" data-act="restore">RESTORE</button>'))}
-    ${row('Sample data','A year of a learner on SQL, Python, Tableau and SAS. Replaces your progress.',btns('<button type="button" class="btn" data-act="sample">LOAD SAMPLE</button>'))}
-    ${row('Reset all progress','Clears progress, attempts, study history and drafts. Pinned videos are kept.',btns('<button type="button" class="btn ui-danger" data-act="clear">RESET ALL</button>'))}
+    ${row('Sync',window.ISXSync?.state==='ok'?'On · this app syncs across your devices':'Keep every app the same on all your devices',btns('<button type="button" class="btn" data-act="sync">Sync…</button>'))}
+    ${row('Backup','Saved on this device. Download a copy, or restore one.',btns('<button type="button" class="btn" data-act="backup">Back up JSON</button><button type="button" class="btn" data-act="restore">Restore</button>'))}
+    ${row('Sample data','A year of a learner on SQL, Python, Tableau and SAS. Replaces your progress.',btns('<button type="button" class="btn" data-act="sample">Load sample</button>'))}
+    ${row('Reset all progress','Clears progress, attempts, study history and drafts. Pinned videos are kept.',btns('<button type="button" class="btn ui-danger" data-act="clear">Reset all</button>'))}
   </div><input id="i_file" type="file" accept=".json,application/json" class="hidden" aria-label="Backup file">
     <p class="mu" style="margin-top:10px;font-size:11px">Everything stays on this device. The SQL engine and Python runtime are downloaded once from public CDNs and then cached for offline use; videos always need a connection.</p>
-    <div class="mact"><button type="button" class="btn pri" data-act="savedata">SAVE</button></div>`);
+    <div class="mact"><button type="button" class="btn pri" data-act="savedata">Save</button></div>`);
 }
 /* ================= daily review: a script to read over at the end of each study day =================
    Built from the day's sessions and attempts (in the track filter), the days before it, lesson progress and the morning check-in.
@@ -4578,7 +4578,7 @@ function review(day){
     out+=sec('My state',`<p>I slept <b>${esc(ci.sleep)} h</b> (${Q[ci.q]||'unrated'} sleep) and my energy was <b>${E[ci.energy]||'unrated'}</b>.${ci.sleep<7&&S1.length&&min<g?' Short sleep on a short study day: worth watching if it repeats.':''}</p>`)}
   // next up: the same lesson the START button opens
   const nx=S.track==='all'?recommend():nextIn(S.track);
-  out+=sec('Next up',nx?`<p>${day===today()?'Next for me':'As things stand now, next for me'} is ${lt(nx)}${progress[nx.id]?.att?`, where I've already made ${pl(progress[nx.id].att,'attempt')}`:''}. Press <b>START</b> to pick it up.</p>`:`<p>I've completed every ${S.track==='all'?'':TR[S.track].n+' '}lesson. Revisit the ones that took the most attempts.</p>`);
+  out+=sec('Next up',nx?`<p>${day===today()?'Next for me':'As things stand now, next for me'} is ${lt(nx)}${progress[nx.id]?.att?`, where I've already made ${pl(progress[nx.id].att,'attempt')}`:''}. Press <b>Start</b> to pick it up.</p>`:`<p>I've completed every ${S.track==='all'?'':TR[S.track].n+' '}lesson. Revisit the ones that took the most attempts.</p>`);
   // questions, most specific first
   const hard=W.slice().sort((a,b)=>fails(b.id)-fails(a.id))[0],q=[];
   if(hard)q.push(`Explain ${esc(hard.title)} in one sentence without looking.`);
@@ -4720,7 +4720,7 @@ document.addEventListener('click',async e=>{
       if(ok){b.classList.add('right');complete(l,p.att===1);const fbh=`✓ Correct${p.att===1?' — first try!':''} ${esc(l.quiz.why)}`;drawLesson();setFb('ok',fbh)}
       else setFb('no','Not quite — think about it and try another option.')},
     reveal:()=>{drafts[l.id]=$('#ed').value;saveDrafts();
-      $('#pracSol').innerHTML=`<div class="codeh"><b>MODEL ANSWER</b></div><pre tabindex="0">${esc(l.prac.sol)}</pre><div class="mact"><span class="mu" style="font-size:12px">Did yours match?</span><button class="btn xs go" data-act="self" data-v="1">I got it</button><button class="btn xs" data-act="self" data-v="0">Not yet</button></div>`},
+      $('#pracSol').innerHTML=`<div class="codeh"><b>Model answer</b></div><pre tabindex="0">${esc(l.prac.sol)}</pre><div class="mact"><span class="mu" style="font-size:12px">Did yours match?</span><button class="btn xs go" data-act="self" data-v="1">I got it</button><button class="btn xs" data-act="self" data-v="0">Not yet</button></div>`},
     self:()=>{logEvent('self',v==='1');toast(v==='1'?'Nice — logged':'Logged — worth another try later');$('#pracSol').querySelector('.mact').innerHTML='<span class="mu" style="font-size:12px">Logged ✓</span>'},
     review:()=>reviewForm(rvDefault()),rvgo:()=>v&&reviewForm(v),
     rvcopy:()=>{const t=reviewText();(navigator.clipboard?.writeText(t)||Promise.reject()).then(()=>toast('Review copied'),()=>toast('Copy failed — select the text instead'))},
