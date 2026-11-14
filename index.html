@@ -4349,6 +4349,7 @@ function complete(l,first){
   const p=pr(l.id);if(p.done)return;
   p.done=true;p.first=first;p.xp=Math.round(XPL[l.lv]*(first?1.5:1));p.date=today();save();
   chime();toast(`Lesson complete · +${p.xp} XP${first?' (first-try bonus!)':''}`);
+  setTimeout(()=>window.UI?.bloom?.(document.querySelector('#out')||undefined),250);   // a lesson complete (UI.bloom, ARCHITECTURE.md 2m)
 }
 async function doRun(check){
   const l=curLesson(),code=$('#ed').value;drafts[l.id]=code;saveDrafts();
@@ -4734,6 +4735,7 @@ document.addEventListener('click',async e=>{
 });
 
 render();
+window.UI?.backdrop?.({tint:['--info','--accent','--success']});   // ARCHITECTURE.md 2m
 // a phone keeps the app in memory overnight: a new day redraws today, the week and the plan, and the calendar moves on to
 // the new month when it was showing the old one
 let RD=today();
