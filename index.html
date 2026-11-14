@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('isx.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script><!-- Settings › Appearance, before the first paint (ui.js keeps it in step) -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="LEARN">
@@ -4489,6 +4490,7 @@ function dataForm(){
   openModal(`<h3>SETTINGS</h3><div class="ui-set">
     ${row('Daily goal','Study minutes a day',`<input id="s_goal" type="number" min="5" step="5" value="${settings.goal}" aria-label="Daily goal, minutes">`)}
     ${row('Focus chime','Minutes into a session, 0 = off',`<input id="s_focus" type="number" min="0" step="5" value="${settings.focus}" aria-label="Focus chime, minutes">`)}
+    ${UI.appearance()}
     ${row('Sync',window.ISXSync?.state==='ok'?'On · this app syncs across your devices':'Keep every app the same on all your devices',btns('<button type="button" class="btn" data-act="sync">SYNC…</button>'))}
     ${row('Backup','Saved on this device. Download a copy, or restore one.',btns('<button type="button" class="btn" data-act="backup">BACKUP JSON</button><button type="button" class="btn" data-act="restore">RESTORE</button>'))}
     ${row('Sample data','A year of a learner on SQL, Python, Tableau and SAS. Replaces your progress.',btns('<button type="button" class="btn" data-act="sample">LOAD SAMPLE</button>'))}
