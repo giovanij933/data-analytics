@@ -3691,7 +3691,7 @@ const DATA=(()=>{
       for(let k=59;k>=0;k--){const d=dayAt(k,9,30,r);if(d.getDay()===0||d.getDay()===6)continue;let t=d.getTime()+r()*20*6e4;
         for(let n=2+Math.floor(r()*4);n>0;n--){const x=r(),c=x<.5?'NQZ6':x<.8?'ESZ6':'GCZ6',[mult,stop,tick]=C[c],o=r(),res=o<.36?'W':o<.84?'L':'B',long=r()<.55;
           px[c]=Math.round((px[c]+(r()-.48)*stop*4)/tick)*tick;const mv=res==='W'?stop*3:res==='L'?-stop:c==='NQZ6'?tick:0,held=(res==='W'?8+r()*35:2+r()*12)*6e4;
-          if(t+held>Date.now())break;out.push({account:'SAMPLE-50K',contract:c,side:long?'Long':'Short',qty:1,entry:px[c],exit:px[c]+(long?mv:-mv),open:t,close:t+held,mult,fee:2.5,comm:2.5});t+=held+(10+r()*40)*6e4}}
+          if(t+held>Date.now())break;out.push({account:'LIVE-7319204',contract:c,side:long?'Long':'Short',qty:1,entry:px[c],exit:px[c]+(long?mv:-mv),open:t,close:t+held,mult,fee:2.5,comm:2.5});t+=held+(10+r()*40)*6e4}}
       return out},
     workouts(){const r=rng(12),out=[],P={1:[['Bench Press','W',3,5,135,5],['Overhead Press','W',3,5,85,2.5],['Triceps Pushdown','W',3,10,40,5]],2:[['Deadlift','W',2,5,225,10],['Barbell Row','W',3,6,115,5],['Pull-up','B',3,6,0,0]],
         4:[['Back Squat','W',3,5,185,10],['Romanian Deadlift','W',3,8,155,10],['Leg Press','W',3,10,270,10]],3:[['Run','C']],6:[['Row Erg','C'],['Hamstring Stretch','S',2,30,0,0]]};
