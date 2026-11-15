@@ -4112,7 +4112,7 @@ function continueHTML(){
     :Q.items.length?`Today: ${L?`${pill(rec.t)} <b>${esc(rec.title)}</b> `:''}<span class="mu">${L&&n?'+ ':''}${n?pls(n,'review')+' · ':L?LV[rec.lv]+' · ':''}~${Q.min} min</span>`
     :'<span class="grn">Every lesson complete</span>';
   const due=D.length?`<span class="amb">${pls(D.length,'review')} due</span>`:nd?`No reviews due · next ${dl(nd)}`:LESSONS.some(l=>srOf(l.id)?.done)?'No reviews left: every lesson you\'ve completed is learned':'Reviews start the day after you complete a lesson';
-  return`<div class="card"><div class="bd" style="padding-bottom:4px"><h3 style="margin-bottom:6px">Continue learning</h3><div class="lbl" style="margin-bottom:8px">Beginner → Intermediate → Advanced → Expert in each track</div>${rows}</div>
+  return`<div class="card"><div class="bd" style="padding-bottom:4px"><h3 style="margin-bottom:6px">Tracks</h3><div class="lbl" style="margin-bottom:8px">Beginner → Intermediate → Advanced → Expert in each track</div>${rows}</div>
     <div class="ft"><span>${what}<span class="mu nx">${due}</span></span>${P&&P.done&&!Q.items.length?'':`<button class="btn go" data-act="startnext">&#9654; ${P&&!P.done?'Resume':'Start'} SESSION</button>`}</div></div>`;
 }
 function topCards(st,F){
@@ -4244,8 +4244,10 @@ function render(){
   const ban=events.length||sessions.length?'':`<div class="card ban"><div><h2 style="margin:0 0 4px;font-size:1.17em">Welcome to LEARN</h2><div class="mu" style="font-size:12px">${LESSONS.length} lessons from beginner to expert. SQL and Python exercises run and auto-grade right here; SAS and Tableau lessons teach with real code, quizzes and practice. Every lesson has video searches you can pin.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go" data-act="open" data-v="sql1">&#9654; Start with SQL</button><button class="btn" data-act="open" data-v="py1">&#9654; Start with Python</button><button class="btn" data-act="catalog">All lessons</button><button class="btn" data-act="sample">Load sample</button></div></div>`;
   // today and what to learn next don't depend on the filters, so they sit above them (today's numbers are in the hero)
-  UI.paint($('#top'),ban+heroToday()+continueHTML(),{now:true});
-  UI.paint($('#app'),topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+`<div class="card">${tableHTML(st)}</div>`);
+  // the same order as every app: Today, Up next (the next lesson, UI.upNext), (filters), four numbers, calendar + what
+  // stands out, trends, breakdowns, more (every track, to switch), Log
+  UI.paint($('#top'),ban+heroToday()+(sessions.length||events.length?UI.upNext({app:'learn'}):''),{now:true});
+  UI.paint($('#app'),topCards(st,F)+`<div class="grid gm">${calendarHTML()}${evalHTML(st)}</div>`+chartsHTML(st,F)+continueHTML()+`<div class="card">${tableHTML(st)}</div>`);
 }
 
 /* ================= study session timing ================= */
@@ -4763,8 +4765,8 @@ function heroToday(){
   const td=per('today'),wk=per('week'),mo=per('month'),yr=per('year'),min=Math.round(td.tot),pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
   const tile=(k,label,x,sub,tone='')=>({label,value:fmin(x.tot),tone,sub,attrs:{'data-act':'rng','data-v':k,'aria-label':`${label}: ${fmin(x.tot)} studied. Show ${label.toLowerCase()} below`},on:!S.sel&&S.range===k});
   return UI.hero({key:'learn',title:'Today',sub:min>=goal?"Today's goal done ✓":`${goal-min} min to today's goal${st?` · ${st}-day streak`:''}`,
-    big:{value:`+${xp}`,label:'XP today',tone:xp>0?'pos':''},
-    stats:[tile('today','Today',td,td.ses.length||td.done.length?`${pl(td.ses.length,'session')} · ${pl(td.done.length,'lesson')} done`:'not studied yet',min>=goal?'pos':''),
+    // today's XP sits in the Today tile, so this hero is laid out like every app's (no number in the corner)
+    stats:[tile('today','Today',td,td.ses.length||td.done.length?`${pl(td.ses.length,'session')} · ${pl(td.done.length,'lesson')} done${xp?` · +${xp} XP`:''}`:'not studied yet',min>=goal?'pos':''),
       tile('week','Week',wk,`${pl(wk.days,'day')} studied`),
       tile('month','Month',mo,`${pl(mo.done.length,'lesson')} done`),
       tile('year','Year',yr,`${pl(yr.done.length,'lesson')} done`)],
