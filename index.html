@@ -85,14 +85,21 @@ body ::selection{background:var(--accent);color:var(--on-accent)}
 .cell.hatch{background:repeating-linear-gradient(135deg,var(--raised) 0 6px,var(--border-soft) 6px 7px)}
 .cell.out{cursor:default;border-color:transparent;opacity:.5}
 .cell.fut span{color:var(--text-secondary)}
-.cell.on{border-color:var(--success-line)}
-.cell.on b{font-size:12px;color:var(--tx)}
+.cell.on{background:var(--success-soft);border-color:var(--success-line)}
+.cell.on b{font-size:12px;color:var(--success-text)}
 .cell.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .cell small{font-size:10px;color:var(--mu)}
 .cell.wk{border:1px dashed var(--line2);background:var(--raised);color:var(--mu);cursor:default}
 .cell.wk b{font-size:11px}
 .cdots{display:flex;gap:2px}.cdots i{width:5px;height:5px}
 .calft{padding:10px 16px}
+/* the calendar card's frame, the same as JOURNAL's, MIND's, TRAINING's and REWIRE's (ARCHITECTURE.md 2n): counts on the
+   title line, the month's buttons and a summary line under the grid, a blank dashed box for a week with nothing in it */
+.rowh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.rowh .wl{padding-top:2px;font-size:13px}
+.calf{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.calf>div{display:flex;align-items:center;gap:8px}.calf b{font-weight:600;font-size:14px}
+.bd>.calf{padding:0;margin-top:12px}
 .nav{display:flex;gap:8px;align-items:center}
 .nav button{border:1px solid var(--line2);min-width:33px;height:33px;padding:0 10px;font-size:12px}
 .nav button:hover{border-color:var(--accent);color:var(--accent-text)}
@@ -4151,16 +4158,19 @@ function calendarHTML(){
       if(d.getMonth()!==mo){h+='<div class="cell hatch out"></div>';continue}
       if(v){wm+=v;wd++;tm+=v;td++}
       const done=dn[k]||0;
-      h+=`<div class="cell${v?' on':''}${k>tk?' fut':''}${S.sel===k?' sel':''}" data-day="${k}" role="button" tabindex="0" aria-pressed="${S.sel===k}" title="${dl(k)}${v?`: ${fmin(v)}`:''} — click to show this day"${v?` style="background:color-mix(in srgb,var(--success) ${Math.round(10+30*Math.min(1,v/settings.goal))}%,transparent)"`:''}>
+      h+=`<div class="cell${v?' on':''}${k>tk?' fut':''}${S.sel===k?' sel':''}" data-day="${k}" role="button" tabindex="0" aria-pressed="${S.sel===k}" title="${dl(k)}${v?`: ${fmin(v)}`:''} — click to show this day">
         <span>${d.getDate()}</span>${v?`<b>${fmin(v)}</b><small>${done?done+' done':'&nbsp;'}</small><div class="cdots">${[...(dt[k]||[])].map(t=>`<i style="background:${TR[t].col}"></i>`).join('')}</div>`:''}</div>`;
     }
-    h+=`<div class="cell wk">${wd?`<b class="grn">${fmin(wm)}</b><small>${wd} days</small>`:'—'}</div>`;
+    h+=`<div class="cell wk">${wd?`<b class="grn">${fmin(wm)}</b><small>${wd} days</small>`:''}</div>`;
   }
-  return`<div class="card"><div class="bd"><h3 style="margin-bottom:10px">Study calendar</h3><div class="lbl">Total study time</div>
-    <div class="calhd"><div class="big">${fmin(tm)}</div><div class="wl">Days: <b class="grn" style="font-weight:500">${td}</b> &nbsp;&nbsp; Streak: <b class="${streak()?'grn':''}" style="font-weight:500">${streak()}</b></div></div>
-    <div class="cal">${h}</div></div>
-    <div class="ft calft"><div class="nav"><button data-act="mprev" aria-label="Previous month">‹</button><span>${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</span><button data-act="mnext" aria-label="Next month">›</button><button class="tb" data-act="mtoday">Today</button></div>
-    <span>${td} study days</span></div></div>`;
+  // the frame every app's calendar shares: the month's two counts at the right of the title, its buttons and a summary
+  // line under the grid
+  const sk=streak();
+  return`<div class="card"><div class="bd"><div class="rowh"><div><h3>Study calendar</h3><div class="lbl">Total study time</div><div class="big">${fmin(tm)}</div></div>
+    <div class="wl">Days: <b class="grn">${td}</b> &nbsp; Streak: <b class="${sk?'grn':''}">${sk}</b></div></div>
+    <div class="cal">${h}</div>
+    <div class="calf"><div><button class="btn" data-act="mprev" aria-label="Previous month">&lt;</button> <b>${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</b> <button class="btn" data-act="mnext" aria-label="Next month">&gt;</button> <button class="btn" data-act="mtoday">Today</button></div>
+    <span class="lbl">${td} study day${td===1?'':'s'} · ${fmin(tm)}</span></div></div></div>`;
 }
 function evalHTML(st){
   const c=(v,good,ok)=>v==null?'':v>=good?'grn':v>=ok?'amb':'red',VT=view(false,'track');
