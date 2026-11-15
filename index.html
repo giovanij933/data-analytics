@@ -4143,6 +4143,36 @@ function topCards(st,F){
     ${TK.map(t=>{const x=xpOf(tLessons(t).filter(l=>VT.lk(l.id)));return lr(x?'var(--g)':'var(--border)',TR[t].n,`${x} XP`,trackLevel(t)?LV[trackLevel(t)].slice(0,3)+'.':'—',`track:${t}`)}).join('')}</div>${F}</div>
   </div>`;
 }
+/* ---------- weekly review (UI.weekReview: the same sheet, in the same order, in every app; ARCHITECTURE.md 2p) ----------
+   A week of study: minutes against the daily goal, lessons done and XP, first-try accuracy, the tracks moved on, against the last 8 weeks. A day row shows that day in the page. TODAY's Your week opens it (act 'week'), and so does
+   the Week button under the calendar. */
+function weekRev(){
+  const W=UI.weekReview,{pl,avg,wd,and}=W.t,Sx=sessions.filter(Boolean),Ev=events.filter(Boolean),goal=settings.goal||30;
+  W({weeks:[...Sx.map(dayOf),...Ev.map(dayOf)],onDay:k=>{S.sel=k;const d=pd(k);S.month=new Date(d.getFullYear(),d.getMonth(),1);render()},build:ws=>{
+    const ks=Array.from({length:7},(_,i)=>W.add(ws,i)),T=Sx.filter(x=>ks.includes(dayOf(x))),E=Ev.filter(x=>ks.includes(dayOf(x))),P=Object.entries(progress).filter(([,p])=>p&&p.done&&ks.includes(p.date));
+    if(!T.length&&!E.length&&!P.length)return {days:ks.map(k=>({k}))};
+    const mins=k=>T.filter(x=>dayOf(x)===k).reduce((a,x)=>a+(+x.min||0),0),tot=ks.reduce((a,k)=>a+mins(k),0),met=ks.filter(k=>mins(k)>=goal),dd=ks.filter(k=>mins(k)>0||E.some(x=>dayOf(x)===k));
+    const xp=P.reduce((a,[,p])=>a+(p.xp||0),0),first={};E.filter(x=>x.kind==='check').sort((a,b)=>Date.parse(a.time)-Date.parse(b.time)).forEach(x=>{if(!(x.lesson in first))first[x.lesson]=!!x.ok});
+    const fv=Object.values(first),acc=fv.length?Math.round(fv.filter(Boolean).length/fv.length*100):null;
+    const byT={};P.forEach(([id])=>{const t=LM[id]?.t;if(t)byT[t]=(byT[t]||0)+1});
+    const wk={};Sx.forEach(x=>{const w=W.mon(dayOf(x));wk[w]=(wk[w]||0)+(+x.min||0)});const pw=Object.keys(wk).filter(w=>w<ws).sort().slice(-8),aw=avg(pw.map(w=>wk[w]));
+    const max=Math.max(...ks.map(mins),goal,1);
+    const days=ks.map(k=>{const m=mins(k),l=P.filter(([,p])=>p.date===k).length;return {k,n:m||l?[l?pl(l,'lesson'):'',m>=goal?'goal met':m?`${Math.round(goal-m)} min short`:''].filter(Boolean).join(' · '):'',v:m?fmin(m):'',bar:m/max,cls:m>=goal?'pos':''}});
+    const miss=ks.filter(k=>k<=today()&&!dd.includes(k)),good=[],look=[],q=['What is my one focus for next week?'];
+    if(met.length)good.push(`I hit my ${goal}-minute goal on ${pl(met.length,'day')}.`);
+    if(P.length)good.push(`${pl(P.length,'lesson')} done, <b class="pos">+${xp} XP</b>.`);
+    if(acc!=null&&acc>=70)good.push(`Right on the first try in <b>${acc}%</b> of exercises.`);
+    if(miss.length&&miss.length<7)look.push(`No study on ${and(miss.map(wd))}.`);
+    if(acc!=null&&acc<60)look.push(`Right on the first try in only ${acc}% of exercises: worth a review session.`);
+    if(aw&&tot<aw*.8)look.push(`Less study than my usual week (${fmin(tot)} against ${fmin(aw)}).`);
+    if(acc!=null&&acc<70)q.push('Which topic tripped me up most, and when will I review it?');
+    if(miss.length&&miss.length<7)q.push(`What got in the way on ${wd(miss[0])}?`);
+    q.push('One thing to repeat next week. One thing to cut.');
+    return {week:`I studied <b>${fmin(tot)}</b> on ${pl(dd.length,'day')} and hit my ${goal}-minute goal on ${met.length}. ${pl(P.length,'lesson')} done (<b class="pos">+${xp} XP</b>)${acc!=null?`, ${acc}% right on the first try`:''}.`,
+      context:aw!=null?`Over my last ${pl(pw.length,'week')} I averaged <b>${fmin(aw)}</b> a week, so this week was ${tot>aw*1.05?'<b>more</b> than usual':tot<aw*.95?'<b>less</b> than usual':'<b>about usual</b>'}.`:'',
+      days,good,look,more:Object.keys(byT).length?[['Tracks',`<p>${Object.entries(byT).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`${esc(TR[t]?.n||t)} <b>${pl(n,'lesson')}</b>`).join(' · ')}.</p>`]]:[],questions:q};
+  }});
+}
 function calendarHTML(){
   // every filter but the range: the chosen day stays outlined
   const V=view(false),dm={},dt={},dn={};
@@ -4169,7 +4199,7 @@ function calendarHTML(){
   return`<div class="card"><div class="bd"><div class="rowh"><div><h3>Study calendar</h3><div class="lbl">Total study time</div><div class="big">${fmin(tm)}</div></div>
     <div class="wl">Days: <b class="grn">${td}</b> &nbsp; Streak: <b class="${sk?'grn':''}">${sk}</b></div></div>
     <div class="cal">${h}</div>
-    <div class="calf"><div><button class="btn" data-act="mprev" aria-label="Previous month">&lt;</button> <b>${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</b> <button class="btn" data-act="mnext" aria-label="Next month">&gt;</button> <button class="btn" data-act="mtoday">Today</button></div>
+    <div class="calf"><div><button class="btn" data-act="mprev" aria-label="Previous month">&lt;</button> <b>${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</b> <button class="btn" data-act="mnext" aria-label="Next month">&gt;</button> <button class="btn" data-act="mtoday">Today</button> <button class="btn" data-act="week">Week</button></div>
     <span class="lbl">${td} study day${td===1?'':'s'} · ${fmin(tm)}</span></div></div></div>`;
 }
 function evalHTML(st){
@@ -4691,6 +4721,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const v=b.dataset.v,l=curLesson();
   const A={
     cpg:()=>cpGuide(v),
+    week:()=>weekRev(),
     mprev:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);render()},
     mnext:()=>{S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);render()},
     mtoday:()=>{const t=new Date();S.month=new Date(t.getFullYear(),t.getMonth(),1);S.sel=null;render()},
