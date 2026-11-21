@@ -4261,9 +4261,9 @@ function tableHTML(st){
   const rows=f.slice((S.page-1)*S.rows,S.page*S.rows),tf=d=>FMT.dt.format(new Date(d));
   const KIND=LOGK;
   return`<div class="th"><h3>Log</h3><button class="btn" data-act="export">Export CSV</button></div>
-  <div class="tw" tabindex="0" role="region" aria-label="Table"><table><thead><tr><th>${F.th(0)}</th><th>${F.th(1)}</th><th>${F.th(2)}</th><th>${F.th(3)}</th><th>${F.th(4)}</th><th>${F.th(5)}</th><th><span class="ui-sr">Actions</span></th></tr></thead><tbody>
-  ${rows.map(e=>{const l=LM[e.lesson];if(!l)return'';return`<tr><td class="mu2">${tf(e.time)}</td><td><b>${esc(l.title)}</b></td><td>${pill(l.t)}</td><td class="mu2">${LV[l.lv]}</td><td class="mu2">${KIND[e.kind]||esc(e.kind||"—")}</td>
-    <td class="${e.ok?'grn':'red'}">${e.ok?'✓ Correct':'✗ Not yet'}</td><td><button class="btn xs" data-act="open" data-v="${l.id}">Open</button></td></tr>`}).join('')
+  <div class="tw" tabindex="0" role="region" aria-label="Table"><table class="ui-lg"><thead><tr><th>${F.th(0)}</th><th>${F.th(1)}</th><th>${F.th(2)}</th><th>${F.th(3)}</th><th>${F.th(4)}</th><th>${F.th(5)}</th><th><span class="ui-sr">Actions</span></th></tr></thead><tbody>
+  ${rows.map(e=>{const l=LM[e.lesson];if(!l)return'';return`<tr><td class="mu2">${tf(e.time)}</td><td class="lm"><b>${esc(l.title)}</b></td><td>${pill(l.t)}</td><td class="mu2">${LV[l.lv]}</td><td class="mu2">${KIND[e.kind]||esc(e.kind||"—")}</td>
+    <td class="${e.ok?'grn':'red'} lk">${e.ok?'✓ Correct':'✗ Not yet'}</td><td class="lp">${tf(e.time)} · ${esc(TR[l.t]?.n||'')} · ${LV[l.lv]} · ${KIND[e.kind]||esc(e.kind||'—')}</td><td class="la"><button class="btn xs" data-act="open" data-v="${l.id}">Open</button></td></tr>`}).join('')
   ||'<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:30px">No attempts in this range</td></tr>'}
   </tbody></table></div>
   <div class="calf"><div><button data-act="pp" aria-label="Previous page">&lt;</button> Page <b>${S.page}</b> of ${pages} <button data-act="pn" aria-label="Next page">&gt;</button></div><span class="dim">${n} record${n===1?'':'s'}${F.clear()}</span></div>`;
