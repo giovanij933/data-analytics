@@ -3740,7 +3740,7 @@ const DATA=(()=>{
     // NUTRITION writes its meals with their nutrients worked out (nj.mealnut.v1); bowls can't be totalled from here
     meals:arr(get('nj.mealnut.v1')?.meals).filter(Array.isArray).map(([id,time,kind,name,...v])=>({at:Date.parse(time),kind:kind==='bowl'?'bowl':'snack',name,v})),
     habits:arr(rw?.log).filter(e=>e?.at&&['resist','slip','done'].includes(e.t)).map(e=>({at:e.at,event:{resist:'resisted',slip:'slipped',done:'done'}[e.t],habit:e.t==='done'?e.g:bad[e.b]||'—',int:e.t==='done'?null:e.int??null,trig:e.t==='done'?null:e.trig||null})),
-    checkins:arr(get('isx.checkin.v1')?.log).filter(e=>e?.day),
+    checkins:UI.checkins().log,
     study:arr(get('xl.sessions.v1')).filter(x=>x?.time).map(x=>({at:Date.parse(x.time),min:x.min,track:TRN[(x.tracks||[])[0]]||'',n:(x.lessons||[]).length}))};
   const tab={},src={},ord=x=>x.at??x.close??Date.parse(x.day);
   for(const t in TBL){const m=arr(MINE[t]).filter(x=>x&&isFinite(ord(x))),mine=m.length>=5,rows=(mine?m:S[t]()).sort((a,b)=>ord(a)-ord(b));
@@ -4617,7 +4617,7 @@ function review(day){
     if(n>=7)look.push(`I haven't touched ${TR[t].n} in ${n} days (last on ${fdate(last)}).`)});
   out+=sec('What went well',ul(good))+sec('What to look at',ul(look));
   // the morning check-in for this date, when there is one
-  let ci=null;try{ci=(JSON.parse(localStorage.getItem('isx.checkin.v1'))?.log||[]).find(e=>e.day===day)}catch(e){}
+  let ci=UI.checkins().log.find(e=>e.day===day)||null;   // through UI.checkins: typed fields, never stored text as it is
   if(ci){const Q=['','poor','restless','OK','good','great'],E=['','drained','low','steady','good','charged'];
     out+=sec('My state',`<p>I slept <b>${esc(ci.sleep)} h</b> (${Q[ci.q]||'unrated'} sleep) and my energy was <b>${E[ci.energy]||'unrated'}</b>.${ci.sleep<7&&S1.length&&min<g?' Short sleep on a short study day: worth watching if it repeats.':''}</p>`)}
   // next up: the same lesson the START button opens
